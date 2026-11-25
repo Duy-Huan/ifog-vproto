@@ -1,0 +1,26 @@
+{
+  "sweep_name": "monte_carlo_ablation",
+  "base_config": "configs/baseline_1km.json",
+  "seeds": [101, 202, 303, 404],
+  "duration_per_point_s": 0.01,
+  "decimation_tau": 4,
+  "scenarios": [
+    {
+      "label": "linear_ideal",
+      "overrides": {
+        "noise": { "en_white_noise": false, "en_pink_noise": false },
+        "ablation_flags": {
+          "en_pol_error": false, "en_kerr": false, "en_shupe": false, "en_faraday": false,
+          "en_mioc_vpi_err": false, "en_ram": false, "en_xtalk": false,
+          "en_ltf_transient": false, "en_tia_poly_nl": false, "en_quantization": false
+        }
+      }
+    },
+    {
+      "label": "full_compensated",
+      "overrides": {
+        "dsp": { "en_adc_blanking": true, "en_vpi_loop": true, "en_prbs_dither": true }
+      }
+    }
+  ]
+}

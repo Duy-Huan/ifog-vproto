@@ -1,0 +1,48 @@
+# Build directories
+build/
+build-cov/
+cmake-build-*/
+*.o
+*.a
+*.so
+*.gcda
+*.gcno
+*.gcov
+coverage.info
+coverage_cpp/
+coverage_py/
+htmlcov/
+.coverage
+.coverage.*
+
+# Simulation run artifacts (spec: data/ is gitignored)
+data/
+*.bin
+!tests/fixtures/*.bin
+
+# LaTeX build intermediates
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Third-party local dependency build caches
+third_party/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp

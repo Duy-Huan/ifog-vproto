@@ -1,0 +1,146 @@
+name: CI — IFOG Virtual Prototype Verification
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance-and-spec-lock:
+    name: Governance, Branch Policy & Spec Immutability
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce Rule 1 — Strict 2-Branch Policy (only main and dev allowed)
+        run: |
+          set -euo pipefail
+          EXTRA_BRANCHES=$(git for-each-ref --format='%(refname:short)' refs/remotes/origin \
+            | sed 's|^origin/||' \
+            | grep -Ev '^(HEAD|main|dev)$' || true)
+          if [ -n "$EXTRA_BRANCHES" ]; then
+            echo "ERROR (AGENT.md Rule 1): Disallowed branches detected on origin:"
+            echo "$EXTRA_BRANCHES"
+            exit 1
+          fi
+          echo "Branch policy OK: only {main, dev} exist on origin."
+
+      - name: Enforce Rule 1 — PR to main must originate strictly from dev
+        if: github.event_name == 'pull_request'
+        run: |
+          set -euo pipefail
+          if [ "${{ github.head_ref }}" != "dev" ] || [ "${{ github.base_ref }}" != "main" ]; then
+            echo "ERROR (AGENT.md Rule 1): PRs must merge strictly dev -> main (got ${{ github.head_ref }} -> ${{ github.base_ref }})"
+            exit 1
+          fi
+          echo "PR branch policy OK: dev -> main."
+
+      - name: Enforce Rule 7 — Spec SHA-256 Immutability & PDF Presence
+        run: |
+          set -euo pipefail
+          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256
+          test -s spec/IFOG-SIM-SPEC-004.pdf
+          echo "Spec checksum and compiled PDF verified."
+
+      - name: Enforce Rule 6 — Governance & Project Skills Presence
+        run: |
+          set -euo pipefail
+          test -s AGENT.md
+          test -s skills/README.md
+          for skill in \
+            ifog-spec-formula-verification \
+            ifog-tier1-optical-thermal \
+            ifog-tier2-sysc-ams-core \
+            ifog-tier3-dual-regime-avar \
+            ifog-cicd-release-workflow; do
+            test -s "skills/${skill}/SKILL.md"
+          done
+          echo "AGENT.md and all project skills verified."
+
+  build-and-verify:
+    name: Build SystemC-AMS, 30 Formulas, 100% C++/Py Coverage & Real 4-Gate Sim
+    needs: governance-and-spec-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      SYSTEMC_AMS_HOME: ${{ github.workspace }}/.cache/systemc-ams
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system toolchain (SystemC 2.3.4, nlohmann-json, gcovr, autotools)
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential cmake autoconf automake libtool pkg-config \
+            libsystemc-dev nlohmann-json3-dev gcovr lcov
+
+      - name: Cache SystemC-AMS PoC 2.3.4 installation
+        id: cache-scams
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SYSTEMC_AMS_HOME }}
+          key: systemc-ams-2.3.4-ubuntu2404-a72d365f
+
+      - name: Build & install SystemC-AMS PoC 2.3.4 (if cache miss)
+        if: steps.cache-scams.outputs.cache-hit != 'true'
+        run: bash scripts/install_systemc_ams.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies & editable package
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install numpy scipy matplotlib plotly jsonschema pytest pytest-cov pytest-xdist
+          python3 -m pip install -e . --no-build-isolation --no-deps
+
+      - name: Build Tier 2 SystemC-AMS Core (Release -O3) & run C++ Unit Tests
+        run: |
+          cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j"$(nproc)"
+          ./build/ifog_cpp_tests
+
+      - name: Gate A — C++ 100.0% Line Coverage Verification (gcovr)
+        run: bash scripts/run_cpp_coverage.sh
+
+      - name: Gate B — Per-Formula Verification Matrix (EQ-01 .. EQ-30, Rule 3)
+        run: |
+          python3 scripts/verify_formulas_ci.py --out-dir data/ci_formula_report
+          cat data/ci_formula_report/formula_verification_matrix.md
+
+      - name: Gate C — Python Unit & Formula Suite with 100.0% Coverage (pytest-cov)
+        run: |
+          pytest tests/unit tests/formula_verification \
+            --cov --cov-report=term-missing --cov-report=xml:data/python_coverage.xml
+
+      - name: Gate D — Full Real 4-Gate Acceptance & Regression Simulations (No Smoke Tests, Rule 5)
+        run: pytest tests/system -v -s
+
+      - name: Upload CI Verification Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ifog-ci-verification-artifacts
+          path: |
+            data/ci_formula_report/formula_verification_matrix.md
+            data/ci_formula_report/formula_verification_matrix.json
+            data/cov_cpp_work/cpp_coverage_summary.json
+            data/python_coverage.xml
+          if-no-files-found: warn

@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ifog-vproto"
+version = "1.0.0"
+description = "Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-004)"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "matplotlib>=3.8",
+    "plotly>=5.18",
+    "jsonschema>=4.20",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=4.1",
+    "pytest-xdist>=3.5",
+]
+
+[tool.setuptools.packages.find]
+include = ["tier1_offline*", "tier3_analysis*", "viz*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --strict-markers"
+markers = [
+    "formula: Individual spec formula verification test (EQ-01..EQ-30)",
+    "unit: Unit test",
+    "system: Full end-to-end simulation system test",
+    "gate: Normative 4-gate acceptance test (Gate 1..Gate 4)",
+    "regression: Deterministic regression test",
+]
+
+[tool.coverage.run]
+source = ["tier1_offline", "tier3_analysis", "viz"]
+branch = false
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 100
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
