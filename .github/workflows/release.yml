@@ -1,0 +1,109 @@
+name: Release — Gated SemVer Tag Verification & Publish
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  release-verify-and-publish:
+    name: Verify Release Tag, Full Gates & Publish GitHub Release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      SYSTEMC_AMS_HOME: ${{ github.workspace }}/.cache/systemc-ams
+    steps:
+      - name: Checkout tagged commit (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Enforce Rule 1 & Rule 8 — SemVer Tag Format & Ancestor of main
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR (Rule 1/8): Release tag must match vX.Y.Z, got '$TAG'"
+            exit 1
+          fi
+          git fetch origin main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "ERROR (Rule 8): Release tag '$TAG' must point to a commit on main!"
+            exit 1
+          fi
+          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256
+          test -s spec/IFOG-SIM-SPEC-004.pdf
+          echo "Release tag $TAG validated on main with locked spec."
+
+      - name: Install system toolchain
+        run: |
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential cmake autoconf automake libtool pkg-config \
+            libsystemc-dev nlohmann-json3-dev gcovr lcov
+
+      - name: Cache SystemC-AMS PoC 2.3.4
+        id: cache-scams
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.SYSTEMC_AMS_HOME }}
+          key: systemc-ams-2.3.4-ubuntu2404-a72d365f
+
+      - name: Build & install SystemC-AMS PoC 2.3.4
+        if: steps.cache-scams.outputs.cache-hit != 'true'
+        run: bash scripts/install_systemc_ams.sh
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies & package
+        run: |
+          python3 -m pip install --upgrade pip setuptools wheel
+          python3 -m pip install numpy scipy matplotlib plotly jsonschema pytest pytest-cov pytest-xdist
+          python3 -m pip install -e . --no-build-isolation --no-deps
+
+      - name: Build Tier 2 Release (-O3) & Verify 100% C++ Coverage
+        run: |
+          cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j"$(nproc)"
+          ./build/ifog_cpp_tests
+          bash scripts/run_cpp_coverage.sh
+
+      - name: Verify 30 Formulas, 100% Python Coverage & Full Real 4-Gate Acceptance Suite
+        run: |
+          python3 scripts/verify_formulas_ci.py --out-dir data/release_artifacts
+          pytest tests/unit tests/formula_verification --cov --cov-report=term-missing
+          pytest tests/system -v -s
+
+      - name: Package Release Artifacts & Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p data/release_bundle
+          cp spec/IFOG-SIM-SPEC-004.pdf data/release_bundle/
+          cp data/release_artifacts/formula_verification_matrix.md data/release_bundle/
+          cp data/release_artifacts/formula_verification_matrix.json data/release_bundle/
+          cp data/cov_cpp_work/cpp_coverage_summary.json data/release_bundle/
+          cat > data/release_bundle/RELEASE_NOTES.md <<EOF
+          # Release ${TAG} — Closed-Loop IFOG Multi-Scale Virtual Prototype (\`IFOG-SIM-SPEC-004\`)
+
+          ## Verified Release Gates (100% Passed on \`main\`)
+          - **Specification Lock:** \`spec/IFOG-SIM-SPEC-004.tex\` SHA-256 verified + compiled \`IFOG-SIM-SPEC-004.pdf\` attached.
+          - **Formula Traceability (Rule 3):** All **30 / 30** normative formulas (\`EQ-01\` .. \`EQ-30\`) individually verified.
+          - **Dual-Domain 100% Coverage (Rule 2):** C++ SystemC-AMS core = **100.0%** line coverage (\`gcovr\`); Python Tier 1 / Tier 3 / Viz = **100.0%** line coverage (\`pytest-cov\`).
+          - **Full Real Simulations (Rule 5):** Gate 1 (Golden Linear Baseline & Continuous 2*pi Flyback), Gate 2 (Full Slow Rate Ramp Deadband & Bunny Ears >= 90% Mitigation), Gate 3 (2 s Shifted 1/f Flicker PSD & 100 Hz K-matrix < 2%), Gate 4 (60 s Fast-Scale + 10 h / 3.6M-sample Slow-Scale Dual-Regime Overlapping AVAR < 5% overlap & +-10% 5-region WLS recovery).
+          EOF
+          gh release create "${TAG}" \
+            data/release_bundle/IFOG-SIM-SPEC-004.pdf \
+            data/release_bundle/formula_verification_matrix.md \
+            data/release_bundle/formula_verification_matrix.json \
+            data/release_bundle/cpp_coverage_summary.json \
+            --title "Release ${TAG} — IFOG Virtual Prototype (IFOG-SIM-SPEC-004)" \
+            --notes-file data/release_bundle/RELEASE_NOTES.md

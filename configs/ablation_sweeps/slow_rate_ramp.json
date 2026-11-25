@@ -1,0 +1,60 @@
+{
+  "sweep_name": "slow_rate_ramp_deadband_bunny_ears",
+  "base_config": "configs/baseline_1km.json",
+  "rates_deg_per_s": [
+    -0.5, -0.35, -0.25, -0.18, -0.12, -0.08, -0.05, -0.03, -0.02, -0.01, -0.005,
+    0.0,
+    0.005, 0.01, 0.02, 0.03, 0.05, 0.08, 0.12, 0.18, 0.25, 0.35, 0.5
+  ],
+  "duration_per_point_s": 0.02,
+  "decimation_tau": 4,
+  "uncompensated_overrides": {
+    "dsp": {
+      "mode": "4state",
+      "en_vpi_loop": false,
+      "en_adc_blanking": false,
+      "en_prbs_dither": false
+    },
+    "noise": {
+      "en_white_noise": false,
+      "en_pink_noise": false
+    },
+    "ablation_flags": {
+      "en_pol_error": false,
+      "en_kerr": false,
+      "en_shupe": false,
+      "en_faraday": false,
+      "en_mioc_vpi_err": true,
+      "en_ram": true,
+      "en_xtalk": true,
+      "en_ltf_transient": true,
+      "en_tia_poly_nl": true,
+      "en_quantization": true
+    }
+  },
+  "compensated_overrides": {
+    "dsp": {
+      "mode": "4state",
+      "en_vpi_loop": true,
+      "en_adc_blanking": true,
+      "en_prbs_dither": true,
+      "prbs_amplitude_rad": 3.0e-4
+    },
+    "noise": {
+      "en_white_noise": false,
+      "en_pink_noise": false
+    },
+    "ablation_flags": {
+      "en_pol_error": false,
+      "en_kerr": false,
+      "en_shupe": false,
+      "en_faraday": false,
+      "en_mioc_vpi_err": true,
+      "en_ram": true,
+      "en_xtalk": true,
+      "en_ltf_transient": true,
+      "en_tia_poly_nl": true,
+      "en_quantization": true
+    }
+  }
+}

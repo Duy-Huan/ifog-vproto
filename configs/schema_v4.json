@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ifog-vproto.local/schemas/schema_v4.json",
+  "title": "IFOG-SIM-SPEC-004 Configuration Schema v4.0",
+  "description": "Strict normative JSON Schema validating device datasheet, optics, TIA/ADC/DAC analog front-end, 2/4-state DSP, 10 ablation flags, stimulus, and slow-scale IEEE 952 parameters.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "meta",
+    "optics",
+    "thermal",
+    "magneto_optic",
+    "mioc",
+    "analog_frontend",
+    "adc_dac",
+    "dsp",
+    "noise",
+    "ablation_flags",
+    "simulation",
+    "slow_scale"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "4.0"
+    },
+    "meta": {
+      "type": "object",
+      "required": ["name", "spec_id", "seed"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "spec_id": { "type": "string", "const": "IFOG-SIM-SPEC-004" },
+        "description": { "type": "string" },
+        "seed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "optics": {
+      "type": "object",
+      "required": [
+        "L_m", "D_m", "lambda_bar_m", "n_eff", "P_sld_W", "P_peak_W", "P_coil_W",
+        "delta_lambda_fwhm_m", "beat_length_m", "h_param_inv_m", "er_dB",
+        "n_spec", "m_segments", "n2_m2_per_W", "A_eff_m2", "L_eff_m",
+        "kappa_split", "eta_coh"
+      ],
+      "properties": {
+        "L_m": { "type": "number", "exclusiveMinimum": 0 },
+        "D_m": { "type": "number", "exclusiveMinimum": 0 },
+        "lambda_bar_m": { "type": "number", "exclusiveMinimum": 0 },
+        "n_eff": { "type": "number", "minimum": 1.0 },
+        "P_sld_W": { "type": "number", "exclusiveMinimum": 0 },
+        "P_peak_W": { "type": "number", "exclusiveMinimum": 0 },
+        "P_coil_W": { "type": "number", "minimum": 0 },
+        "delta_lambda_fwhm_m": { "type": "number", "exclusiveMinimum": 0 },
+        "beat_length_m": { "type": "number", "exclusiveMinimum": 0 },
+        "h_param_inv_m": { "type": "number", "minimum": 0 },
+        "er_dB": { "type": "number", "minimum": 0 },
+        "n_spec": { "type": "integer", "minimum": 64, "maximum": 128 },
+        "m_segments": { "type": "integer", "minimum": 200, "maximum": 1000 },
+        "n2_m2_per_W": { "type": "number", "minimum": 0 },
+        "A_eff_m2": { "type": "number", "exclusiveMinimum": 0 },
+        "L_eff_m": { "type": "number", "exclusiveMinimum": 0 },
+        "kappa_split": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "eta_coh": { "type": "number", "minimum": 0.0, "maximum": 2.0 },
+        "phi_pol_drift_rad_per_s": { "type": "number" }
+      }
+    },
+    "thermal": {
+      "type": "object",
+      "required": [
+        "dn_dT_per_K", "alpha_T_per_K", "diffusivity_m2_per_s",
+        "coil_thickness_m", "n_z", "delta_z_quad_m", "boundary_ramp_K_per_s",
+        "duration_s", "dt_s"
+      ],
+      "properties": {
+        "dn_dT_per_K": { "type": "number" },
+        "alpha_T_per_K": { "type": "number" },
+        "diffusivity_m2_per_s": { "type": "number", "exclusiveMinimum": 0 },
+        "coil_thickness_m": { "type": "number", "exclusiveMinimum": 0 },
+        "n_z": { "type": "integer", "minimum": 16 },
+        "delta_z_quad_m": { "type": "number" },
+        "boundary_ramp_K_per_s": { "type": "number" },
+        "boundary_asymmetry_K_per_s": { "type": "number" },
+        "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+        "dt_s": { "type": "number", "exclusiveMinimum": 0 },
+        "fem_csv_path": { "type": ["string", "null"] }
+      }
+    },
+    "magneto_optic": {
+      "type": "object",
+      "required": ["verdet_rad_per_Tm", "B_ext_T", "effective_loop_m"],
+      "properties": {
+        "verdet_rad_per_Tm": { "type": "number", "minimum": 0 },
+        "B_ext_T": { "type": "number" },
+        "effective_loop_m": { "type": "number", "minimum": 0 }
+      }
+    },
+    "mioc": {
+      "type": "object",
+      "required": ["V_pi_0_V", "eps_vpi", "gamma_nl_rad_per_V2", "alpha_ram_per_V"],
+      "properties": {
+        "V_pi_0_V": { "type": "number", "exclusiveMinimum": 0 },
+        "eps_vpi": { "type": "number", "minimum": -0.5, "maximum": 0.5 },
+        "gamma_nl_rad_per_V2": { "type": "number" },
+        "alpha_ram_per_V": { "type": "number" }
+      }
+    },
+    "analog_frontend": {
+      "type": "object",
+      "required": [
+        "responsivity_A_per_W", "I_dark_A", "R_f_ohm", "C_tot_F", "C_f_F",
+        "f_gbw_Hz", "T_tia_K", "e_n_op_V_per_rtHz", "i_n_op_A_per_rtHz",
+        "V_off_0_V", "G1", "G2_per_V", "G3_per_V2", "V_min_V", "V_max_V",
+        "C_xtalk_F", "k_xtalk_A_per_V"
+      ],
+      "properties": {
+        "responsivity_A_per_W": { "type": "number", "exclusiveMinimum": 0 },
+        "I_dark_A": { "type": "number", "minimum": 0 },
+        "R_f_ohm": { "type": "number", "exclusiveMinimum": 0 },
+        "C_tot_F": { "type": "number", "exclusiveMinimum": 0 },
+        "C_f_F": { "type": "number", "minimum": 0 },
+        "f_gbw_Hz": { "type": "number", "exclusiveMinimum": 0 },
+        "T_tia_K": { "type": "number", "exclusiveMinimum": 0 },
+        "e_n_op_V_per_rtHz": { "type": "number", "minimum": 0 },
+        "i_n_op_A_per_rtHz": { "type": "number", "minimum": 0 },
+        "V_off_0_V": { "type": "number" },
+        "G1": { "type": "number", "exclusiveMinimum": 0 },
+        "G2_per_V": { "type": "number" },
+        "G3_per_V2": { "type": "number" },
+        "V_min_V": { "type": "number" },
+        "V_max_V": { "type": "number" },
+        "C_xtalk_F": { "type": "number", "minimum": 0 },
+        "k_xtalk_A_per_V": { "type": "number" }
+      }
+    },
+    "adc_dac": {
+      "type": "object",
+      "required": [
+        "K_oversample", "N_adc_bits", "V_fs_adc_V", "k_start", "k_end",
+        "N_dac_bits", "V_ref_dac_V", "drv_omega0_rad_per_s", "drv_zeta"
+      ],
+      "properties": {
+        "K_oversample": { "type": "integer", "enum": [16, 32] },
+        "N_adc_bits": { "type": "integer", "minimum": 8, "maximum": 24 },
+        "V_fs_adc_V": { "type": "number", "exclusiveMinimum": 0 },
+        "k_start": { "type": "integer", "minimum": 0 },
+        "k_end": { "type": "integer", "minimum": 0 },
+        "N_dac_bits": { "type": "integer", "minimum": 8, "maximum": 24 },
+        "V_ref_dac_V": { "type": "number", "exclusiveMinimum": 0 },
+        "drv_omega0_rad_per_s": { "type": "number", "exclusiveMinimum": 0 },
+        "drv_zeta": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "dsp": {
+      "type": "object",
+      "required": [
+        "mode", "alpha_rad", "K_tot_1", "K_P_1", "K_tot_2",
+        "en_adc_blanking", "en_vpi_loop", "en_prbs_dither", "prbs_amplitude_rad"
+      ],
+      "properties": {
+        "mode": { "type": "string", "enum": ["2state", "4state"] },
+        "alpha_rad": { "type": "number", "exclusiveMinimum": 0.0, "maximum": 1.5707963267948966 },
+        "K_tot_1": { "type": "number", "exclusiveMinimum": 0.0, "exclusiveMaximum": 1.0 },
+        "K_P_1": { "type": "number", "minimum": 0.0 },
+        "K_tot_2": { "type": "number", "minimum": 0.0, "exclusiveMaximum": 1.0 },
+        "en_adc_blanking": { "type": "boolean" },
+        "en_vpi_loop": { "type": "boolean" },
+        "en_prbs_dither": { "type": "boolean" },
+        "prbs_amplitude_rad": { "type": "number", "minimum": 0.0, "maximum": 0.5 }
+      }
+    },
+    "noise": {
+      "type": "object",
+      "required": [
+        "en_white_noise", "en_pink_noise",
+        "pink_f_min_Hz", "pink_f_max_Hz",
+        "sigma_pink_tia_V", "sigma_pink_dac_rel", "sigma_pink_xtalk_rel"
+      ],
+      "properties": {
+        "en_white_noise": { "type": "boolean" },
+        "en_pink_noise": { "type": "boolean" },
+        "pink_f_min_Hz": { "type": "number", "exclusiveMinimum": 0 },
+        "pink_f_max_Hz": { "type": "number", "exclusiveMinimum": 0 },
+        "sigma_pink_tia_V": { "type": "number", "minimum": 0 },
+        "sigma_pink_dac_rel": { "type": "number", "minimum": 0 },
+        "sigma_pink_xtalk_rel": { "type": "number", "minimum": 0 },
+        "sine_inject_target": { "type": "string", "enum": ["none", "tia", "dac", "xtalk"] },
+        "sine_inject_freq_Hz": { "type": "number", "minimum": 0 },
+        "sine_inject_amp": { "type": "number", "minimum": 0 }
+      }
+    },
+    "ablation_flags": {
+      "type": "object",
+      "description": "10 normative physical/analog impairment isolation flags",
+      "additionalProperties": false,
+      "required": [
+        "en_pol_error", "en_kerr", "en_shupe", "en_faraday", "en_mioc_vpi_err",
+        "en_ram", "en_xtalk", "en_ltf_transient", "en_tia_poly_nl", "en_quantization"
+      ],
+      "properties": {
+        "en_pol_error": { "type": "boolean" },
+        "en_kerr": { "type": "boolean" },
+        "en_shupe": { "type": "boolean" },
+        "en_faraday": { "type": "boolean" },
+        "en_mioc_vpi_err": { "type": "boolean" },
+        "en_ram": { "type": "boolean" },
+        "en_xtalk": { "type": "boolean" },
+        "en_ltf_transient": { "type": "boolean" },
+        "en_tia_poly_nl": { "type": "boolean" },
+        "en_quantization": { "type": "boolean" }
+      }
+    },
+    "simulation": {
+      "type": "object",
+      "required": ["duration_s", "decimation_tau", "stimulus"],
+      "properties": {
+        "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+        "decimation_tau": { "type": "integer", "minimum": 1 },
+        "dump_micro_ms": { "type": "number", "minimum": 0 },
+        "stimulus": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": { "type": "string", "enum": ["constant", "step", "ramp", "sine"] },
+            "omega_rad_per_s": { "type": "number" },
+            "omega_start_rad_per_s": { "type": "number" },
+            "omega_end_rad_per_s": { "type": "number" },
+            "step_time_s": { "type": "number", "minimum": 0 },
+            "freq_Hz": { "type": "number", "minimum": 0 },
+            "amp_rad_per_s": { "type": "number" }
+          }
+        }
+      }
+    },
+    "slow_scale": {
+      "type": "object",
+      "required": [
+        "f_dec_Hz", "duration_hours", "rrw_mode", "K_rrw_deg_per_rt_h3",
+        "T_c_s", "B_flicker_deg_per_h", "R_ramp_deg_per_h2"
+      ],
+      "properties": {
+        "f_dec_Hz": { "type": "number", "exclusiveMinimum": 0 },
+        "duration_hours": { "type": "number", "exclusiveMinimum": 0 },
+        "rrw_mode": { "type": "string", "enum": ["wiener", "gauss_markov"] },
+        "K_rrw_deg_per_rt_h3": { "type": "number", "minimum": 0 },
+        "T_c_s": { "type": "number", "exclusiveMinimum": 0 },
+        "B_flicker_deg_per_h": { "type": "number", "minimum": 0 },
+        "R_ramp_deg_per_h2": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

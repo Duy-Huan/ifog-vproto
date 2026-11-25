@@ -1,0 +1,732 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[a4paper, margin=2.0cm]{geometry}
+\usepackage{fontspec}
+\usepackage[vietnamese, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{english}
+\babelfont{rm}{Noto Sans}
+\usepackage{enumitem}
+\setlist[itemize]{label=-, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{topsep=3pt, itemsep=2pt}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds, shapes.geometric, babel}
+\usepackage{hyperref}
+
+\definecolor{primaryblue}{HTML}{1B365D}
+\definecolor{accentteal}{HTML}{0E6251}
+\definecolor{alertred}{HTML}{9B2C2C}
+\definecolor{warmamber}{HTML}{975A16}
+\definecolor{mutedgray}{HTML}{4A5568}
+\definecolor{rulegray}{HTML}{CBD5E0}
+\definecolor{softblue}{HTML}{EBF4FF}
+\definecolor{softteal}{HTML}{E6FFFA}
+\definecolor{softamber}{HTML}{FEFCBF}
+\definecolor{softred}{HTML}{FFF5F5}
+\definecolor{softgray}{HTML}{F7FAFC}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryblue,
+    citecolor=accentteal,
+    urlcolor=primaryblue,
+    pdftitle={IFOG-SIM-SPEC-004 - Dac ta va Xac minh Cong thuc Nguyen mau Ao IFOG},
+    pdfauthor={Technical Design Specification v4.0}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\setlength{\headheight}{16pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.5pt}
+\emergencystretch=2em
+\raggedbottom
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{mutedgray}Đặc tả \& Xác minh Công thức Nguyên mẫu Ảo IFOG Đa thang đo}
+\fancyhead[R]{\small\color{mutedgray}\texttt{IFOG-SIM-SPEC-004}}
+\fancyfoot[L]{\small\color{mutedgray}Phiên bản 4.0 --- Xác minh Toán học Đầy đủ 4 Miền \& Đánh giá Khả thi}
+\fancyfoot[R]{\small\color{mutedgray}Trang \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+% --- TITLE BLOCK ---
+\thispagestyle{plain}
+{\color{primaryblue}\rule{\textwidth}{1.5pt}}
+\vspace{0.3cm}
+
+{\Large\bfseries\color{primaryblue} ĐẶC TẢ KỸ THUẬT \& XÁC MINH CÔNG THỨC NGUYÊN MẪU ẢO ĐỒNG MÔ PHỎNG ĐA THANG ĐO CHO IFOG VÒNG KÍN}
+
+\vspace{0.15cm}
+{\normalsize\color{mutedgray} Phiên bản 4.0 --- Hoàn thiện Phương trình Miền Quang -- Điện -- DSP (2 \& 4 Trạng thái), Liên kết Liên tầng, Cấu trúc Mã nguồn và Đánh giá Tính khả thi Định lượng}
+
+\vspace{0.2cm}
+{\color{rulegray}\rule{\textwidth}{0.6pt}}
+\vspace{0.15cm}
+
+\begin{tabular}{@{}l L{4.7cm} l L{4.9cm}@{}}
+\textbf{Mã tài liệu:} & \texttt{IFOG-SIM-SPEC-004} & \textbf{Phiên bản:} & 4.0 (Thay thế \texttt{SPEC-003}) \\
+\textbf{Hệ thống:} & Closed-Loop IFOG (2/4-State) & \textbf{Chuẩn tham chiếu:} & IEEE Std 952-2020; IEEE Std 1666.1 \\
+\textbf{Kiến trúc:} & 3-Tier Hybrid (LITEF-inspired) & \textbf{Nền tảng chạy:} & C++ / SystemC-AMS (PoC) + Python \\
+\end{tabular}
+
+\vspace{0.15cm}
+{\color{primaryblue}\rule{\textwidth}{1.0pt}}
+\vspace{0.25cm}
+
+\begin{abstract}
+\noindent Tài liệu \texttt{IFOG-SIM-SPEC-004} thiết lập đặc tả toán học đầy đủ và đã qua kiểm chứng giải tích cho nguyên mẫu ảo (\emph{Virtual Prototype}) của con quay hồi chuyển sợi quang giao thoa vòng kín (Closed-Loop IFOG). So với phiên bản 003, tài liệu bổ sung hoàn chỉnh hệ phương trình cho miền điện tử tương tự (băng thông bậc 2 của TIA, điện dung bù tối ưu, thời gian xác lập, 6 nguồn nhiễu ngõ vào, phạt chu kỳ \emph{ADC blanking}, xuyên âm và phi tuyến đa thức), miền xử lý số vòng kín (giải điều chế 2 trạng thái và 4 trạng thái Lefèvre sau khi hiệu chỉnh dấu cộng kênh, hàm truyền miền $Z$ và điều kiện ổn định Jury), mô hình 5 thành phần nhiễu chuẩn IEEE Std 952-2020 (gồm cả \emph{Rate Random Walk --- RRW}), phương trình liên kết liên tầng, cây thư mục mã nguồn kèm thư mục \texttt{spec/}, quy trình vận hành CLI -- công cụ trực quan hóa và bảng thẩm định tính khả thi định lượng trước khi triển khai.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.25cm}
+
+% ====================================================================
+\section{Tự Phản biện Nội bộ \& Xác minh Công thức Đối chiếu Tài liệu Chuẩn}
+
+Trước khi đóng băng đặc tả để sinh mã nguồn, toàn bộ hệ phương trình từ các bản thảo trước được rà soát độc lập và đối chiếu trực tiếp với các chuẩn IEEE cùng tài liệu kinh điển của Lefèvre \cite{lefevre2022}, Burns \cite{burns1983}, Shupe \cite{shupe1980}, Bergh \cite{bergh1982}, Graeme \cite{graeme1996} và nhóm Northrop Grumman LITEF / Fraunhofer IIS \cite{waydhas2011, rieke2011}. Bảng~\ref{tab:audit} tổng hợp 6 kết quả tự phản biện và hiệu chỉnh toán học trọng yếu.
+
+\begin{table}[htbp]
+\centering
+\caption{Kết quả tự phản biện nội bộ và xác minh công thức đối chiếu tài liệu chuẩn.}
+\label{tab:audit}
+\footnotesize
+\renewcommand{\arraystretch}{1.22}
+\begin{tabular}{@{}L{2.8cm} L{4.3cm} L{5.3cm} L{3.3cm}@{}}
+\toprule
+\textbf{Hạng mục kiểm tra} & \textbf{Phát hiện lỗi / Thiếu sót cũ} & \textbf{Công thức đã xác minh} & \textbf{Nguồn chuẩn} \\
+\midrule
+1. Dấu giải điều chế 4 trạng thái & Với chuỗi pha $[+(\pi-\alpha), -(\pi-\alpha), -(\pi+\alpha), +(\pi+\alpha)]$, công thức cũ $(y_2-y_1)+(y_3-y_4)$ làm triệt tiêu pha Sagnac về $0$. & Đảo dấu cặp sau: $e_\Omega = (y_2-y_1)+(y_4-y_3) \propto 4\sin\alpha\,\Delta\phi_{\text{NR}}$; giữ nguyên $e_{V_\pi} = (y_3+y_4)-(y_1+y_2)$. & Lefèvre (2022) \cite{lefevre2022}, Ch.~8 \\
+2. Tầng tương tự TIA & Chưa đặc tả quan hệ giữa $(R_f, C_f, C_{\text{tot}}, f_{\text{GBW}})$ với thời gian xác lập và đỉnh nhiễu điện dung. & Bổ sung hàm truyền bậc 2 $H_{\text{TIA}}(s)$, $C_{f,\text{opt}}$, thời gian xác lập $t_s(0.1\%)$, 6 nguồn nhiễu và hệ số phạt blanking $1/\sqrt{\eta_b}$. & Graeme (1996) \cite{graeme1996}, Ch.~2--4 \\
+3. Ổn định vòng kín miền $Z$ & Thiếu điều kiện giới hạn hệ số khuếch đại bộ tích phân số khi có trễ $\tau$ và trễ DAC 1 chu kỳ ($d=2$). & Thiết lập hàm truyền hở $L(z)$ với độ trễ $d=2$; ràng buộc $0 < K_{\text{tot}} < 1$ (Jury) và tách băng thông vòng $V_\pi$ chậm hơn $\ge 10\times$. & IEEE Std 952 \cite{ieee952}; Lefèvre \cite{lefevre2022} \\
+4. Đủ 5 vùng nhiễu AVAR & Thiếu mô hình \emph{Rate Random Walk} ($K$, dốc $+1/2$) và chế độ Gauss--Markov tương quan thời gian. & Bổ sung đầy đủ 5 tham số $(Q, N, B, K, R)$ cùng phương trình tổng hợp AVAR và lọc AR(1) cho RRW. & IEEE Std 952 \cite{ieee952}; El-Sheimy \cite{elsheimy2008} \\
+5. Liên kết liên tầng & Chưa tường minh ma trận chuyển đổi rò rỉ $\mathbf{K}$ và điều kiện ghép liên tục tại vùng giao AVAR. & Khóa định nghĩa ma trận $\mathbf{K}$, phép quy đổi đơn vị rad $\leftrightarrow$ $^\circ/\text{h}$ và sai lệch giao thoa $<5\%$ tại $T_m \in [0.1, 5]\text{ s}$. & LITEF \cite{waydhas2011, rieke2011} \\
+6. Hiệu ứng Kerr \& Phân cực & Chưa gắn hệ số suy giảm kết hợp $\eta_{\text{coh}}$ cho nguồn SLD phổ rộng trong công thức pha Kerr. & Bổ sung $\eta_{\text{coh}} \approx 1$ tại giao thoa hai chiều đối xứng và công thức chuẩn của Bergh et al. & Bergh et al. (1982) \cite{bergh1982} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Chứng minh giải tích hiệu chỉnh dấu giải điều chế 4 trạng thái}
+Xét chuỗi 4 mức pha thiên vị tuần hoàn trong chu kỳ $4\tau$:
+\begin{equation}
+\phi_1 = +(\pi - \alpha), \quad
+\phi_2 = -(\pi - \alpha), \quad
+\phi_3 = -(\pi + \alpha), \quad
+\phi_4 = +(\pi + \alpha), \qquad \alpha \in (0, \pi/2]
+\end{equation}
+Khi hệ số điều chế MIOC có sai số tương đối $\epsilon_{V_\pi}$ (tức pha thực tế là $(1+\epsilon_{V_\pi})\phi_k$) và pha không tương hỗ cần đo là $\Delta\phi_{\text{NR}} \ll 1$, khai triển Taylor bậc nhất quanh $\pm(\pi \mp \alpha)$ cho số hạng $\cos\bigl(\Delta\phi_{\text{NR}} + (1+\epsilon_{V_\pi})\phi_k\bigr)$ tại từng trạng thái:
+\begin{align}
+\cos\bigl(\Delta\phi_{\text{NR}} + (1+\epsilon_{V_\pi})(\pi-\alpha)\bigr) &\approx -\cos\alpha - \sin\alpha\,\Delta\phi_{\text{NR}} - \epsilon_{V_\pi}(\pi-\alpha)\sin\alpha \\
+\cos\bigl(\Delta\phi_{\text{NR}} - (1+\epsilon_{V_\pi})(\pi-\alpha)\bigr) &\approx -\cos\alpha + \sin\alpha\,\Delta\phi_{\text{NR}} - \epsilon_{V_\pi}(\pi-\alpha)\sin\alpha \\
+\cos\bigl(\Delta\phi_{\text{NR}} - (1+\epsilon_{V_\pi})(\pi+\alpha)\bigr) &\approx -\cos\alpha - \sin\alpha\,\Delta\phi_{\text{NR}} + \epsilon_{V_\pi}(\pi+\alpha)\sin\alpha \\
+\cos\bigl(\Delta\phi_{\text{NR}} + (1+\epsilon_{V_\pi})(\pi+\alpha)\bigr) &\approx -\cos\alpha + \sin\alpha\,\Delta\phi_{\text{NR}} + \epsilon_{V_\pi}(\pi+\alpha)\sin\alpha
+\end{align}
+Gọi $y_k$ ($k=1,2,3,4$) là mẫu ADC tương ứng của 4 trạng thái và $S_\alpha = G_{\text{chain}} \frac{P_{\text{peak}}}{2} V \sin\alpha$ là độ nhạy kênh. Từ 4 biểu thức trên, tổ hợp tuyến tính đúng để tách trực giao hai vòng điều khiển là:
+\begin{equation}
+e_\Omega = (y_2 - y_1) + (y_4 - y_3) \approx 4 S_\alpha \Delta\phi_{\text{NR}}, \qquad
+e_{V_\pi} = (y_3 + y_4) - (y_1 + y_2) \approx 4\pi S_\alpha \epsilon_{V_\pi}
+\end{equation}
+Hai phương trình này trực giao hoàn toàn ở bậc nhất: sai số $V_\pi$ triệt tiêu trong $e_\Omega$, trong khi pha Sagnac $\Delta\phi_{\text{NR}}$ triệt tiêu trong $e_{V_\pi}$.
+
+% ====================================================================
+\section{Kiến trúc Lai 3 Tầng \& Luồng Dữ liệu Toàn trình}
+
+Toàn bộ nguyên mẫu ảo tổ chức theo **Kiến trúc Lai 3 Tầng** mô phỏng phong cách nguyên mẫu ảo của Northrop Grumman LITEF GmbH \cite{waydhas2011, rieke2011} (Hình~\ref{fig:3tier_arch}): tách các bài toán trường quang phân giải phổ và truyền nhiệt không gian sang tiền xử lý ngoại tuyến, giữ lõi SystemC-AMS siêu gọn ở miền đường bao 64-bit kết hợp phần cứng số đúng từng bit, và thực hiện kiểm chứng dài hạn trên tầng hậu xử lý.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    >=Stealth,
+    tierbox/.style={draw=primaryblue, thick, rounded corners=4pt, fill=softgray, inner sep=6pt},
+    modbox/.style={draw=primaryblue, semithick, rounded corners=3pt, fill=white, align=center, text width=4.6cm, minimum height=1.35cm, inner sep=4pt},
+    corebox/.style={draw=accentteal, thick, rounded corners=3pt, fill=softteal, align=center, text width=15.6cm, minimum height=1.55cm, inner sep=5pt},
+    postbox/.style={draw=warmamber, thick, rounded corners=3pt, fill=softamber, align=center, text width=4.6cm, minimum height=1.35cm, inner sep=4pt},
+    filetag/.style={draw=mutedgray, dashed, rounded corners=2pt, fill=white, font=\footnotesize\ttfamily, inner sep=3.5pt},
+    flowarrow/.style={->, thick, draw=primaryblue}
+]
+
+% --- TIER 1 ---
+\node[modbox] (t1a) at (2.6, 9.2) {\textbf{Trình giải Quang học}\\Jones + Spectral Slicing\\($N_{\text{spec}}$ phổ, $M$ đoạn sợi)};
+\node[modbox] (t1b) at (8.3, 9.2) {\textbf{Trình giải Nhiệt -- Cơ}\\Khuếch tán 1D / Bảng FEM\\Tích phân Shupe $\Delta\phi_{\text{Shupe}}(t)$};
+\node[modbox] (t1c) at (14.0, 9.2) {\textbf{Quản lý Cấu hình}\\Cờ cô lập \texttt{AblationConfig}\\Phân phối Monte Carlo};
+
+\begin{scope}[on background layer]
+    \node[tierbox, fit=(t1a)(t1b)(t1c), inner ysep=14pt, label={[anchor=north west, font=\footnotesize\bfseries\color{primaryblue}, yshift=-2pt]north west:TẦNG 1: TIỀN XỬ LÝ VẬT LÝ NGOẠI TUYẾN (Python / C++ Offline)}] (tier1) {};
+\end{scope}
+
+% --- ARTIFACT FILES BETWEEN TIER 1 & 2 ---
+\node[filetag] (f_phys) at (2.6, 7.25) {phys\_params.json};
+\node[filetag] (f_cfg)  at (14.0, 7.25) {ablation\_cfg.json};
+
+% --- TIER 2 ---
+\node[corebox] (t2core) at (8.3, 5.05) {
+    \textbf{LÕI ĐỒNG MÔ PHỎNG VÒNG KÍN TỐC ĐỘ CAO --- SystemC + SystemC-AMS (PoC, C++ \texttt{-O3})}\\[3pt]
+    \footnotesize \texttt{OpticalEnvelope\_TDF} (64-bit) $\leftrightarrow$ \texttt{AnalogFrontEnd\_TDF} (\texttt{sca\_ltf\_nd} + Crosstalk + $G_2/G_3$) $\leftrightarrow$ \texttt{ADC/DAC} $\leftrightarrow$ \texttt{DigitalDSP\_SC}\\[2pt]
+    \footnotesize Nhịp cụm: $1\tau$ ($K \in \{16,32\}$ mẫu quá mức/$\tau$) \quad|\quad Thực thi song song đa tiến trình qua CLI (\texttt{--config})
+};
+
+\begin{scope}[on background layer]
+    \node[tierbox, draw=accentteal, fit=(t2core), inner ysep=14pt, label={[anchor=north west, font=\footnotesize\bfseries\color{accentteal}, yshift=-2pt]north west:TẦNG 2: NGUYÊN MẪU ẢO VÒNG KÍN (Fast-Scale Co-Simulation Core)}] (tier2) {};
+\end{scope}
+
+% --- ARTIFACT FILES BETWEEN TIER 2 & 3 ---
+\node[filetag] (f_bin)   at (3.5, 2.95) {sim\_out.bin (32B / bản ghi)};
+\node[filetag] (f_shupe) at (13.3, 2.95) {shupe\_lut.bin};
+
+% --- TIER 3 ---
+\node[postbox] (t3a) at (2.6, 1.0) {\textbf{Phân tích Phi tuyến}\\Slow Rate Ramp Sweep\\Deadband \& Bunny Ears};
+\node[postbox] (t3b) at (8.3, 1.0) {\textbf{Chẩn đoán Rò rỉ $1/f$}\\Phổ PSD (dịch $f_c$)\\Trích xuất Ma trận $\mathbf{K}$};
+\node[postbox] (t3c) at (14.0, 1.0) {\textbf{Tổng hợp AVAR 5 Vùng}\\Chuỗi chậm $10\text{ h}$ ($100\text{ Hz}$)\\Overlapping AVAR (IEEE 952)};
+
+\begin{scope}[on background layer]
+    \node[tierbox, draw=warmamber, fit=(t3a)(t3b)(t3c), inner ysep=14pt, label={[anchor=north west, font=\footnotesize\bfseries\color{warmamber}, yshift=-2pt]north west:TẦNG 3: HẬU XỬ LÝ, TỔNG HỢP DÀI HẠN \& TRỰC QUAN HÓA (Python / viz/)}] (tier3) {};
+\end{scope}
+
+% --- CONNECTIONS ---
+\draw[flowarrow] (t1a.south) -- (f_phys.north);
+\draw[flowarrow] (f_phys.south) -- (2.6, 6.22);
+\draw[flowarrow] (t1c.south) -- (f_cfg.north);
+\draw[flowarrow] (f_cfg.south) -- (14.0, 6.22);
+
+% Shupe bypass routed cleanly in corridor x=11.15
+\draw[flowarrow, draw=mutedgray] (t1b.south) -- (8.3, 7.25) -- (11.15, 7.25) -- (11.15, 2.95) -- (f_shupe.west);
+\draw[flowarrow, draw=mutedgray] (f_shupe.south) -- (13.3, 2.02);
+
+% Tier 2 to Tier 3
+\draw[flowarrow, draw=accentteal] (3.5, 3.88) -- (f_bin.north);
+\draw[flowarrow, draw=accentteal] (f_bin.south) -- (3.5, 2.02);
+\draw[flowarrow, draw=accentteal] (8.3, 3.88) -- (8.3, 2.02);
+\draw[flowarrow, draw=warmamber] (t3b.east) -- (t3c.west);
+
+\end{tikzpicture}
+\caption{Kiến trúc Lai 3 Tầng (\emph{3-Tier Hybrid Architecture}) và luồng giao tiếp dữ liệu của Nguyên mẫu Ảo IFOG.}
+\label{fig:3tier_arch}
+\end{figure}
+
+\subsection*{Định dạng luồng dữ liệu Đầu vào / Đầu ra (I/O Contract)}
+\begin{itemize}
+    \item \textbf{Đầu vào cấu hình (\texttt{configs/*.json}):} Gồm \texttt{device\_datasheet.json} (tham số linh kiện quang, mạch điện tử TIA/ADC/DAC và kích thước cuộn sợi) và \texttt{ablation\_cfg.json} (chế độ DSP 2/4 trạng thái, danh sách 10 cờ cô lập phi tuyến, kịch bản kích thích $\Omega_{\text{in}}(t)$, độ phân giải bit và hạt giống PRNG).
+    \item \textbf{Tệp nhị phân tốc độ cao (\texttt{sim\_out.bin}):} Ghi tuần tự theo gói cố định \texttt{32 byte} (\texttt{double t; double omega\_in; int64\_t omega\_out\_raw; int32\_t vpi\_err\_raw; uint32\_t flags;}) ở nhịp decimation cấu hình được, tránh nghẽn I/O văn bản khi chạy ở tốc độ hàng MHz.
+    \item \textbf{Báo cáo đầu ra (\texttt{metrics\_summary.json} \& \texttt{figures/}):} Chứa 5 tham số nhiễu IEEE 952 $(\hat{Q}, \hat{N}, \hat{B}, \hat{K}, \hat{R})$, độ rộng vùng chết (\emph{Deadband}), đỉnh sai số hệ số tỉ lệ (\emph{Bunny Ears}), ma trận rò rỉ $\mathbf{K}$ và bộ 5 biểu đồ chẩn đoán.
+\end{itemize}
+
+% ====================================================================
+\section{Hệ Phương trình Vật lý \& Điều khiển Đầy đủ Bốn Miền}
+
+\subsection{Miền Quang học (Tầng 1 Ngoại tuyến \& \texttt{OpticalEnvelope\_TDF})}
+
+\subsubsection*{1. Mô hình Ma trận Jones phân giải phổ (Tầng 1 --- Lefèvre / Burns)}
+Nguồn SLD có phổ Gauss công suất tổng $P_{\text{SLD}}$, bước sóng trung tâm $\bar{\lambda}$ (tần số $\bar{\nu} = c/\bar{\lambda}$) và độ rộng phổ hiệu dụng $\Delta\nu_{\text{eff}} = \sqrt{\pi/(2\ln 2)}\,\Delta\nu_{\text{FWHM}}$ được chia thành $N_{\text{spec}} \in [64, 128]$ lát cắt tần số $\omega_k$ với trọng số chuẩn hóa $w_k$ ($\sum_k w_k = 1$). Cuộn sợi PM dài $L$ chia thành $M \in [200, 1000]$ đoạn độ dài $\Delta z = L/M$, mỗi đoạn có độ lưỡng chiết $\Delta\beta = 2\pi / L_B$ và góc xoay ghép mode phân cực ngẫu nhiên $\theta_m \sim \mathcal{N}(0, h\Delta z)$ đặc trưng bởi tham số giữ phân cực $h$ ($\text{m}^{-1}$). Ma trận truyền hai chiều qua bộ phân cực TE ($\mathbf{J}_{\text{pol}} = \operatorname{diag}(1, \epsilon_{\text{pol}})$ với $\mathrm{ER}_{\text{dB}} = -20\log_{10}\epsilon_{\text{pol}}$) và cuộn sợi là:
+\begin{equation}
+\mathbf{J}_{\text{CW}}(\omega_k) = \mathbf{J}_{\text{pol}} \left(\prod_{m=M}^{1} \mathbf{R}(-\theta_m)\mathbf{B}_m(\omega_k)\mathbf{R}(\theta_m)\right) \mathbf{J}_{\text{pol}}, \qquad
+\mathbf{J}_{\text{CCW}}(\omega_k) = \mathbf{J}_{\text{CW}}^{T}(\omega_k)
+\end{equation}
+trong đó $\mathbf{B}_m(\omega_k) = \operatorname{diag}\!\bigl(e^{-j\beta_x(\omega_k)\Delta z},\, e^{-j\beta_y(\omega_k)\Delta z}\bigr)$. Từ đáp ứng giao thoa tĩnh $P_{\text{static}}(\Delta\phi) = \sum_k w_k \|\mathbf{E}_{\text{CW}}(\omega_k) + \mathbf{E}_{\text{CCW}}(\omega_k)\|^2$, Tầng 1 trích xuất độ tương phản vân $V$ và pha lệch phân cực nền $\phi_{\text{pol}}$:
+\begin{equation}
+V = \frac{P_{\max} - P_{\min}}{P_{\max} + P_{\min}}, \qquad
+\phi_{\text{pol}} = \arg\min_{\Delta\phi} P_{\text{static}}(\Delta\phi) - \pi
+\end{equation}
+
+\subsubsection*{2. Các hiệu ứng pha không tương hỗ (Sagnac, Kerr, Shupe, Faraday)}
+Tại thời điểm mẫu vi mô $m = nK + k$ ($\Delta t_{\text{fast}} = \tau / K$, $\tau = n_{\text{eff}} L / c$), tổng pha không tương hỗ $\Delta\phi_{\text{NR}}[m]$ và pha điều chế MIOC qua bộ đệm vòng độ dài $K$ được tính trên số thực 64-bit \texttt{double}:
+\begin{align}
+\Delta\phi_{\text{NR}}[m] &= K_{\text{opt}} \Omega_{\text{in}}[m] + \phi_{\text{pol}}[m] + \Delta\phi_{\text{Kerr}} + \Delta\phi_{\text{Shupe}}[m] + \Delta\phi_{\text{Faraday}}[m] \\
+K_{\text{opt}} &= \frac{2\pi L D}{\bar{\lambda} c}, \qquad
+\Delta\phi_{\text{Kerr}} = \frac{2\pi n_2 L_{\text{eff}}}{\bar{\lambda} A_{\text{eff}}} (1 - 2\kappa) P_{\text{coil}} \eta_{\text{coh}} \\
+\Delta\phi_{\text{Shupe}}(t) &= \frac{2\pi}{\bar{\lambda} c}\left(\frac{dn_{\text{eff}}}{dT} + n_{\text{eff}}\alpha_T\right)\int_0^L \frac{\partial T(z,t)}{\partial t}\bigl(L - 2z + \delta z_{\text{quad}}(z)\bigr)\,dz \\
+\Delta\phi_{\text{Faraday}}(t) &= V_{\text{Verdet}} \oint_{\mathcal{C}} \mathbf{B}_{\text{ext}}(s, t)\cdot d\mathbf{s}
+\end{align}
+Điện áp lái MIOC $V_{\text{drv}}[m]$ sinh pha điều chế tức thời và độ lệch pha điều chế hiệu dụng hai chiều (được cuộn modulo $2\pi$ để tránh mất chữ số có nghĩa khi cộng với $\Delta\phi_{\text{NR}} \sim 10^{-8}\text{ rad}$):
+\begin{align}
+\phi_{\text{MIOC}}[m] &= \pi (1 + \epsilon_{V_\pi}) \frac{V_{\text{drv}}[m]}{V_{\pi,0}} + \gamma_{\text{nl}} V_{\text{drv}}^2[m] \\
+\Delta\phi_{\text{mod}}[m] &= \operatorname{wrap}_{2\pi}\!\Bigl(\phi_{\text{MIOC}}[m] - \phi_{\text{MIOC}}[m-K]\Bigr), \qquad \operatorname{wrap}_{2\pi}(x) = x - 2\pi\operatorname{round}\!\left(\frac{x}{2\pi}\right)
+\end{align}
+Công suất quang tới Photodiode bao gồm điều chế cường độ ký sinh (RAM) với hệ số $\alpha_{\text{RAM}}$ ($\text{V}^{-1}$):
+\begin{equation}
+P_{\text{det}}[m] = \frac{P_{\text{peak}}}{2}\bigl(1 + \alpha_{\text{RAM}} V_{\text{drv}}[m]\bigr)\Bigl\{1 + V\cos\bigl(\Delta\phi_{\text{NR}}[m] + \Delta\phi_{\text{mod}}[m]\bigr)\Bigr\}
+\end{equation}
+
+\subsection{Miền Điện tử Tương tự (\texttt{AnalogFrontEnd\_TDF} \& \texttt{ADC\_Bridge\_TDF})}
+
+\subsubsection*{1. Xuyên âm DAC $\rightarrow$ TIA và Phổ nhiễu ngõ vào 6 thành phần}
+Dòng điện tổng tại nút đảo của TIA bao gồm dòng quang điện ($\mathcal{R}$ là độ nhạy photodiode, $\text{A/W}$), nhiễu xuyên âm điện dung $C_{\text{xtalk}}$ và điện trở $k_{\text{xtalk}}$ từ mạch lái MIOC, cùng nhiễu trắng tức thời $i_{\text{w}}[m] \sim \mathcal{N}(0, \sigma_{i,\text{w}}^2[m])$:
+\begin{align}
+I_{\text{in}}[m] &= \mathcal{R} P_{\text{det}}[m] + C_{\text{xtalk}}\frac{V_{\text{drv}}[m] - V_{\text{drv}}[m-1]}{\Delta t_{\text{fast}}} + k_{\text{xtalk}}\bigl(1 + n_{1/f,\text{xtalk}}[n]\bigr)V_{\text{drv}}[m] + i_{\text{w}}[m] \\
+S_{i,\text{tot}}(f, m) &= \underbrace{2q(\mathcal{R}P_{\text{det}}[m] + I_d)}_{\text{Shot + Dark}} + \underbrace{\frac{4k_B T_{\text{TIA}}}{R_f}}_{\text{Thermal } R_f} + \underbrace{\frac{\mathcal{R}^2 P_{\text{det}}^2[m]}{\Delta\nu_{\text{eff}}}}_{\text{SLD Excess RIN}} + \underbrace{i_{n,\text{op}}^2 + \frac{e_{n,\text{op}}^2}{R_f^2}}_{\text{Op-Amp White}} + \underbrace{e_{n,\text{op}}^2 (2\pi f)^2 (C_{\text{tot}} + C_f)^2}_{\text{Capacitive Noise Gain}}
+\end{align}
+Trong băng thông lấy mẫu $B_{\text{fast}} = 1/(2\Delta t_{\text{fast}})$, phương sai nhiễu trắng ngõ vào là $\sigma_{i,\text{w}}^2[m] = \int_0^{B_{\text{fast}}} S_{i,\text{tot}}(f, m)\,df$, trong đó số hạng cuối đóng góp $\frac{1}{3} e_{n,\text{op}}^2 (2\pi)^2 (C_{\text{tot}} + C_f)^2 B_{\text{fast}}^3$.
+
+\subsubsection*{2. Đáp ứng quá độ bậc 2 của TIA (Graeme \cite{graeme1996})}
+Với điện trở hồi tiếp $R_f$, tụ bù $C_f$, tổng điện dung ngõ vào $C_{\text{tot}} = C_{\text{pd}} + C_{\text{in,op}} + C_{\text{stray}}$ và tích độ lợi -- băng thông op-amp $f_{\text{GBW}}$, hàm truyền chuẩn bậc 2 cài đặt trong \texttt{sca\_tdf::sca\_ltf\_nd} có dạng:
+\begin{align}
+H_{\text{TIA}}(s) &= \frac{R_f \omega_0^2}{s^2 + 2\zeta\omega_0 s + \omega_0^2}, \qquad
+\omega_0 = \sqrt{\frac{2\pi f_{\text{GBW}}}{R_f (C_{\text{tot}} + C_f)}} \\
+\zeta &= \frac{1}{2}\sqrt{\frac{2\pi f_{\text{GBW}}}{R_f(C_{\text{tot}}+C_f)}}\left(R_f C_f + \frac{1}{2\pi f_{\text{GBW}}}\right)
+\end{align}
+Để đạt đáp ứng Butterworth phẳng cực đại ($\zeta = 1/\sqrt{2}$), giá trị điện dung bù tối ưu và thời gian xác lập tới $0.1\%$ sai số sau mỗi cạnh chuyển mạch là:
+\begin{equation}
+C_{f,\text{opt}} \approx \sqrt{\frac{C_{\text{tot}}}{2\pi R_f f_{\text{GBW}}}}, \qquad
+t_s(0.1\%) \approx \frac{6.9}{\zeta \omega_0}
+\end{equation}
+
+\subsubsection*{3. Phi tuyến đa thức, Cửa sổ Blanking và Lượng tử hóa ADC}
+Ngõ ra TIA cộng với trôi $1/f$ đi qua khối phi tuyến đa thức bậc 3 trước khi vào ADC:
+\begin{align}
+V_{\text{lin}}[m] &= V_{\text{TIA}}[m] + V_{\text{off,0}} + n_{1/f,\text{TIA}}[n] \\
+V_{\text{adc}}[m] &= \operatorname{clip}\!\Bigl(G_1 V_{\text{lin}}[m] + G_2 V_{\text{lin}}^2[m] + G_3 V_{\text{lin}}^3[m],\; V_{\min},\; V_{\max}\Bigr)
+\end{align}
+Tại chu kỳ $\tau$ thứ $n$, \texttt{ADC\_Bridge\_TDF} bỏ qua vùng quá độ đầu xung và chỉ lấy trung bình trên cửa sổ sạch $[k_{\text{start}}, k_{\text{end}}] \subset [0, K-1]$ có tỉ số chiếm dụng $\eta_b = \frac{k_{\text{end}} - k_{\text{start}} + 1}{K} \in (0, 1]$, sau đó lượng tử hóa $N_{\text{ADC}}$-bit với bước lượng tử $\Delta_{\text{ADC}} = \frac{2 V_{\text{FS,ADC}}}{2^{N_{\text{ADC}}}}$:
+\begin{equation}
+y[n] = \operatorname{round}\!\left(\frac{1}{\Delta_{\text{ADC}}(k_{\text{end}} - k_{\text{start}} + 1)}\sum_{k=k_{\text{start}}}^{k_{\text{end}}} V_{\text{adc}}[nK + k]\right) \in [-2^{N_{\text{ADC}}-1},\, 2^{N_{\text{ADC}}-1}-1]
+\end{equation}
+Lưu ý: việc cắt bỏ $1 - \eta_b$ phần đầu chu kỳ làm tăng mật độ phổ nhiễu trắng hiệu dụng thêm hệ số $1/\eta_b$, dẫn tới hệ số ARW tăng theo tỉ lệ $1/\sqrt{\eta_b}$ (sự đánh đổi thiết kế bắt buộc giữa nén BI do quá độ và sàn ARW).
+
+\subsection{Miền Xử lý Số Vòng kín (\texttt{DigitalDSP\_SC} --- 2 \& 4 Trạng thái)}
+
+\subsubsection*{1. Luật cập nhật Bộ tích phân Vòng 1 (Sagnac) và Vòng 2 ($V_\pi$)}
+Ở chế độ **2 trạng thái**, tín hiệu sai số cập nhật mỗi $2\tau$ (hoặc trượt mỗi $\tau$ với dấu luân phiên $s[n] = (-1)^n$) là $e_\Omega[n] = s[n](y[n] - y[n-1])$. Ở chế độ **4 trạng thái**, tại mỗi chu kỳ hoàn chỉnh $4\tau$ (chỉ số khung $r$), hai bộ tích phân số cập nhật đồng thời:
+\begin{align}
+e_\Omega[r] &= (y_2[r] - y_1[r]) + (y_4[r] - y_3[r]) \\
+\Delta\phi_{\text{step}}[r] &= \Delta\phi_{\text{step}}[r-1] + K_{I,1} e_\Omega[r] + K_{P,1}\bigl(e_\Omega[r] - e_\Omega[r-1]\bigr) \\
+e_{V_\pi}[r] &= (y_3[r] + y_4[r]) - (y_1[r] + y_2[r]) \\
+G_{\text{DAC}}[r] &= G_{\text{DAC}}[r-1] - K_{I,2} e_{V_\pi}[r]
+\end{align}
+Bộ tạo dốc số (\emph{Digital Phase Ramp}) tích lũy bước pha $\Delta\phi_{\text{step}}$ tại từng chu kỳ $\tau$ và thực hiện cuộn tràn $2\pi$ (\emph{flyback reset}) khi vượt ngưỡng $\pm\pi$ (hoặc $[0, 2\pi)$):
+\begin{align}
+\phi_{\text{ramp}}[n] &= \operatorname{wrap}_{2\pi}\!\bigl(\phi_{\text{ramp}}[n-1] + \Delta\phi_{\text{step}}[n]\bigr) \\
+\text{DAC\_code}[n] &= \operatorname{round}\!\left(\frac{\phi_{\text{ramp}}[n] + \phi_{\text{bias}}[n] + d_{\text{PRBS}}[n]}{2\pi} \cdot G_{\text{DAC}}[n] \cdot 2^{N_{\text{DAC}}}\right)
+\end{align}
+trong đó $d_{\text{PRBS}}[n]$ là chuỗi giả ngẫu nhiên LFSR phá khóa đồng bộ Deadband và được trừ lại chính xác trước khâu tích phân vòng kín.
+
+\subsubsection*{2. Hàm truyền Miền $Z$, Tiêu chuẩn Jury và Hệ số Tỉ lệ Vòng kín}
+Với bộ tích phân thuần túy ($K_{P,1}=0$) và tổng độ trễ vòng kín $d = 2$ chu kỳ điều chế (1 chu kỳ truyền sợi $\tau$ + 1 chu kỳ ống lệnh DAC/ADC), hàm truyền vòng hở của Vòng 1 là:
+\begin{equation}
+L_1(z) = \frac{K_{\text{tot}}}{z^2 (z - 1)}, \qquad
+K_{\text{tot}} = 4 S_\alpha K_{I,1}
+\end{equation}
+Phương trình đặc trưng vòng kín $z^3 - z^2 + K_{\text{tot}} = 0$ thỏa mãn tiêu chuẩn ổn định Jury khi và chỉ khi:
+\begin{equation}
+0 < K_{\text{tot}} < 1 \quad (\text{khuyến nghị thiết kế giảm chấn tốt: } K_{\text{tot}} \in [0.15,\, 0.35])
+\end{equation}
+Để tránh tương tác chéo giữa hai vòng trong chế độ 4 trạng thái, băng thông Vòng 2 (khóa $V_\pi$) phải chậm hơn Vòng 1 ít nhất 10 lần: $K_{\text{tot},2} = 4\pi S_\alpha K_{I,2} \le 0.1\,K_{\text{tot},1}$. Khi vòng kín xác lập ($\Delta\phi_{\text{step}} = K_{\text{opt}}\Omega_{\text{in}}$), vận tốc góc đầu ra số được quy đổi qua hệ số tỉ lệ vòng kín $\mathrm{SF}_{\text{CL}}$:
+\begin{equation}
+\Omega_{\text{out}}[n] = \frac{\Delta\phi_{\text{step}}[n]}{\mathrm{SF}_{\text{CL}}}, \qquad
+\mathrm{SF}_{\text{CL}} = K_{\text{opt}} = \frac{2\pi L D}{\bar{\lambda} c} \;\; [\text{rad}/(\text{rad}/\text{s})]
+\end{equation}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    font=\footnotesize,
+    >=Stealth,
+    tdfbox/.style={draw=primaryblue, thick, rounded corners=3pt, fill=softblue, align=center, inner sep=4pt},
+    debox/.style={draw=accentteal, thick, rounded corners=3pt, fill=softteal, align=center, inner sep=4pt},
+    noisebox/.style={draw=warmamber, thick, rounded corners=3pt, fill=softamber, align=center, inner sep=3.5pt},
+    inbbox/.style={draw=mutedgray, semithick, rounded corners=3pt, fill=softgray, align=center, inner sep=3.5pt},
+    sig/.style={->, thick, draw=primaryblue},
+    desig/.style={->, thick, draw=accentteal},
+    xtalk/.style={->, thick, dashed, draw=alertred}
+]
+
+% --- ROW 1: TOP AUXILIARY ---
+\node[inbbox, text width=4.0cm, minimum height=1.15cm] (insrc) at (2.3, 8.85) {
+    \textbf{Stimulus \& Params}\\
+    $\Omega_{\text{in}}(t)$ + \texttt{phys\_params.json}
+};
+
+\node[noisebox, text width=4.6cm, minimum height=1.15cm] (pink) at (8.4, 8.85) {
+    \textbf{\texttt{PinkNoise\_TDF}} (IIR 5 cực)\\
+    \scriptsize \texttt{rate=1} mỗi $\tau$ (bộ đếm ZOH nội)\\
+    \scriptsize $n_{1/f,\text{TIA}},\; n_{1/f,\text{DAC}},\; n_{1/f,\text{xtalk}}$
+};
+
+% --- ROW 2: FORWARD TDF PATH ---
+\node[tdfbox, text width=4.0cm, minimum height=2.5cm] (opt) at (2.3, 5.45) {
+    \textbf{\texttt{OpticalEnvelope\_TDF}}\\
+    \scriptsize (\texttt{double} 64-bit, \texttt{rate=K})\\[2pt]
+    $\bullet$ Ring Buffer trễ $K$ mẫu ($\tau$)\\
+    $\bullet$ Lệch $V_\pi$ ($\epsilon_{V_\pi}$), RAM ($\alpha_{\text{RAM}}$)\\
+    $\bullet$ $\Delta\phi_{\text{S}} + \phi_{\text{pol}} + \phi_{\text{Kerr}}$\\
+    $\bullet$ Wrap pha $\bmod 2\pi$
+};
+
+\node[tdfbox, text width=4.6cm, minimum height=2.5cm] (afe) at (8.4, 5.45) {
+    \textbf{\texttt{AnalogFrontEnd\_TDF}}\\
+    \scriptsize (\texttt{double} 64-bit, \texttt{rate=K})\\[2pt]
+    $\bullet$ Quá độ TIA bậc 2: \texttt{sca\_ltf\_nd}\\
+    $\bullet$ Phi tuyến: $G_1 V + G_2 V^2 + G_3 V^3$\\
+    $\bullet$ Nhiễu trắng 6 thành phần\\
+    $\bullet$ Cộng dòng xuyên âm \& $n_{1/f,\text{TIA}}$
+};
+
+\node[tdfbox, text width=4.0cm, minimum height=2.5cm] (adc) at (14.3, 5.45) {
+    \textbf{\texttt{ADC\_Bridge\_TDF}}\\
+    \scriptsize (\texttt{rate=K} $\rightarrow$ \texttt{rate=1})\\[2pt]
+    $\bullet$ Cửa sổ \emph{ADC Blanking}\\
+    \scriptsize $[k_{\text{start}},\, k_{\text{end}}]$ (tỉ số $\eta_b$)\\
+    $\bullet$ Trung bình hóa cửa sổ\\
+    $\bullet$ Lượng tử hóa \texttt{sc\_int<$N_{\text{ADC}}$>}
+};
+
+% --- ROW 3: FEEDBACK PATH ---
+\node[tdfbox, text width=4.8cm, minimum height=2.45cm] (dac) at (5.0, 1.2) {
+    \textbf{\texttt{DAC\_Driver\_TDF}}\\
+    \scriptsize (\texttt{rate=1} $\rightarrow$ \texttt{rate=K})\\[2pt]
+    $\bullet$ \textbf{\color{alertred}\texttt{set\_delay(1)}} (phá vòng đại số)\\
+    $\bullet$ Lượng tử DAC + $V_{\text{ref}}(1 + n_{1/f,\text{DAC}})$\\
+    $\bullet$ Quá độ Driver: \texttt{sca\_ltf\_nd}\\
+    $\bullet$ Tính $dV_{\text{drv}}/dt$ cho nhánh xuyên âm
+};
+
+\node[debox, text width=5.6cm, minimum height=2.45cm] (dsp) at (12.8, 1.2) {
+    \textbf{\texttt{DigitalDSP\_SC}} (SystemC DE --- Bit-true)\\[2pt]
+    \scriptsize $\bullet$ Giải điều chế 4 trạng thái (hoặc 2 trạng thái)\\
+    \scriptsize $\bullet$ Vòng 1: $e_\Omega = (y_2-y_1)+(y_4-y_3)$ + Ramp $2\pi$\\
+    \scriptsize $\bullet$ Vòng 2: $e_{V_\pi} = (y_3+y_4)-(y_1+y_2)$ khóa $G_{\text{DAC}}$\\
+    \scriptsize $\bullet$ Tùy chọn PRBS Dither phá Deadband
+};
+
+% --- ROW 4: LOG OUTPUT ---
+\node[inbbox, text width=3.2cm, minimum height=0.95cm] (log) at (12.8, -1.2) {
+    \textbf{Binary Logger}\\
+    \texttt{sim\_out.bin} (32B)
+};
+
+% --- SIGNAL ARROWS ---
+\draw[sig] (insrc.south) -- (opt.north);
+\draw[sig, draw=warmamber] (pink.south) -- node[right, font=\scriptsize\color{warmamber}] {\texttt{rate=1}} (afe.north);
+
+% Pink noise to DAC routed through wide corridor x=5.05
+\draw[->, semithick, dotted, draw=warmamber] (pink.west) -- (5.05, 8.85) -- (5.05, 2.43);
+\node[font=\scriptsize\color{warmamber}, anchor=west] at (5.1, 7.55) {$n_{1/f,\text{DAC}}$};
+
+\draw[sig] (opt.east) -- node[above, font=\scriptsize] {$P_{\text{det}}$} node[below, font=\scriptsize] {\texttt{K}} (afe.west);
+\draw[sig] (afe.east) -- node[above, font=\scriptsize] {$V_{\text{adc}}$} node[below, font=\scriptsize] {\texttt{K}} (adc.west);
+
+% ADC -> DSP
+\draw[desig] (adc.south) -- node[right, font=\scriptsize, align=left] {\texttt{adc\_code}\\(\texttt{DE}, nhịp $\tau$)} (14.3, 2.43);
+
+% DSP -> DAC
+\draw[desig] (dsp.west) -- node[above, font=\scriptsize] {\texttt{dac\_code}} node[below, font=\scriptsize] {(\texttt{DE}, \texttt{delay=1})} (dac.east);
+
+% DAC -> Optical feedback routed on far left x=0.75
+\draw[sig] (dac.west) -- (0.75, 1.2) -- (0.75, 3.35) -- (1.6, 3.35) -- (1.6, 4.2);
+\node[font=\scriptsize\color{primaryblue}, anchor=east] at (0.7, 2.25) {$V_{\text{drv}}$ (\texttt{K})};
+
+% Crosstalk path (DAC -> AFE) in center corridor
+\draw[xtalk] (6.5, 2.43) -- (6.5, 3.35) -- (8.4, 3.35) -- (8.4, 4.2);
+\node[font=\scriptsize\color{alertred}, fill=white, inner sep=1.5pt] at (8.4, 3.35) {Crosstalk: $C_{\text{xtalk}}\frac{dV}{dt} + k_{\text{xtalk}}V$};
+
+% DSP -> Logger
+\draw[desig] (dsp.south) -- node[right, font=\scriptsize] {$\Omega_{\text{out}}, e_{V_\pi}$} (log.north);
+
+\end{tikzpicture}
+\caption{Sơ đồ khối Lõi Đồng mô phỏng Vòng kín SystemC-AMS (Tầng 2) với hợp đồng nhịp cụm $\tau$, điểm phá vòng đại số \texttt{set\_delay(1)} và đường nhiễu xuyên âm.}
+\label{fig:sysc_ams_core}
+\end{figure}
+
+\subsection{Mô hình Đầy đủ 5 Thành phần Nhiễu Chuẩn IEEE Std 952-2020}
+
+Theo chuẩn IEEE Std 952-2020 \cite{ieee952} (Phụ lục C), phương sai Allan tổng hợp $\sigma^2(T)$ theo thời gian cụm $T$ bao gồm đầy đủ 5 quá trình ngẫu nhiên độc lập (Bảng~\ref{tab:ieee952_5noise}):
+\begin{equation}
+\sigma^2(T) = \underbrace{\frac{3 Q^2}{T^2}}_{\text{Quantization}} + \underbrace{\frac{N^2}{T}}_{\text{ARW}} + \underbrace{\frac{2 \ln 2}{\pi} B^2}_{\text{Bias Instability}} + \underbrace{\frac{K^2 T}{3}}_{\text{RRW}} + \underbrace{\frac{R^2 T^2}{2}}_{\text{Rate Ramp}}
+\end{equation}
+Riêng thành phần **Rate Random Walk (RRW)** có thể mô hình hóa ở hai chế độ: (a) bước ngẫu nhiên Wiener thuần túy $\Omega_{\text{RRW}}[i] = \Omega_{\text{RRW}}[i-1] + K\sqrt{\Delta t_{\text{slow}}}\,w_i$ ($w_i \sim \mathcal{N}(0,1)$), hoặc (b) quá trình **Gauss--Markov bậc 1** có hằng số thời gian tương quan $T_c$ (sát với trôi ứng suất cơ học cuộn sợi thực tế):
+\begin{equation}
+\Omega_{\text{GM}}[i] = e^{-\Delta t_{\text{slow}}/T_c}\Omega_{\text{GM}}[i-1] + \sigma_{\text{GM}}\sqrt{1 - e^{-2\Delta t_{\text{slow}}/T_c}}\,w_i, \qquad
+\sigma_{\text{GM}} = K\sqrt{\frac{T_c}{2}} \;\; (\text{khi } T \ll T_c)
+\end{equation}
+
+\begin{table}[htbp]
+\centering
+\caption{Đặc tả 5 thành phần nhiễu chuẩn IEEE Std 952-2020 trong nguyên mẫu ảo IFOG.}
+\label{tab:ieee952_5noise}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}L{2.7cm} L{1.3cm} L{1.8cm} L{3.6cm} L{5.9cm}@{}}
+\toprule
+\textbf{Thành phần nhiễu} & \textbf{Ký hiệu} & \textbf{Độ dốc $\log\sigma$} & \textbf{Nguồn gốc vật lý} & \textbf{Tầng mô phỏng \& Vai trò DSP} \\
+\midrule
+1. Quantization Noise & $Q$ & $-1$ & Lượng tử ADC/DAC, bậc nhảy ramp, vùng chết. & Tầng 2 (bit-true); DSP giảm mạnh bằng ramp mịn + PRBS dither. \\
+2. Angle Random Walk & $N$ & $-1/2$ & Shot noise, Thermal TIA, SLD RIN, blanking. & Tầng 2; DSP nén phần RIN qua góc $\phi_b$ gần vân tối. \\
+3. Bias Instability & $B$ & $0$ & Phân cực ($h\times\mathrm{ER}$), Kerr, $1/f$ rò rỉ, reset $2\pi$. & Tầng 1 + Tầng 2 ($\mathbf{K}$) + Tầng 3; DSP khóa $V_\pi$ triệt phần điện tử. \\
+4. Rate Random Walk & $K$ & $+1/2$ & Lão hóa nguồn SLD, thư giãn ứng suất keo cuộn sợi. & Tầng 3 (Wiener / Gauss--Markov); vượt ngoài dải lọc giải điều chế. \\
+5. Rate Ramp & $R$ & $+1$ & Hiệu ứng Shupe ($\partial T/\partial t$), trôi nhiệt bước sóng $\bar{\lambda}(T)$. & Tầng 1 (\texttt{shupe\_lut.bin}) $\rightarrow$ Tầng 3; cần bù nhiệt đa cảm biến. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\section{Phương trình Liên kết Liên tầng (Inter-Tier Coupling Equations)}
+
+Để bảo toàn tính nhất quán vật lý khi kết nối 3 tầng chạy ở các thang thời gian khác nhau (Hình~\ref{fig:dual_regime_avar}), ba phương trình liên kết sau được khóa cứng trong mã nguồn:
+
+\begin{enumerate}
+    \item \textbf{Liên kết Tầng 1 $\rightarrow$ Tầng 2 \& Tầng 3 (Truyền tham số Quang \& Nhiệt):}
+    Các đại lượng trôi chậm từ Tầng 1 được quy đổi sang tốc độ góc tương đương ($\text{rad/s}$, sau đó nhân $206264.8$ để đổi sang $^\circ/\text{h}$) trước khi cộng vào chuỗi Tầng 3:
+    \begin{equation}
+    \Omega_{\text{pol}}[i] = \frac{\phi_{\text{pol}}(t_i)}{K_{\text{opt}}}, \qquad
+    \Omega_{\text{Shupe}}[i] = \frac{\Delta\phi_{\text{Shupe}}(t_i)}{K_{\text{opt}}}, \qquad
+    \Omega_{\text{Faraday}}[i] = \frac{\Delta\phi_{\text{Faraday}}(t_i)}{K_{\text{opt}}}
+    \end{equation}
+
+    \item \textbf{Liên kết Tầng 2 $\rightarrow$ Tầng 3 (Trích xuất Độ lợi Rò rỉ $\mathbf{K}$ và Sàn ARW):}
+    Bơm tuần tự tín hiệu sin thử $f_{\text{test}} = 100\text{ Hz}$ biên độ nhỏ vào từng nút nhiễu $1/f$ trong Tầng 2 ($0.1\text{ s}$ thực tế) và đo biên độ điều hòa $100\text{ Hz}$ ở ngõ ra $\Omega_{\text{out}}$ bằng FFT để lập ma trận truyền đạt rò rỉ $\mathbf{K}$:
+    \begin{equation}
+    \mathbf{K} = \begin{bmatrix} K_{\text{TIA}\to\Omega} & K_{\text{DAC}\to\Omega} & K_{\text{xtalk}\to\Omega} \end{bmatrix}
+    = \begin{bmatrix}
+    \dfrac{\partial\Omega_{\text{out}}}{\partial V_{\text{off,TIA}}} &
+    \dfrac{\partial\Omega_{\text{out}}}{\partial V_{\text{ref,DAC}}} &
+    \dfrac{\partial\Omega_{\text{out}}}{\partial k_{\text{xtalk}}}
+    \end{bmatrix}_{f = 100\text{ Hz}}
+    \end{equation}
+    Đồng thời, từ $30\text{--}60\text{ s}$ chạy Fast-Scale với đầy đủ nhiễu động và lượng tử hóa, Tầng 3 khớp các đoạn dốc $-1$ và $-1/2$ để lấy hệ số lượng tử $\hat{Q}_{\text{fast}}$ và hệ số ARW thực tế $\hat{N}_{\text{fast}}$.
+
+    \item \textbf{Tổng hợp Chuỗi Dài hạn Tầng 3 \& Điều kiện Khớp Vùng giao:}
+    Tại nhịp lấy mẫu chậm $f_{\text{dec}} = 1/\Delta t_{\text{slow}} = 100\text{ Hz}$ trong $10\text{ giờ}$ ($N_{\text{slow}} = 3.6 \times 10^6$ mẫu), chuỗi vận tốc góc tổng hợp được tạo bởi:
+    \begin{equation}
+    \Omega_{\text{slow}}[i] = \frac{\hat{N}_{\text{fast}}}{\sqrt{\Delta t_{\text{slow}}}} w_{\text{ARW}}[i] + \mathbf{K}\,\mathbf{n}_{1/f}[i] + \Omega_{\text{pol}}[i] + \Omega_{\text{RRW}}[i] + \Omega_{\text{Shupe}}[i] + \Omega_{\text{Faraday}}[i]
+    \end{equation}
+    Sau khi tính Overlapping AVAR theo công thức chuẩn IEEE 952:
+    \begin{equation}
+    \sigma^2(T_m) = \frac{1}{2(N-2m)T_m^2}\sum_{j=1}^{N-2m}(\theta_{j+2m}-2\theta_{j+m}+\theta_j)^2
+    \end{equation}
+    đường cong toàn dải ghép nhánh Fast-Scale ($T_m < 1\text{ s}$) với nhánh Slow-Scale ($T_m \ge 1\text{ s}$) và kiểm tra điều kiện liên tục tại vùng giao $T_m \in [0.1, 5]\text{ s}$:
+    \begin{equation}
+    \max_{T_m \in [0.1,\, 5]\text{ s}} \frac{\bigl|\sigma_{\text{fast}}(T_m) - \sigma_{\text{slow}}(T_m)\bigr|}{\sigma_{\text{fast}}(T_m)} < 5\%
+    \end{equation}
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    font=\footnotesize,
+    >=Stealth,
+    fastbox/.style={draw=primaryblue, thick, rounded corners=3pt, fill=softblue, align=center, text width=4.6cm, minimum height=1.95cm, inner sep=4pt},
+    slowbox/.style={draw=accentteal, thick, rounded corners=3pt, fill=softteal, align=center, text width=4.6cm, minimum height=1.95cm, inner sep=4pt},
+    outbox/.style={draw=warmamber, thick, rounded corners=3pt, fill=softamber, align=center, text width=4.2cm, minimum height=5.15cm, inner sep=4pt},
+    arr/.style={->, thick, draw=primaryblue},
+    sarr/.style={->, thick, draw=accentteal},
+    marr/.style={->, thick, draw=warmamber}
+]
+
+% --- TOP BRANCH: FAST SCALE (y = 4.6) ---
+\node[fastbox] (f1) at (2.5, 4.6) {
+    \textbf{Chạy Fast-Scale (Tầng 2)}\\
+    \scriptsize $f_s = K/\tau$ ($3.2\text{--}6.5\text{ MHz}$)\\
+    $\bullet$ Chạy $30\text{--}60\text{ s}$ thực tế\\
+    $\bullet$ Chạy sin thử $100\text{ Hz}$ ($0.1\text{ s}$)\\
+    $\bullet$ Chạy dịch $f_c \in [10\text{ Hz}, 5\text{ kHz}]$
+};
+
+\node[fastbox] (f2) at (8.4, 4.6) {
+    \textbf{Trích xuất Đặc trưng Nhanh}\\
+    $\bullet$ Sàn $\hat{Q}_{\text{fast}}$ ($-1$) \& $\hat{N}_{\text{fast}}$ ($-1/2$)\\
+    $\bullet$ Kiểm chứng PSD rò rỉ $1/f$\\
+    $\bullet$ Ma trận hệ số rò rỉ $\mathbf{K}$:\\
+    \scriptsize $[K_{\text{TIA}\to\Omega},\, K_{\text{DAC}\to\Omega},\, K_{\text{xtalk}\to\Omega}]$
+};
+
+% --- BOTTOM BRANCH: SLOW SCALE (y = 1.4) ---
+\node[slowbox] (s1) at (2.5, 1.4) {
+    \textbf{Nguồn Biến thiên Chậm}\\
+    \scriptsize $f_{\text{dec}} = 100\text{ Hz}$, thời lượng $10\text{ giờ}$\\
+    $\bullet$ Chuỗi $1/f$ độc lập (IIR / Voss)\\
+    $\bullet$ RRW (Wiener / Gauss--Markov)\\
+    $\bullet$ $\Omega_{\text{pol}}(t)$ \& \texttt{shupe\_lut.bin}
+};
+
+\node[slowbox] (s2) at (8.4, 1.4) {
+    \textbf{Tổng hợp Chuỗi Dài Hạn}\\
+    \scriptsize Ghép nhiễu ở tốc độ $100\text{ Hz}$:\\[2pt]
+    $\Omega_{\text{slow}}[i] = \frac{\hat{N}_{\text{fast}}}{\sqrt{\Delta t}}w[i] + \mathbf{K}\mathbf{n}_{1/f}[i]$\\
+    $+ \Omega_{\text{pol}}[i] + \Omega_{\text{RRW}}[i] + \Omega_{\text{Shupe}}[i]$\\
+    \scriptsize (Chạy $<3\text{ s}$ CPU trong Python)
+};
+
+% --- MERGE OUTPUT (x = 14.2, y = 3.0) ---
+\node[outbox] (out) at (14.2, 3.0) {
+    \textbf{Overlapping AVAR}\\
+    \scriptsize (IEEE Std 952-2020)\\[4pt]
+    \scriptsize Khớp vùng giao\\
+    \scriptsize $T_m \in [0.1,\, 5]\text{ s}$ ($<5\%$)\\[6pt]
+    $\bullet$ \textbf{QN} ($Q$, dốc $-1$)\\
+    $\bullet$ \textbf{ARW} ($N$, dốc $-1/2$)\\
+    $\bullet$ \textbf{BI} ($B$, dốc $0$)\\
+    $\bullet$ \textbf{RRW} ($K$, dốc $+1/2$)\\
+    $\bullet$ \textbf{RR} ($R$, dốc $+1$)
+};
+
+% --- ARROWS ---
+\draw[arr] (f1.east) -- (f2.west);
+\draw[sarr] (s1.east) -- (s2.west);
+\draw[arr, dashed] (f2.south) -- node[right, font=\scriptsize, align=left] {$\hat{N}_{\text{fast}}$ + Ma trận $\mathbf{K}$} (s2.north);
+
+% Straight horizontal merge arrows
+\draw[marr] (f2.east) -- node[above, font=\scriptsize\color{primaryblue}] {$T_m < 1\text{ s}$} (12.0, 4.6);
+\draw[marr] (s2.east) -- node[below, font=\scriptsize\color{accentteal}] {$T_m \ge 1\text{ s}$} (12.0, 1.4);
+
+\end{tikzpicture}
+\caption{Luồng thực thi Hai Chế độ (\emph{Dual-Regime}) trích xuất ma trận rò rỉ $\mathbf{K}$ và tổng hợp Overlapping AVAR 5 vùng.}
+\label{fig:dual_regime_avar}
+\end{figure}
+
+% ====================================================================
+\section{Phân bổ Cây Mã nguồn, Vận hành CLI \& Bộ Công cụ Trực quan hóa}
+
+\subsection{Cấu trúc Cây Thư mục Mã nguồn (\texttt{ifog-vproto/})}
+Toàn bộ kho mã nguồn được tổ chức chuẩn hóa theo 7 phân hệ, bao gồm thư mục \texttt{spec/} lưu trữ tài liệu đặc tả hiện tại và lịch sử thay đổi:
+
+\begin{footnotesize}
+\begin{verbatim}
+ifog-vproto/
+|-- spec/                                # Thu muc luu tru tai lieu dac ta thiet ke
+|   |-- IFOG-SIM-SPEC-004.tex            # Ma nguon LaTeX ban dac ta hien hanh (v4.0)
+|   |-- IFOG-SIM-SPEC-004.pdf            # Ban PDF da bien dich lam chuan nghiem thu
+|   `-- CHANGELOG.md                     # Nhat ky phan bien va thay doi qua cac phien ban
+|-- configs/                             # Cau hinh linh kien va kich ban mo phong
+|   |-- schema_v4.json                   # JSON Schema kiem tra rang buoc tham so dau vao
+|   |-- baseline_1km.json                # Cau hinh chuan cho cuon soi 1 km (2/4-state)
+|   `-- ablation_sweeps/                 # Tap cau hinh quet Slow Rate Ramp & Monte Carlo
+|-- tier1_offline/                       # Tang 1: Tien xu ly quang hoc & nhiet ngoai tuyen
+|   |-- jones_spectral.py                # Tinh ma tran Jones phan giai pho -> phys_params.json
+|   `-- shupe_thermal.py                 # Giai truyen nhiet 1D / nhap FEM -> shupe_lut.bin
+|-- tier2_sysc_ams/                      # Tang 2: Loi dong mo phong C++ / SystemC-AMS
+|   |-- CMakeLists.txt                   # Cau hinh bien dich -O3 lien ket SystemC & SystemC-AMS
+|   |-- include/                         # Header cac khoi TDF, DE va cau truc AblationConfig
+|   `-- src/                             # optical_envelope_tdf, analog_frontend_tdf, pink_noise_tdf,
+|                                        # adc_dac_bridge, digital_dsp_sc, main.cpp
+|-- tier3_analysis/                      # Tang 3: Hau xu ly, trich xuat K & tong hop AVAR
+|   |-- run_sweep_parallel.py            # Dieu phoi chay song song da nhan CPU qua CLI
+|   |-- extract_k_matrix.py              # Do FFT sin thu 100 Hz -> ma tran ro ri K
+|   |-- analyze_nonlinearity.py          # Tinh do rong Deadband & dinh Bunny Ears
+|   `-- dual_regime_avar.py              # Tong hop chuoi 10h, tinh Overlapping AVAR & WLS fit
+|-- viz/                                 # Bo cong cu ve bieu do tinh (Matplotlib) & tuong tac (Plotly)
+|   |-- plot_waveforms.py                # Dang song qua do TIA, cua so blanking, ramp 2*pi
+|   |-- plot_bunny_ears.py               # Dac tuyen sai so he so ti le (Deadband & Bunny Ears)
+|   |-- plot_psd_flicker.py              # Pho PSD kiem chung loc/ro ri nhieu 1/f (dich fc)
+|   |-- plot_avar_5regions.py            # Bieu do Overlapping AVAR kem 5 duong tiem can IEEE 952
+|   `-- export_report.py                 # Xuat tong hop metrics_summary.json va bao cao HTML/PDF
+|-- tests/                               # Bo kiem thu tu dong theo 4 cong nghiem thu (Gate 1..4)
+`-- data/                                # Thu muc luu tru ket qua theo tung run_id (gitignored)
+\end{verbatim}
+\end{footnotesize}
+
+\subsection{Quy trình Vận hành CLI và Đặc tả Công cụ Vẽ hình (\texttt{viz/})}
+Người dùng vận hành toàn bộ quy trình từ dòng lệnh theo 4 bước chuẩn:
+\begin{footnotesize}
+\begin{verbatim}
+# 1. Bien dich loi SystemC-AMS (mot lan duy nhat)
+cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
+
+# 2. Chay Tang 1 trich xuat tham so quang & nhiet ngoai tuyen
+python3 tier1_offline/jones_spectral.py --cfg configs/baseline_1km.json --out data/run01/
+python3 tier1_offline/shupe_thermal.py  --cfg configs/baseline_1km.json --out data/run01/
+
+# 3. Chay Tang 2 vong kin (don le hoac quet song song da nhan Slow Rate Ramp)
+./build/ifog_sim --phys data/run01/phys_params.json --cfg configs/baseline_1km.json --out data/run01/
+python3 tier3_analysis/run_sweep_parallel.py --bin ./build/ifog_sim --sweep configs/ablation_sweeps/
+
+# 4. Chay Tang 3 tong hop AVAR 5 vung va xuat tron bo bieu do chuan doan
+python3 tier3_analysis/dual_regime_avar.py --run data/run01/
+python3 viz/export_report.py --run data/run01/ --format png,html
+\end{verbatim}
+\end{footnotesize}
+
+Bảng~\ref{tab:viz_tools} đặc tả chi tiết 5 mô-đun trực quan hóa trong thư mục \texttt{viz/} phục vụ kiểm chứng vật lý và nghiệm thu thiết kế.
+
+\begin{table}[htbp]
+\centering
+\caption{Đặc tả bộ công cụ trực quan hóa dữ liệu mô phỏng trong thư mục \texttt{viz/}.}
+\label{tab:viz_tools}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}L{3.2cm} L{3.0cm} L{5.0cm} L{4.7cm}@{}}
+\toprule
+\textbf{Mô-đun \texttt{viz/}} & \textbf{Đầu vào dữ liệu} & \textbf{Nội dung đồ thị} & \textbf{Ý nghĩa chẩn đoán kỹ thuật} \\
+\midrule
+\texttt{plot\_waveforms.py} & \texttt{sim\_out.bin} (chế độ dump vi mô $K$ mẫu) & Dạng sóng quá độ $V_{\text{TIA}}(t)$, điểm lấy mẫu ADC, cửa sổ \emph{blanking} $[k_{\text{start}}, k_{\text{end}}]$ và xung reset $2\pi$. & Kiểm tra thời gian xác lập $t_s(0.1\%)$ của TIA và căn chỉnh vị trí blanking né gai chuyển mạch. \\
+\texttt{plot\_bunny\_ears.py} & Tập bản ghi quét dốc $\Omega_{\text{in}}$ (Sweep) & Đồ thị sai số tốc độ $\Omega_{\text{out}} - \Omega_{\text{in}}$ và sai số hệ số tỉ lệ tương đối theo $\Omega_{\text{in}}$ quanh vùng $0$. & Định lượng trực quan độ rộng vùng chết (\emph{Deadband}) và hai đỉnh vọt \emph{Bunny Ears} trước/sau khi bật dither. \\
+\texttt{plot\_psd\_flicker.py} & \texttt{sim\_out.bin} (bài test dịch $f_c$) & Mật độ phổ công suất Welch (dB/Hz) của $\Omega_{\text{out}}$ từ $1\text{ Hz}$ đến $50\text{ kHz}$ so sánh tuyến tính vs. phi tuyến. & Xác minh dốc $0$ (lọc sạch $1/f$ TIA cộng tính) và dốc $-1$ trồi lên khi bật xuyên âm hoặc $G_2, G_3$. \\
+\texttt{plot\_avar\_5regions.py} & \texttt{avar\_curve.npz} & Biểu đồ log--log Overlapping ADEV $\sigma(T)$ kèm 5 đường tiệm cận khớp WLS $(Q, N, B, K, R)$ và vùng giao Fast/Slow. & Báo cáo tổng hợp 5 chỉ tiêu nhiễu IEEE 952 và kiểm tra độ mượt tại vùng giao $T_m \in [0.1, 5]\text{ s}$. \\
+\texttt{export\_report.py} & Toàn bộ thư mục \texttt{run\_id/} & Xuất bảng tổng hợp \texttt{metrics\_summary.json}, ảnh độ phân giải cao (300 DPI) và trang HTML Plotly thu phóng tương tác. & Đóng gói kết quả kiểm thử tự động cho từng lần thay đổi tham số phần cứng hoặc thuật toán DSP. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\section{Đánh giá Tính khả thi Định lượng \& Ma trận Nghiệm thu 4 Cổng}
+
+\subsection{Thẩm định Tính khả thi Định lượng trên Cấu hình Đối chứng (\texorpdfstring{$L = 1000\text{ m}$}{L = 1000 m})}
+Xét cấu hình tiêu chuẩn: cuộn sợi $L = 1000\text{ m}$, $D = 0.10\text{ m}$, $\bar{\lambda} = 1550\text{ nm}$, $n_{\text{eff}} = 1.468 \Rightarrow \tau = 4.897\,\mu\text{s}$ ($f_e = 1/(2\tau) = 102.1\text{ kHz}$), $K = 16$ mẫu/$\tau$ ($\Delta t_{\text{fast}} = 306\text{ ns}$, $f_s = 3.27\text{ MHz}$); mạch TIA dùng $R_f = 50\text{ k}\Omega$, $C_{\text{tot}} = 3\text{ pF}$, $f_{\text{GBW}} = 150\text{ MHz}$. Bảng~\ref{tab:feasibility} đánh giá định lượng 6 tiêu chí khả thi trước khi viết mã.
+
+\begin{table}[htbp]
+\centering
+\caption{Bảng đánh giá tính khả thi định lượng của nguyên mẫu ảo trên cấu hình đối chứng $1\text{ km}$.}
+\label{tab:feasibility}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}L{3.1cm} L{4.7cm} L{5.8cm} L{2.1cm}@{}}
+\toprule
+\textbf{Tiêu chí thẩm định} & \textbf{Giá trị tính toán từ Spec} & \textbf{Ngưỡng yêu cầu kỹ thuật} & \textbf{Kết luận} \\
+\midrule
+1. Bắt quá độ TIA ở nhịp $K = 16$ & $C_{f,\text{opt}} \approx 0.25\text{ pF}$, $\omega_0 \approx 7.6\times 10^7\text{ rad/s}$, $t_s(0.1\%) \approx 0.13\,\mu\text{s}$. & $t_s(0.1\%) < \Delta t_{\text{fast}} = 0.306\,\mu\text{s}$ (xác lập gọn ngay trong mẫu con đầu tiên). & \textbf{ĐẠT} \\
+2. Phân giải số học ở ngưỡng $0.001^\circ/\text{h}$ & $\Delta\phi_S \approx 6.55 \times 10^{-9}\text{ rad}$; phép $\operatorname{wrap}_{2\pi}$ giữ $|\Delta\phi| \le \pi$ trên \texttt{double} 53-bit mantissa. & Sai số làm tròn số học $< 10^{-15}\text{ rad}$ (nhỏ hơn tín hiệu Sagnac 6 bậc độ lớn). & \textbf{ĐẠT} \\
+3. Ổn định vòng kép DSP 4 trạng thái & Chọn $K_{\text{tot},1} = 0.25 \in (0, 1)$, $K_{\text{tot},2} = 0.02 \le 0.1\,K_{\text{tot},1}$ với độ trễ $d=2$. & Thỏa tiêu chuẩn Jury, thời gian xác lập vòng kín $< 0.2\text{ ms}$, không kích dao động. & \textbf{ĐẠT} \\
+4. Thời gian chạy CPU trên máy trạm & $60\text{ s}$ Fast-Scale $= 1.96 \times 10^8$ mẫu vi mô ($\sim 15\text{--}35\text{ s}$ CPU C++ \texttt{-O3}); $10\text{ h}$ Slow-Scale $< 3\text{ s}$. & Toàn bộ 1 kịch bản AVAR 5 vùng hoàn tất trong dưới $1\text{ phút}$ trên PC 8 nhân. & \textbf{ĐẠT} \\
+5. Dung lượng lưu trữ & Ghi sau decimation $100\text{ kHz}$: $32\text{ B} \times 10^5 \approx 3.2\text{ MB/s}$ ($192\text{ MB}$ cho $60\text{ s}$); dump vi mô chỉ bật cục bộ $10\text{ ms}$. & Nằm gọn trong RAM thông thường, không gây nghẽn băng thông ghi đĩa SSD. & \textbf{ĐẠT} \\
+6. Độ tin cậy dự đoán tuyệt đối vs. độ nhạy & Dự đoán chính xác độ nhạy tham số và hình dạng phi tuyến ngay khi chưa đo; khớp biên độ AVAR sau hiệu chuẩn. & Tách bạch rạch ròi chế độ phân tích cơ chế (chưa hiệu chuẩn) và dự đoán định lượng (sau đo). & \textbf{ĐẠT} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Ma trận Nghiệm thu 4 Cổng (Gate 1 -- Gate 4)}
+Quá trình lập trình được chia thành 4 cổng kiểm thử tự động trong thư mục \texttt{tests/}:
+\begin{itemize}
+    \item \textbf{Gate 1 --- Vòng kín Tuyến tính Lý tưởng (\emph{Golden Linear Baseline}):} Tắt toàn bộ phi tuyến và nhiễu; bơm $\Delta\phi_S = 10^{-8}\text{ rad}$ và bước nhảy lớn gây reset $2\pi$ liên tục. \emph{Tiêu chí đạt:} Sai số tĩnh đầu ra $< 10^{-9}\text{ rad}$; vòng 2 khóa $V_\pi$ triệt tiêu sai số $\epsilon_{V_\pi} = 2\%$ về $< 10^{-5}$.
+    \item \textbf{Gate 2 --- Tái tạo \& Triệt tiêu Phi tuyến Vòng kín:} Bật \texttt{en\_ltf\_transient}, \texttt{en\_xtalk}, \texttt{en\_tia\_poly\_nl}, \texttt{en\_ram} và quét dốc chậm $\Omega_{\text{in}} \in [-0.5^\circ/\text{s}, +0.5^\circ/\text{s}]$. \emph{Tiêu chí đạt:} Xuất hiện rõ vùng \emph{Deadband} và hai đỉnh \emph{Bunny Ears} khi tắt bù; bật khóa $V_\pi$ 4 trạng thái, \emph{ADC Blanking} và \emph{PRBS Dither} giảm $\ge 90\%$ biên độ hai lỗi này.
+    \item \textbf{Gate 3 --- Kiểm chứng Lọc \& Rò rỉ Nhiễu $1/f$:} Bật \texttt{PinkNoise\_TDF} với dải tần dịch $f_c \in [10\text{ Hz}, 5\text{ kHz}]$ trong $2\text{ s}$ thực tế và chạy sin thử $100\text{ Hz}$. \emph{Tiêu chí đạt:} PSD đầu ra phẳng hoàn toàn khi tắt phi tuyến; xuất hiện dốc $-1$ khi bật xuyên âm/$G_2, G_3$; ma trận $\mathbf{K}$ tái lập với sai số $< 2\%$.
+    \item \textbf{Gate 4 --- Ghép Dual-Regime \& Khớp 5 Vùng AVAR IEEE 952:} Chạy đầy đủ chuỗi Fast-Scale ($60\text{ s}$) + Slow-Scale ($10\text{ giờ}$). \emph{Tiêu chí đạt:} Sai lệch vùng giao $T_m \in [0.1, 5]\text{ s}$ dưới $5\%$; khớp WLS khôi phục cả 5 tham số $(\hat{Q}, \hat{N}, \hat{B}, \hat{K}, \hat{R})$ khớp lý thuyết giải tích trong giới hạn $\pm 10\%$.
+\end{itemize}
+
+% ====================================================================
+\begin{thebibliography}{9}
+
+\bibitem{ieee952}
+IEEE Std 952-2020, \emph{IEEE Standard Specification Format Guide and Test Procedure for Single-Axis Interferometric Fiber Optic Gyros}, IEEE Aerospace and Electronic Systems Society, 2020.
+
+\bibitem{ieee16661}
+IEEE Std 1666.1-2016, \emph{IEEE Standard for Standard SystemC\textregistered\ Analog/Mixed-Signal Extensions Language Reference Manual}, IEEE Computer Society, 2016.
+
+\bibitem{lefevre2022}
+H.~C. Lefèvre, \emph{The Fiber-Optic Gyroscope}, 3rd ed. Norwood, MA, USA: Artech House, 2022.
+
+\bibitem{burns1983}
+W.~K. Burns, C.-L. Chen, and R.~P. Moeller, ``Fiber-optic gyroscopes with broad-band sources,'' \emph{Journal of Lightwave Technology}, vol.~1, no.~1, pp.~98--105, Mar. 1983.
+
+\bibitem{shupe1980}
+D.~M. Shupe, ``Thermally induced nonreciprocity in the fiber-optic interferometer,'' \emph{Applied Optics}, vol.~19, no.~5, pp.~654--655, Mar. 1980.
+
+\bibitem{bergh1982}
+R.~A. Bergh, H.~C. Lefèvre, and H.~J. Shaw, ``Compensation of the optical Kerr effect in fiber-optic gyroscopes,'' \emph{Optics Letters}, vol.~7, no.~6, pp.~282--284, Jun. 1982.
+
+\bibitem{graeme1996}
+J.~G. Graeme, \emph{Photodiode Amplifiers: Op Amp Solutions}. New York, NY, USA: McGraw-Hill, 1996.
+
+\bibitem{waydhas2011}
+O.~Waydhas, S.~Rieke, et al., ``Modelling and simulation of a fibre optical gyro system with SystemC AMS,'' in \emph{Proc. SystemC AMS Day / edaWorkshop}, Dresden, Germany, 2011.
+
+\bibitem{elsheimy2008}
+N.~El-Sheimy, H.~Hou, and X.~Niu, ``Analysis and modeling of inertial sensors using Allan variance,'' \emph{IEEE Transactions on Instrumentation and Measurement}, vol.~57, no.~1, pp.~140--149, Jan. 2008.
+
+\end{thebibliography}
+
+\end{document}
