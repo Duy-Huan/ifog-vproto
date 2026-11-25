@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-ARCH-001}
-\newcommand{\DocVersion}{v2.0.0}
+\newcommand{\DocVersion}{v2.1.0}
 \newcommand{\DocDate}{2026-11-25}
 
 \usepackage{fontspec}
@@ -82,6 +82,7 @@ Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \texttt{v1.1.0} & 2026-11-25 & Auto-Reporting \& Doc-Sync & Added automatic \texttt{.md} + interactive \texttt{.html} reporting and dashboard index under \texttt{report/}; unified simulation runner (\texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_sim.py}, \texttt{sim\_runner\_cli.py}); full release docs (\texttt{.md}/\texttt{.tex}/\texttt{.pdf}) under \texttt{docs/}; enacted \textbf{Rule 16} mandatory version--document sync CI gate. \\
 \texttt{v1.2.0} & 2026-11-25 & Portable Containers \& Example & Added universal Git-source installers for SystemC 2.3.4, SystemC-AMS 2.3.4, \texttt{nlohmann/json}, and Python venv (\texttt{scripts/setup\_env.sh}, \texttt{scripts/env.sh}); added Docker/Podman suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}); executed and committed full real 4-Gate feasibility example (\texttt{examples/full\_4gate\_baseline/}). \\
 \texttt{v2.0.0} & 2026-11-25 & \texttt{SPEC-005} 6-State DSP \& 11 Scenarios & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-005} v5.0 (41/41 formulas \texttt{EQ-01}--\texttt{EQ-41}); implemented official 6-state symmetric DSP ($+136.94\text{ dB}$ RAM/xtalk rejection, $-33.3\%$ $V_{\text{peak}}$), 64 B \texttt{dsp\_trace.bin}, real-time FPGA BIT/FDIR, ADC aperture jitter, VRE/Faraday, concurrent 3-axis SystemC-AMS IMU (\texttt{--imu3axis}), 6 Time-Domain + 5 Engineering scenarios (\texttt{scripts/run\_all\_scenarios.sh}, 22 CLI modes), and \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}. \\
+\texttt{v2.1.0} & 2026-11-25 & All-Scenarios Example \& 15-Chart HTML & Upgraded \texttt{viz/export\_report.py} with full Gate 5 / TD / ENG Markdown tables, \textbf{15 interactive Plotly HTML5 charts}, and all 16 300-DPI PNG figures; updated \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to execute all 16 gates \& scenarios (\texttt{MC=500}) by default; executed and committed complete curated bundle \texttt{examples/full\_all\_scenarios/}. \\
 \bottomrule
 \end{tabularx}
 \normalsize

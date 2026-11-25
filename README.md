@@ -1,6 +1,6 @@
 # `ifog-vproto` — Closed-Loop IFOG Multi-Scale Virtual Prototype
 
-[![Version](https://img.shields.io/badge/Release-v2.0.0-0E6251)](docs/RELEASE_NOTES.md)
+[![Version](https://img.shields.io/badge/Release-v2.1.0-0E6251)](docs/RELEASE_NOTES.md)
 [![Spec](https://img.shields.io/badge/Spec-IFOG--SIM--SPEC--005%20v5.0-1B365D)](spec/IFOG-SIM-SPEC-005.pdf)
 [![Formulas](https://img.shields.io/badge/Formulas-41%2F41%20Verified-0E6251)](AGENT.md)
 [![Coverage](https://img.shields.io/badge/Coverage-100%25%20C%2B%2B%20%26%20Python-brightgreen)](AGENT.md)
@@ -9,15 +9,25 @@ A spec-driven, 3-Tier Hybrid Multi-Scale Co-Simulation Virtual Prototype for a *
 
 ---
 
+## Live Complete All-Scenarios Example (All 16 Gates & Scenarios Committed to Repo)
+
+Inspect the **complete genuine full-scale output of ALL 16 official gates & scenarios** (Gates 1–4 with 4×60 s Fast-Scale + 12×10 h Slow-Scale AVAR + Gate 5 Official 6-State DSP + 6 Time-Domain `TD-01`..`TD-06` + 5 System Engineering `ENG-01`..`ENG-05` with `N=500` MC, zero mocks / zero smoke tests) directly in [`examples/full_all_scenarios/`](examples/full_all_scenarios/README.md):
+- **Visual Walkthrough (All 16 300-DPI Figures):** [`examples/full_all_scenarios/README.md`](examples/full_all_scenarios/README.md)
+- **Auto-Generated Markdown & 15-Chart Interactive Plotly HTML5 Reports:** [`report.md`](examples/full_all_scenarios/report.md) | [`report.html`](examples/full_all_scenarios/report.html) | [`metrics_summary.json`](examples/full_all_scenarios/metrics_summary.json) | [`virtual_calibration_dataset.csv`](examples/full_all_scenarios/virtual_calibration_dataset.csv)
+- **One-Command Reproduction (Native or Docker/Podman):** `./examples/run_example.sh` or `./scripts/run_all_scenarios.sh` or `./scripts/container_run.sh example`
+- *(Archival SPEC-004 4-Gate only example preserved in [`examples/full_4gate_baseline/`](examples/full_4gate_baseline/README.md).)*
+
+---
+
 ## Official Simulation Flow — 5 Gates + 6 Time-Domain + 5 System Engineering Scenarios
 
-Every scenario is runnable **individually via CLI** (`./scripts/run_sim.sh --mode <mode>`) or **end-to-end in one command** (`./scripts/run_all_scenarios.sh`), automatically exporting Markdown (`report.md`), interactive Plotly HTML5 (`report.html`), 300-DPI figures, and CSV/JSON datasets into `report/<run_id>/`.
+Every scenario is runnable **individually via CLI** (`./scripts/run_sim.sh --mode <mode>`) or **end-to-end in one command** (`./scripts/run_all_scenarios.sh` / `./examples/run_example.sh`), automatically exporting Markdown (`report.md`), interactive Plotly HTML5 (`report.html` with up to 15 interactive multi-panel charts), up to **16 300-DPI PNG figures**, and CSV/JSON datasets into `report/<run_id>/`.
 
 Full methodology, equations, and verified real-simulation benchmarks are documented in [`docs/IFOG_SIMULATION_SCENARIOS.md`](docs/IFOG_SIMULATION_SCENARIOS.md) | [`.tex`](docs/IFOG_SIMULATION_SCENARIOS.tex) | [`.pdf`](docs/IFOG_SIMULATION_SCENARIOS.pdf).
 
 | Category | CLI Mode (`--mode`) | Highlighted Verified Real SystemC-AMS Result |
 | :--- | :--- | :--- |
-| **Complete Official Suite** | `all_scenarios` (`scripts/run_all_scenarios.sh`) | Executes Gates 1–5 + all 6 Time-Domain + all 5 Engineering scenarios end-to-end |
+| **Complete Official Suite** | `all_scenarios` (`scripts/run_all_scenarios.sh` / `examples/run_example.sh`) | Executes Gates 1–5 + all 6 Time-Domain + all 5 Engineering scenarios (`MC=500`) -> 16/16 PASS, 16 PNGs, 15 interactive Plotly charts |
 | **Core Acceptance Gates** | `full` (`gate1`, `gate2`, `gate3`, `gate4`) | Gate 1 `3.10e-16 rad` (`1,666` wraps) \| Gate 2 `98.85%` reduction \| Gate 3 `-0.062` vs `-0.893` PSD \| Gate 4 `2.42%` overlap & 5 WLS params $\pm 10\%$ |
 | **Gate 5 — Official 6-State DSP** | `dsp6_compare` (`configs/baseline_1km_6state.json`) | **$-33.3\%$ peak MIOC voltage**, `1.28e-16 rad` error, **`+136.94 dB`** (`7.03e6×`) RAM/xtalk/$\gamma_{\text{nl}}$ rejection (`EQ-31`–`EQ-34`) |
 | **Group A — 6 Time-Domain** | `td_all` (`td_blanking`, `td_step_sine`, `td_vpi_shock`, `td_high_rate`, `td_shupe_shock`, `td_limit_cycles`) | Sub-$\tau$ $k_{\text{start}}^*=5$ \| $-3\text{ dB}$ BW `2,540 Hz` \| $+5\%$ $V_\pi$ shock (`2×` lower 6s disturbance) \| `700 deg/s` (`7,184` wraps, anti-windup) \| Shupe `99.74%` filter \| 12-bit PRBS (`3->1,595` codes) |
@@ -25,17 +35,9 @@ Full methodology, equations, and verified real-simulation benchmarks are documen
 
 ---
 
-## Live Feasibility Example (Real 4-Gate Outputs Committed to Repo)
+## Architecture & Synchronized Documentation (`v2.1.0`, Rule 16)
 
-Inspect the complete committed real full-scale baseline simulation output (4×60 s Fast-Scale SystemC-AMS + 12×10 h Slow-Scale AVAR = 3.6M samples, zero smoke tests) in [`examples/full_4gate_baseline/`](examples/full_4gate_baseline/README.md):
-- **Walkthrough & 300-DPI Figures:** [`examples/full_4gate_baseline/README.md`](examples/full_4gate_baseline/README.md)
-- **Auto-Generated Reports:** [`report.md`](examples/full_4gate_baseline/report.md) | [`report.html`](examples/full_4gate_baseline/report.html) | [`metrics_summary.json`](examples/full_4gate_baseline/metrics_summary.json)
-
----
-
-## Architecture & Synchronized Documentation (`v2.0.0`, Rule 16)
-
-All architecture, scenario, and release documents (Markdown, LaTeX, and compiled PDFs) are strictly synchronized with `pyproject.toml` (`v2.0.0`) under [`docs/`](docs/):
+All architecture, scenario, and release documents (Markdown, LaTeX, and compiled PDFs) are strictly synchronized with `pyproject.toml` (`v2.1.0`) under [`docs/`](docs/):
 - [`docs/IFOG_VPROTO_ARCHITECTURE.md`](docs/IFOG_VPROTO_ARCHITECTURE.md) | [`.tex`](docs/IFOG_VPROTO_ARCHITECTURE.tex) | [`.pdf`](docs/IFOG_VPROTO_ARCHITECTURE.pdf)
 - [`docs/IFOG_SIMULATION_SCENARIOS.md`](docs/IFOG_SIMULATION_SCENARIOS.md) | [`.tex`](docs/IFOG_SIMULATION_SCENARIOS.tex) | [`.pdf`](docs/IFOG_SIMULATION_SCENARIOS.pdf)
 - [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | [`.tex`](docs/RELEASE_NOTES.tex) | [`.pdf`](docs/RELEASE_NOTES.pdf) | [`docs/CHANGELOG.md`](docs/CHANGELOG.md)

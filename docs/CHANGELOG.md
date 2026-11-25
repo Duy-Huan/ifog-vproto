@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [2.1.0] - 2026-11-25
+
+### Added
+- **Complete Real All-Scenarios Curated Example (`examples/full_all_scenarios/`):** Executed and committed the complete real 16-gate/scenario verification bundle (`Gates 1–4` including 4×60 s Fast + 12×10 h Slow AVAR, `Gate 5` Official 6-State DSP, `TD-01`..`TD-06`, and `ENG-01`..`ENG-05` with `N=500` MC) including `README.md`, full `report.md`, interactive 15-chart Plotly `report.html`, all **16 300-DPI PNG plots**, `virtual_calibration_dataset.csv`, and all Gate/TD/ENG JSON telemetry.
+- **15-Chart Interactive Plotly HTML5 & Full Scenario Markdown Reporting (`viz/export_report.py`):** Added modular `_build_plotly_sections()` rendering interactive Plotly charts for Core Gates (2, 3, 4, 5), Group A (`TD-01`..`TD-06`), and Group B (`ENG-01`..`ENG-05`), plus dedicated Markdown tables for Gate 5, Group A TD, Group B ENG, 5-fault BIT/FDIR, and MC Yield / Thermal Calibration.
+
+### Changed
+- Upgraded `examples/run_example.sh`, `scripts/run_all_scenarios.sh` (default `--mc-runs 500`), and `scripts/container_run.sh example` to execute ALL 16 official gates & scenarios by default and export `.md`, interactive `.html`, 16 PNG plots, CSV, and `report/index.{md,html}`.
+- Added generated PNG plot count logging in `tier3_analysis/sim_runner_cli.py`, updated `skills/ifog-reporting-and-doc-sync/SKILL.md`, and synchronized `pyproject.toml`, `Containerfile`, `Dockerfile`, `compose.yaml`, `README.md`, and all `docs/*.{md,tex,pdf}` to `v2.1.0`.
+
 ## [2.0.0] - 2026-11-25
 
 ### Added

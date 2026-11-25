@@ -1,0 +1,60 @@
+{
+  "scenario_id": "ENG-04",
+  "formula_id": "EQ-39",
+  "title": "Fault Injection & Real-Time FPGA BIT/FDIR Verification (5 Fault Modes)",
+  "inject_time_ms": 4.0,
+  "cases": [
+    {
+      "fault_type": "sld_drop_50pct",
+      "expected_bit_code": 1,
+      "detected_bit_code": 1,
+      "alert_time_ms": 4.000620989604749,
+      "time_to_alert_us": 0.6209896047486285,
+      "fdir_recovered": false,
+      "trace_samples": 2451,
+      "pass": true
+    },
+    {
+      "fault_type": "fiber_break",
+      "expected_bit_code": 2,
+      "detected_bit_code": 2,
+      "alert_time_ms": 4.000620989604749,
+      "time_to_alert_us": 0.6209896047486285,
+      "fdir_recovered": false,
+      "trace_samples": 2451,
+      "pass": true
+    },
+    {
+      "fault_type": "mioc_electrode_open",
+      "expected_bit_code": 3,
+      "detected_bit_code": 3,
+      "alert_time_ms": 4.030001315109802,
+      "time_to_alert_us": 30.001315109801954,
+      "fdir_recovered": false,
+      "trace_samples": 2451,
+      "pass": true
+    },
+    {
+      "fault_type": "adc_saturation",
+      "expected_bit_code": 4,
+      "detected_bit_code": 4,
+      "alert_time_ms": 4.000620989604749,
+      "time_to_alert_us": 0.6209896047486285,
+      "fdir_recovered": false,
+      "trace_samples": 2451,
+      "pass": true
+    },
+    {
+      "fault_type": "dsp_seu_bitflip",
+      "expected_bit_code": 5,
+      "detected_bit_code": 5,
+      "alert_time_ms": 4.030001315109802,
+      "time_to_alert_us": 30.001315109801954,
+      "fdir_recovered": true,
+      "trace_samples": 2451,
+      "pass": true
+    }
+  ],
+  "all_detected_and_recovered": true,
+  "pass": true
+}

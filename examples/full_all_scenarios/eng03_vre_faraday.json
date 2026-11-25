@@ -1,0 +1,69 @@
+{
+  "scenario_id": "ENG-03",
+  "formula_ids": [
+    "EQ-37",
+    "EQ-38"
+  ],
+  "title": "Vibration Rectification Error (VRE) & Magnetic Faraday Sensitivity / Mu-Metal Sizing",
+  "vre": {
+    "g_rms_levels": [
+      0.0,
+      2.0,
+      5.0,
+      10.0
+    ],
+    "nonlinear_delta_bias_deg_per_h": [
+      0.0,
+      -1.34710339428104,
+      -8.487750670514053,
+      -34.92257379281061
+    ],
+    "linear_delta_bias_deg_per_h": [
+      0.0,
+      -1.275775133652966,
+      -8.03577173952485,
+      -33.02917663827136
+    ],
+    "g2_rectification_delta_deg_per_h": [
+      0.0,
+      -0.07132826062807407,
+      -0.4519789309892026,
+      -1.893397154539251
+    ],
+    "vre_coeff_nonlinear_deg_h_per_g2": -0.34863636496767564,
+    "vre_coeff_linear_deg_h_per_g2": -0.3297542578563922,
+    "vre_coeff_g2_only_deg_h_per_g2": -0.018882107111283474,
+    "quadratic_fit_r2": 0.9997577837161031
+  },
+  "faraday": {
+    "effective_loop_m": 0.02,
+    "sweep": [
+      {
+        "B_gauss": -5.0,
+        "bias_deg_per_h": -0.915269343862992
+      },
+      {
+        "B_gauss": -2.0,
+        "bias_deg_per_h": -0.36610773754388354
+      },
+      {
+        "B_gauss": 0.0,
+        "bias_deg_per_h": 0.0
+      },
+      {
+        "B_gauss": 2.0,
+        "bias_deg_per_h": 0.3661077375449526
+      },
+      {
+        "B_gauss": 5.0,
+        "bias_deg_per_h": 0.9152693438641718
+      }
+    ],
+    "sensitivity_measured_deg_h_per_G": 0.18305386877264643,
+    "sensitivity_theory_deg_h_per_G": 0.18305386877429344,
+    "theory_err_pct": 8.997438120590615e-10,
+    "required_mumetal_shield_dB_for_1G_0p01degh": 25.251578239205617,
+    "mumetal_required": true
+  },
+  "pass": true
+}

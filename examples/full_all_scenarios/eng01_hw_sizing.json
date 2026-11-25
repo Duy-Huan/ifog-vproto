@@ -1,0 +1,157 @@
+{
+  "scenario_id": "ENG-01",
+  "formula_id": "EQ-35",
+  "title": "Hardware Sizing Trade-Off (ENOB 10-16 bit, Aperture Jitter & TIA/SLD Pareto)",
+  "enob_sweep": [
+    {
+      "bits": 10,
+      "deadband_err_deg_per_s": 0.01990952879652426,
+      "arw_deg_per_rt_h": 0.00038975424507903885,
+      "meets_spec": false
+    },
+    {
+      "bits": 11,
+      "deadband_err_deg_per_s": 0.02,
+      "arw_deg_per_rt_h": 0.0,
+      "meets_spec": false
+    },
+    {
+      "bits": 12,
+      "deadband_err_deg_per_s": 0.003454659501085925,
+      "arw_deg_per_rt_h": 0.001977092598572946,
+      "meets_spec": true
+    },
+    {
+      "bits": 13,
+      "deadband_err_deg_per_s": 0.004362827033198614,
+      "arw_deg_per_rt_h": 0.000971468004176454,
+      "meets_spec": true
+    },
+    {
+      "bits": 14,
+      "deadband_err_deg_per_s": 0.004515654257126356,
+      "arw_deg_per_rt_h": 0.00048316330707665566,
+      "meets_spec": true
+    },
+    {
+      "bits": 15,
+      "deadband_err_deg_per_s": 0.004545025984644208,
+      "arw_deg_per_rt_h": 0.0002792244270603563,
+      "meets_spec": true
+    },
+    {
+      "bits": 16,
+      "deadband_err_deg_per_s": 0.0045178139429730285,
+      "arw_deg_per_rt_h": 0.00025383505323984797,
+      "meets_spec": true
+    }
+  ],
+  "recommended_min_bits": 12,
+  "jitter_sweep": [
+    {
+      "jitter_ps": 0.0,
+      "arw_deg_per_rt_h": 0.00015738618477293865,
+      "arw_degradation_pct": 0.0
+    },
+    {
+      "jitter_ps": 20.0,
+      "arw_deg_per_rt_h": 0.00015581684351385604,
+      "arw_degradation_pct": -0.9971277093645203
+    },
+    {
+      "jitter_ps": 100.0,
+      "arw_deg_per_rt_h": 0.00016187144872442498,
+      "arw_degradation_pct": 2.8498460382385016
+    },
+    {
+      "jitter_ps": 500.0,
+      "arw_deg_per_rt_h": 0.00025065253983361756,
+      "arw_degradation_pct": 59.25955648218708
+    },
+    {
+      "jitter_ps": 2000.0,
+      "arw_deg_per_rt_h": 0.0007513418349229017,
+      "arw_degradation_pct": 377.3874123747673
+    },
+    {
+      "jitter_ps": 10000.0,
+      "arw_deg_per_rt_h": 0.0036454773345256097,
+      "arw_degradation_pct": 2216.262599404736
+    }
+  ],
+  "tia_sld_pareto": [
+    {
+      "R_f_kohm": 10.0,
+      "C_f_opt_pF": 0.5641895835477563,
+      "P_peak_uW": 50.0,
+      "t_s_0p1pct_ns": 77.8581625295904,
+      "adc_clip_count": 0,
+      "arw_deg_per_rt_h": 0.0004839843991403982
+    },
+    {
+      "R_f_kohm": 25.0,
+      "C_f_opt_pF": 0.35682482323055426,
+      "P_peak_uW": 50.0,
+      "t_s_0p1pct_ns": 123.10456401454122,
+      "adc_clip_count": 0,
+      "arw_deg_per_rt_h": 0.000293253823804882
+    },
+    {
+      "R_f_kohm": 50.0,
+      "C_f_opt_pF": 0.252313252202016,
+      "P_peak_uW": 50.0,
+      "t_s_0p1pct_ns": 174.09614401939106,
+      "adc_clip_count": 0,
+      "arw_deg_per_rt_h": 0.0002088604655309012
+    },
+    {
+      "R_f_kohm": 10.0,
+      "C_f_opt_pF": 0.5641895835477563,
+      "P_peak_uW": 100.0,
+      "t_s_0p1pct_ns": 77.8581625295904,
+      "adc_clip_count": 0,
+      "arw_deg_per_rt_h": 0.00030435399611068096
+    },
+    {
+      "R_f_kohm": 50.0,
+      "C_f_opt_pF": 0.252313252202016,
+      "P_peak_uW": 100.0,
+      "t_s_0p1pct_ns": 174.09614401939106,
+      "adc_clip_count": 0,
+      "arw_deg_per_rt_h": 0.00015432485863788644
+    },
+    {
+      "R_f_kohm": 100.0,
+      "C_f_opt_pF": 0.17841241161527713,
+      "P_peak_uW": 100.0,
+      "t_s_0p1pct_ns": 246.2091280290824,
+      "adc_clip_count": 41,
+      "arw_deg_per_rt_h": 0.00014694645549170182
+    },
+    {
+      "R_f_kohm": 50.0,
+      "C_f_opt_pF": 0.252313252202016,
+      "P_peak_uW": 200.0,
+      "t_s_0p1pct_ns": 174.09614401939106,
+      "adc_clip_count": 32,
+      "arw_deg_per_rt_h": 0.00013481119280806162
+    },
+    {
+      "R_f_kohm": 25.0,
+      "C_f_opt_pF": 0.35682482323055426,
+      "P_peak_uW": 200.0,
+      "t_s_0p1pct_ns": 123.10456401454122,
+      "adc_clip_count": 0,
+      "arw_deg_per_rt_h": 0.0001411836634092077
+    }
+  ],
+  "pareto_optimal": {
+    "R_f_kohm": 25.0,
+    "C_f_opt_pF": 0.35682482323055426,
+    "P_peak_uW": 200.0,
+    "t_s_0p1pct_ns": 123.10456401454122,
+    "adc_clip_count": 0,
+    "arw_deg_per_rt_h": 0.0001411836634092077
+  },
+  "pass": true
+}

@@ -336,8 +336,94 @@ def _build_markdown_report(
             )
         lines.append("")
 
+    dsp6 = summary.get("dsp6_compare")
+    if dsp6 is not None:
+        s4 = dsp6["four_state"]
+        s6 = dsp6["six_state"]
+        lines.extend(
+            [
+                "## 7. Gate 5 — Official 6-State Symmetric DSP Benchmark (`EQ-31`–`EQ-34`)",
+                "",
+                "| Metric | 4-State Lefèvre ($\\alpha=\\pi/4$) | Official 6-State ($\\alpha^*=\\pi/3$) | Gain / Margin |",
+                "| :--- | ---: | ---: | ---: |",
+                f"| Peak MIOC Bias Voltage [$V_\\pi$ frac] | `{s4['peak_bias_vpi_frac']:.3f}` | `{s6['peak_bias_vpi_frac']:.3f}` | **-{dsp6['peak_voltage_reduction_pct']:.1f}%** |",
+                f"| Golden Linear Static Error [rad] | `{s4['static_err_rad']:.2e}` | `{s6['static_err_rad']:.2e}` | `< 1e-9 rad` |",
+                f"| Loop-2 Residual $\\epsilon_{{V_\\pi,\\text{{eff}}}}$ | `{s4['final_eps_vpi_eff']:.2e}` | `{s6['final_eps_vpi_eff']:.2e}` | `< 1e-5` |",
+                f"| RAM + Crosstalk + $\\gamma_{{\\text{{nl}}}}$ Bias [deg/h] | `{s4['ram_xtalk_bias_deg_per_h']:.3f}` | `{s6['ram_xtalk_bias_deg_per_h']:.2e}` | **+{dsp6['ram_xtalk_rejection_dB']:.2f} dB** |",
+                f"| Online Asymmetry Monitor $e_{{\\text{{asym}}}}$ RMS | `N/A` | `{s6['e_asym_rms_counts']:.2f} counts` | Online health check |",
+                "",
+            ]
+        )
+
+    td_sc = summary.get("td_scenarios", {})
+    if td_sc:
+        lines.extend(
+            [
+                "## 8. Group A — Official Time-Domain Scenarios (`TD-01`..`TD-06`)",
+                "",
+                "| Scenario ID | Engineering Verification Scope | Key Measured Metrics | Status |",
+                "| :--- | :--- | :--- | :---: |",
+            ]
+        )
+        for sc_id, sc in td_sc.items():
+            st = "PASS" if bool(sc.get("pass", False)) else "FAIL"
+            lines.append(
+                f"| `{sc_id}` | {sc.get('title', sc_id)} | {_summarize_scenario_detail(sc_id, sc)} | **{st}** |"
+            )
+        lines.append("")
+
+    eng_sc = summary.get("eng_scenarios", {})
+    if eng_sc:
+        lines.extend(
+            [
+                "## 9. Group B — System Engineering & Production Scenarios (`ENG-01`..`ENG-05`)",
+                "",
+                "| Scenario ID | Engineering Scope | Key Quantitative Results | Status |",
+                "| :--- | :--- | :--- | :---: |",
+            ]
+        )
+        for sc_id, sc in eng_sc.items():
+            st = "PASS" if bool(sc.get("pass", False)) else "FAIL"
+            lines.append(
+                f"| `{sc_id}` | {sc.get('title', sc_id)} | {_summarize_scenario_detail(sc_id, sc)} | **{st}** |"
+            )
+        lines.append("")
+
+        e4 = eng_sc.get("ENG-04")
+        if e4 is not None:
+            lines.extend(
+                [
+                    "### ENG-04 — Real-Time FPGA BIT/FDIR 5-Fault Detection & Recovery Table",
+                    "",
+                    "| Fault Mode | Expected Code | Detected Code | Time-to-Alert [us] | FDIR Recovered | Status |",
+                    "| :--- | :---: | :---: | ---: | :---: | :---: |",
+                ]
+            )
+            for c in e4["cases"]:
+                lines.append(
+                    f"| `{c['fault_type']}` | `{c['expected_bit_code']}` | `{c['detected_bit_code']}` "
+                    f"| `{c['time_to_alert_us']:.2f}` | `{c['fdir_recovered']}` | **{'PASS' if c['pass'] else 'FAIL'}** |"
+                )
+            lines.append("")
+
+        e5 = eng_sc.get("ENG-05")
+        if e5 is not None:
+            mc = e5["monte_carlo"]
+            cal = e5["virtual_calibration"]
+            ci = mc["wilson_ci95_pct"]
+            lines.extend(
+                [
+                    "### ENG-05 — Monte Carlo Production Yield & Virtual Thermal Calibration (`-40..+85 C`)",
+                    "",
+                    f"- **Monte Carlo Yield:** `{mc['n_pass']}/{mc['n_runs']}` = **`{mc['yield_pct']:.2f}%`** (95% Wilson CI: `[{ci[0]:.2f}%, {ci[1]:.2f}%]`, Bias mean `{mc['bias_mean_deg_per_h']:.3f} deg/h`, std `{mc['bias_std_deg_per_h']:.3f} deg/h`, **$C_{{pk}} = {mc['cpk_bias_1degh']:.3f}$**)",
+                    f"- **Virtual Thermal Calibration CSV:** [`{cal['dataset_csv']}`]({cal['dataset_csv']}) (`{cal['n_points']}` operating points across `{cal['temp_range_C'][0]:.0f}..{cal['temp_range_C'][1]:+.0f} C`)",
+                    f"- **Thermal Drift Compensation:** Raw RMS `{cal['raw_rms_deg_per_h']:.2f} deg/h` -> 2D Poly `{cal['poly_residual_rms_deg_per_h']:.4f} deg/h` (**`{cal['poly_reduction_pct']:.2f}%`**) | 4-State EKF `{cal['ekf_residual_rms_deg_per_h']:.4f} deg/h` (**`{cal['ekf_reduction_pct']:.2f}%`**)",
+                    "",
+                ]
+            )
+
     if fig_rel_paths:
-        lines.extend(["## 7. Diagnostic Figures (300-DPI)", ""])
+        lines.extend(["## 10. Diagnostic Figures (300-DPI)", ""])
         for rel in fig_rel_paths:
             title = Path(rel).stem.replace("_", " ").title()
             lines.append(f"### {title}")
@@ -346,6 +432,267 @@ def _build_markdown_report(
 
     out_md.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return out_md
+
+
+def _plotly_div(fig: go.Figure, height: int = 380) -> str:
+    """Serialize a Plotly Figure to a lightweight HTML div (CDN loaded once in document head)."""
+    fig.update_layout(
+        height=height,
+        template="plotly_white",
+        margin={"l": 60, "r": 25, "t": 55, "b": 50},
+        legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1.0},
+    )
+    return fig.to_html(full_html=False, include_plotlyjs=False)
+
+
+def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
+    """Build interactive Plotly HTML5 chart cards for all available Core, TD, and ENG scenarios."""
+    sections: list[str] = []
+
+    # 1. Core Acceptance Gates (Gate 2, Gate 3, Gate 4, Gate 5)
+    core_divs: list[str] = []
+    if (rdir / "avar_curve.npz").exists():
+        npz = np.load(rdir / "avar_curve.npz")
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(x=npz["taus_fast"], y=npz["adev_fast_deg_h"], mode="markers+lines", name="Fast-Scale ADEV [deg/h]", line={"color": "#1B365D"})
+        )
+        fig.add_trace(
+            go.Scatter(x=npz["taus_slow"], y=npz["adev_slow_deg_h"], mode="markers+lines", name="Slow-Scale ADEV [deg/h]", line={"color": "#0E6251"})
+        )
+        fig.update_xaxes(type="log", title_text="Cluster Time T [s]")
+        fig.update_yaxes(type="log", title_text="ADEV [deg/h]")
+        fig.update_layout(title="Gate 4 — Dual-Regime Overlapping Allan Deviation (Fast + 10 h Slow)")
+        core_divs.append(_plotly_div(fig, 400))
+
+    if (rdir / "sweep_results.json").exists():
+        sw = _load_optional_json(rdir / "sweep_results.json")
+        assert sw is not None
+        r_in = np.asarray(sw["rates_in_deg_per_s"], dtype=np.float64)
+        u_err = np.asarray(sw["uncompensated_out_deg_per_s"], dtype=np.float64) - r_in
+        c_err = np.asarray(sw["compensated_out_deg_per_s"], dtype=np.float64) - r_in
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=r_in, y=u_err, mode="lines+markers", name="Uncompensated Error [deg/s]", line={"color": "#9B2C2C"}))
+        fig.add_trace(go.Scatter(x=r_in, y=c_err, mode="lines+markers", name="Compensated Error [deg/s]", line={"color": "#0E6251"}))
+        fig.update_xaxes(title_text="Input Rate [deg/s]")
+        fig.update_yaxes(title_text="Rate Error [deg/s]")
+        fig.update_layout(title="Gate 2 — Closed-Loop Deadband & Bunny Ears Mitigation")
+        core_divs.append(_plotly_div(fig, 370))
+
+    if (rdir / "psd_linear.bin").exists() and (rdir / "psd_nonlinear.bin").exists():
+        rec_l = read_sim_records(rdir / "psd_linear.bin")
+        rec_n = read_sim_records(rdir / "psd_nonlinear.bin")
+        dt_l = float(np.median(np.diff(rec_l["t"])))
+        dt_n = float(np.median(np.diff(rec_n["t"])))
+        skip = min(500, len(rec_l["omega_out"]) // 10)
+        f_l, p_l = compute_welch_psd(rec_l["omega_out"][skip:], fs_Hz=1.0 / dt_l)
+        f_n, p_n = compute_welch_psd(rec_n["omega_out"][skip:], fs_Hz=1.0 / dt_n)
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=f_l[1:], y=p_l[1:], mode="lines", name="Linear PSD [(rad/s)^2/Hz]", line={"color": "#1B365D"}))
+        fig.add_trace(go.Scatter(x=f_n[1:], y=p_n[1:], mode="lines", name="Nonlinear 1/f PSD [(rad/s)^2/Hz]", line={"color": "#9B2C2C"}))
+        fig.update_xaxes(type="log", title_text="Frequency [Hz]")
+        fig.update_yaxes(type="log", title_text="PSD [(rad/s)^2/Hz]")
+        fig.update_layout(title="Gate 3 — 1/f Flicker Modulation Rejection vs Nonlinear Leakage")
+        core_divs.append(_plotly_div(fig, 380))
+
+    dsp6 = summary.get("dsp6_compare")
+    if dsp6 is not None:
+        s4, s6 = dsp6["four_state"], dsp6["six_state"]
+        fig = make_subplots(rows=1, cols=2, subplot_titles=("RAM + Crosstalk Bias [deg/h] (Log)", "Peak MIOC Bias Voltage [V_pi frac]"))
+        fig.add_trace(
+            go.Bar(
+                x=["4-State (pi/4)", "6-State (pi/3)"],
+                y=[max(float(s4["ram_xtalk_bias_deg_per_h"]), 1e-12), max(float(s6["ram_xtalk_bias_deg_per_h"]), 1e-12)],
+                marker_color=["#9B2C2C", "#0E6251"],
+                name="Bias [deg/h]",
+            ),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Bar(
+                x=["4-State (pi/4)", "6-State (pi/3)"],
+                y=[float(s4["peak_bias_vpi_frac"]), float(s6["peak_bias_vpi_frac"])],
+                marker_color=["#1B365D", "#2B6CB0"],
+                name="Peak V_pi frac",
+            ),
+            row=1,
+            col=2,
+        )
+        fig.update_yaxes(type="log", title_text="Bias Error [deg/h]", row=1, col=1)
+        fig.update_yaxes(title_text="V_pi Fraction", range=[0, 1.2], row=1, col=2)
+        fig.update_layout(title=f"Gate 5 — Official 6-State DSP (+{dsp6['ram_xtalk_rejection_dB']:.1f} dB Rejection, -{dsp6['peak_voltage_reduction_pct']:.1f}% Peak Voltage)")
+        core_divs.append(_plotly_div(fig, 380))
+
+    if core_divs:
+        sections.append("<h2>Interactive Telemetry — Core Acceptance Gates</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in core_divs))
+
+    # 2. Group A — 6 Time-Domain Scenarios (TD-01..TD-06)
+    td_sc = summary.get("td_scenarios", {})
+    td_divs: list[str] = []
+    if "TD-01" in td_sc:
+        d = td_sc["TD-01"]
+        ks = list(range(len(d["rel_err_by_k_pct"])))
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=ks, y=[max(v, 1e-5) for v in d["rel_err_by_k_pct"]], mode="lines+markers", name="Max TIA Settling Err [%]", line={"color": "#1B365D"}))
+        fig.add_hline(y=0.5, line_dash="dash", line_color="#9B2C2C", annotation_text="0.5% Settling Threshold")
+        fig.add_vrect(x0=d["k_start_configured"], x1=d["k_end_configured"], fillcolor="#C6F6D5", opacity=0.35, line_width=0)
+        fig.update_xaxes(title_text="Sub-sample Index k")
+        fig.update_yaxes(type="log", title_text="Settling Error [%]")
+        fig.update_layout(title=f"TD-01 — Sub-tau Settling & ADC Blanking Alignment (k*={d['k_start_optimal_0p5pct']}, t_s={d['tia_ts_0p1pct_ns']:.1f} ns)")
+        td_divs.append(_plotly_div(fig, 360))
+
+    if "TD-02" in td_sc:
+        d = td_sc["TD-02"]
+        fig = make_subplots(rows=1, cols=2, subplot_titles=("Step Response (0 -> 100 deg/s)", f"Closed-Loop Bode (-3 dB BW = {d['bw_3db_measured_Hz']:.0f} Hz)"))
+        fig.add_trace(go.Scatter(x=d["step_trace"]["t_ms"], y=d["step_trace"]["omega_out_deg_per_s"], mode="lines", name="Omega_out [deg/s]", line={"color": "#1B365D"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=[p["freq_Hz"] for p in d["bode_points"]], y=[p["mag_dB"] for p in d["bode_points"]], mode="lines+markers", name="Magnitude [dB]", line={"color": "#9B2C2C"}), row=1, col=2)
+        fig.add_hline(y=-3.0, line_dash="dash", line_color="#4A5568", row=1, col=2)
+        fig.update_xaxes(title_text="Time after step [ms]", row=1, col=1)
+        fig.update_yaxes(title_text="Rate [deg/s]", row=1, col=1)
+        fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=1, col=2)
+        fig.update_yaxes(title_text="Magnitude [dB]", row=1, col=2)
+        fig.update_layout(title="TD-02 — Closed-Loop Step & Sine Bode Bandwidth")
+        td_divs.append(_plotly_div(fig, 380))
+
+    if "TD-03" in td_sc:
+        d = td_sc["TD-03"]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=d["four_state"]["trace_t_ms"], y=[v * 100.0 for v in d["four_state"]["trace_eps_vpi_eff"]], mode="lines", name="4-State Loop-2 [%]", line={"color": "#9B2C2C"}))
+        fig.add_trace(go.Scatter(x=d["six_state"]["trace_t_ms"], y=[v * 100.0 for v in d["six_state"]["trace_eps_vpi_eff"]], mode="lines", name="6-State Loop-2 [%]", line={"color": "#0E6251"}))
+        fig.update_xaxes(title_text="Time after +5% V_pi Shock [ms]")
+        fig.update_yaxes(title_text="Residual eps_Vpi [%]")
+        fig.update_layout(title="TD-03 — Loop-2 Gain-Lock Convergence Under +5% Thermal Shock")
+        td_divs.append(_plotly_div(fig, 360))
+
+    if "TD-04" in td_sc:
+        d = td_sc["TD-04"]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=d["trace"]["t_ms"], y=d["trace"]["omega_in_deg_per_s"], mode="lines", name="Command Omega_in [deg/s]", line={"color": "#4A5568", "dash": "dash"}))
+        fig.add_trace(go.Scatter(x=d["trace"]["t_ms"], y=d["trace"]["omega_out_deg_per_s"], mode="lines", name="Closed-Loop Omega_out [deg/s]", line={"color": "#1B365D"}))
+        fig.update_xaxes(title_text="Time [ms]")
+        fig.update_yaxes(title_text="Rate [deg/s]")
+        fig.update_layout(title=f"TD-04 — High-Rate 0->700 deg/s Tracking ({d['flyback_count']:,} 2pi Wraps @ {d['flyback_rate_kHz']:.1f} kHz)")
+        td_divs.append(_plotly_div(fig, 360))
+
+    if "TD-05" in td_sc:
+        d = td_sc["TD-05"]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=d["trace"]["t_ms"], y=d["trace"]["omega_out_deg_per_h"], mode="lines", name="Uncompensated Shupe [deg/h]", line={"color": "#9B2C2C"}))
+        fig.add_trace(go.Scatter(x=d["trace"]["t_ms"], y=d["trace"]["omega_comp_deg_per_h"], mode="lines", name="Extrapolative Thermal Filter [deg/h]", line={"color": "#0E6251"}))
+        fig.update_xaxes(title_text="Time [ms]")
+        fig.update_yaxes(title_text="Thermal Bias Drift [deg/h]")
+        fig.update_layout(title=f"TD-05 — Real-Time Shupe Shock & Compensation ({d['thermal_compensation_reduction_pct']:.2f}% Suppression)")
+        td_divs.append(_plotly_div(fig, 360))
+
+    if "TD-06" in td_sc:
+        d = td_sc["TD-06"]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=d["without_dither"]["freqs_Hz"], y=d["without_dither"]["psd_dB"], mode="lines", name="No Dither (Limit Cycles)", line={"color": "#9B2C2C"}))
+        fig.add_trace(go.Scatter(x=d["with_dither"]["freqs_Hz"], y=d["with_dither"]["psd_dB"], mode="lines", name="With LFSR PRBS Dither", line={"color": "#0E6251"}))
+        fig.update_xaxes(type="log", title_text="Frequency [Hz]")
+        fig.update_yaxes(title_text="PSD [dB((deg/s)^2/Hz)]")
+        fig.update_layout(title=f"TD-06 — 12-Bit Quantization Idle Tones vs PRBS Dither (DAC codes {d['without_dither']['unique_dac_codes']}->{d['with_dither']['unique_dac_codes']})")
+        td_divs.append(_plotly_div(fig, 360))
+
+    if td_divs:
+        sections.append("<h2>Interactive Telemetry — Group A: 6 Time-Domain Scenarios (TD-01..TD-06)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in td_divs))
+
+    # 3. Group B — 5 System Engineering & Production Scenarios (ENG-01..ENG-05)
+    eng_sc = summary.get("eng_scenarios", {})
+    eng_divs: list[str] = []
+    if "ENG-01" in eng_sc:
+        d = eng_sc["ENG-01"]
+        fig = make_subplots(rows=1, cols=2, subplot_titles=(f"ENOB Sweep (Min Passing = {d['recommended_min_bits']}-bit)", "ADC Aperture Jitter vs ARW"))
+        fig.add_trace(
+            go.Scatter(x=[r["bits"] for r in d["enob_sweep"]], y=[max(r["deadband_err_deg_per_s"], 1e-7) for r in d["enob_sweep"]], mode="lines+markers", name="Deadband Err [deg/s]", line={"color": "#1B365D"}),
+            row=1,
+            col=1,
+        )
+        fig.add_hline(y=0.01, line_dash="dash", line_color="#9B2C2C", row=1, col=1)
+        fig.add_trace(
+            go.Scatter(x=[r["jitter_ps"] for r in d["jitter_sweep"]], y=[r["arw_deg_per_rt_h"] for r in d["jitter_sweep"]], mode="lines+markers", name="ARW [deg/rt-h]", line={"color": "#0E6251"}),
+            row=1,
+            col=2,
+        )
+        fig.update_xaxes(title_text="Resolution [bits]", row=1, col=1)
+        fig.update_yaxes(type="log", title_text="Deadband Error [deg/s]", row=1, col=1)
+        fig.update_xaxes(title_text="Aperture Jitter [ps]", row=1, col=2)
+        fig.update_yaxes(title_text="ARW [deg/rt-h]", row=1, col=2)
+        fig.update_layout(title="ENG-01 — Hardware Sizing & Cost Trade-Off (ENOB & Aperture Jitter)")
+        eng_divs.append(_plotly_div(fig, 380))
+
+    if "ENG-02" in eng_sc:
+        d = eng_sc["ENG-02"]
+        fig = go.Figure(
+            go.Bar(
+                x=["Isolated (4-State)", "Shared SLD/Rail (4-State)", "Shared SLD/Rail (6-State)"],
+                y=[
+                    abs(float(d["isolated_4state"]["y_bias_err_deg_per_h"])),
+                    abs(float(d["coupled_4state"]["y_bias_err_deg_per_h"])),
+                    abs(float(d["coupled_6state"]["y_bias_err_deg_per_h"])),
+                ],
+                marker_color=["#4A5568", "#9B2C2C", "#0E6251"],
+            )
+        )
+        fig.update_yaxes(title_text="Stationary Axis-Y Bias Error [deg/h]")
+        fig.update_layout(title=f"ENG-02 — Concurrent 3-Axis SystemC-AMS IMU Crosstalk (Rail Droop = {d['peak_rail_droop_V']*1e3:.1f} mV)")
+        eng_divs.append(_plotly_div(fig, 360))
+
+    if "ENG-03" in eng_sc:
+        d = eng_sc["ENG-03"]
+        g2 = [v * v for v in d["vre"]["g_rms_levels"]]
+        fig = make_subplots(rows=1, cols=2, subplot_titles=("VRE Quadratic Rectification (g_rms^2)", f"Faraday Sweep (Mu-Metal = {d['faraday']['required_mumetal_shield_dB_for_1G_0p01degh']:.1f} dB)"))
+        fig.add_trace(go.Scatter(x=g2, y=d["vre"]["nonlinear_delta_bias_deg_per_h"], mode="lines+markers", name="Nonlinear TIA (G2>0)", line={"color": "#9B2C2C"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=g2, y=d["vre"]["linear_delta_bias_deg_per_h"], mode="lines+markers", name="Linear TIA (G2=0)", line={"color": "#0E6251", "dash": "dash"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=[r["B_gauss"] for r in d["faraday"]["sweep"]], y=[r["bias_deg_per_h"] for r in d["faraday"]["sweep"]], mode="lines+markers", name="Faraday Bias [deg/h]", line={"color": "#1B365D"}), row=1, col=2)
+        fig.update_xaxes(title_text="Vibration Power g_rms^2 [g^2]", row=1, col=1)
+        fig.update_yaxes(title_text="Bias Shift [deg/h]", row=1, col=1)
+        fig.update_xaxes(title_text="External Magnetic Field B [Gauss]", row=1, col=2)
+        fig.update_yaxes(title_text="Faraday Bias [deg/h]", row=1, col=2)
+        fig.update_layout(title="ENG-03 — Vibration Rectification Error (VRE) & Faraday Sensitivity")
+        eng_divs.append(_plotly_div(fig, 380))
+
+    if "ENG-04" in eng_sc:
+        d = eng_sc["ENG-04"]
+        fig = go.Figure(
+            go.Bar(
+                y=[c["fault_type"] for c in d["cases"]],
+                x=[c["time_to_alert_us"] for c in d["cases"]],
+                orientation="h",
+                marker_color=["#0E6251" if c["pass"] else "#9B2C2C" for c in d["cases"]],
+            )
+        )
+        fig.update_xaxes(title_text="BIT Time-to-Alert [us]")
+        fig.update_layout(title="ENG-04 — Real-Time FPGA BIT/FDIR Detection Latency (5 Fault Modes)")
+        eng_divs.append(_plotly_div(fig, 340))
+
+    if "ENG-05" in eng_sc:
+        d = eng_sc["ENG-05"]
+        mc = d["monte_carlo"]
+        cal = d["virtual_calibration"]
+        raw = [r["omega_out_deg_per_h"] for r in cal["rows"]]
+        res_poly = [r - p for r, p in zip(raw, cal["poly_pred_deg_per_h"])]
+        res_ekf = [r - p for r, p in zip(raw, cal["ekf_pred_deg_per_h"])]
+        idx = list(range(len(raw)))
+        fig = make_subplots(rows=1, cols=2, subplot_titles=(f"MC Yield = {mc['yield_pct']:.1f}% (N={mc['n_runs']}, Cpk={mc['cpk_bias_1degh']:.2f})", "Virtual Thermal Calibration (-40..+85 C)"))
+        fig.add_trace(go.Histogram(x=mc["bias_samples_deg_per_h"], nbinsx=20, name="MC Unit Bias [deg/h]", marker_color="#1B365D"), row=1, col=1)
+        fig.add_vline(x=-1.0, line_dash="dash", line_color="#9B2C2C", row=1, col=1)
+        fig.add_vline(x=1.0, line_dash="dash", line_color="#9B2C2C", row=1, col=1)
+        fig.add_trace(go.Scatter(x=idx, y=raw, mode="lines+markers", name="Raw Thermal Bias", line={"color": "#9B2C2C"}), row=1, col=2)
+        fig.add_trace(go.Scatter(x=idx, y=res_poly, mode="lines+markers", name="2D Poly Residual", line={"color": "#0E6251"}), row=1, col=2)
+        fig.add_trace(go.Scatter(x=idx, y=res_ekf, mode="lines", name="4-State EKF Residual", line={"color": "#2B6CB0", "dash": "dot"}), row=1, col=2)
+        fig.update_xaxes(title_text="Bias Error [deg/h]", row=1, col=1)
+        fig.update_yaxes(title_text="Unit Count", row=1, col=1)
+        fig.update_xaxes(title_text="Thermal Point Index (21 pts)", row=1, col=2)
+        fig.update_yaxes(title_text="Bias [deg/h]", row=1, col=2)
+        fig.update_layout(title="ENG-05 — Monte Carlo Production Yield & -40..+85 C Virtual Thermal Calibration")
+        eng_divs.append(_plotly_div(fig, 390))
+
+    if eng_divs:
+        sections.append("<h2>Interactive Telemetry — Group B: 5 System Engineering Scenarios (ENG-01..ENG-05)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in eng_divs))
+
+    return "".join(sections)
 
 
 def _build_interactive_html(
@@ -357,124 +704,7 @@ def _build_interactive_html(
     """Build self-contained industrial HTML5 diagnostic report with interactive Plotly charts & KPI tables."""
     meta = summary["report_meta"]
     gate_rows = summary["gate_statuses"]
-
-    has_avar = (rdir / "avar_curve.npz").exists()
-    has_sweep = (rdir / "sweep_results.json").exists()
-    has_psd = (rdir / "psd_linear.bin").exists() and (rdir / "psd_nonlinear.bin").exists()
-
-    subplot_titles = [
-        "Overlapping Allan Deviation (Dual-Regime Fast + Slow)",
-        "Closed-Loop Deadband & Bunny Ears Scale-Factor Error",
-    ]
-    rows_count = 2
-    if has_psd:
-        subplot_titles.append("1/f Flicker PSD: Linear vs Nonlinear Crosstalk Leakage")
-        rows_count = 3
-
-    fig = make_subplots(
-        rows=rows_count,
-        cols=1,
-        subplot_titles=tuple(subplot_titles),
-        vertical_spacing=0.11,
-    )
-
-    if has_avar:
-        npz = np.load(rdir / "avar_curve.npz")
-        fig.add_trace(
-            go.Scatter(
-                x=npz["taus_fast"],
-                y=npz["adev_fast_deg_h"],
-                mode="markers+lines",
-                name="Fast-Scale ADEV [deg/h]",
-                line={"color": "#1B365D"},
-            ),
-            row=1,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=npz["taus_slow"],
-                y=npz["adev_slow_deg_h"],
-                mode="markers+lines",
-                name="Slow-Scale ADEV [deg/h]",
-                line={"color": "#0E6251"},
-            ),
-            row=1,
-            col=1,
-        )
-        fig.update_xaxes(type="log", title_text="Cluster Time T [s]", row=1, col=1)
-        fig.update_yaxes(type="log", title_text="ADEV [deg/h]", row=1, col=1)
-
-    if has_sweep:
-        sw = _load_optional_json(rdir / "sweep_results.json")
-        assert sw is not None
-        r_in = np.asarray(sw["rates_in_deg_per_s"], dtype=np.float64)
-        u_err = np.asarray(sw["uncompensated_out_deg_per_s"], dtype=np.float64) - r_in
-        c_err = np.asarray(sw["compensated_out_deg_per_s"], dtype=np.float64) - r_in
-        fig.add_trace(
-            go.Scatter(
-                x=r_in,
-                y=u_err,
-                mode="lines+markers",
-                name="Uncompensated Error [deg/s]",
-                line={"color": "#9B2C2C"},
-            ),
-            row=2,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=r_in,
-                y=c_err,
-                mode="lines+markers",
-                name="Compensated Error [deg/s]",
-                line={"color": "#0E6251"},
-            ),
-            row=2,
-            col=1,
-        )
-        fig.update_xaxes(title_text="Input Rate [deg/s]", row=2, col=1)
-        fig.update_yaxes(title_text="Rate Error [deg/s]", row=2, col=1)
-
-    if has_psd:
-        rec_l = read_sim_records(rdir / "psd_linear.bin")
-        rec_n = read_sim_records(rdir / "psd_nonlinear.bin")
-        dt_l = float(np.median(np.diff(rec_l["t"])))
-        dt_n = float(np.median(np.diff(rec_n["t"])))
-        skip = min(500, len(rec_l["omega_out"]) // 10)
-        f_l, p_l = compute_welch_psd(rec_l["omega_out"][skip:], fs_Hz=1.0 / dt_l)
-        f_n, p_n = compute_welch_psd(rec_n["omega_out"][skip:], fs_Hz=1.0 / dt_n)
-        fig.add_trace(
-            go.Scatter(
-                x=f_l[1:],
-                y=p_l[1:],
-                mode="lines",
-                name="Linear PSD [(rad/s)^2/Hz]",
-                line={"color": "#1B365D"},
-            ),
-            row=3,
-            col=1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=f_n[1:],
-                y=p_n[1:],
-                mode="lines",
-                name="Nonlinear 1/f PSD [(rad/s)^2/Hz]",
-                line={"color": "#9B2C2C"},
-            ),
-            row=3,
-            col=1,
-        )
-        fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=3, col=1)
-        fig.update_yaxes(type="log", title_text="PSD [(rad/s)^2/Hz]", row=3, col=1)
-
-    fig.update_layout(
-        title=f"IFOG-SIM-SPEC-005 Interactive Diagnostics — {meta['run_id']} (v{meta['version']})",
-        height=420 * rows_count,
-        template="plotly_white",
-    )
-    plot_html = fig.to_html(full_html=False, include_plotlyjs="cdn")
+    plot_sections_html = _build_plotly_sections(rdir, summary)
 
     status_cls = "pass" if meta["overall_status"] == "PASS" else ("fail" if meta["overall_status"] == "FAIL" else "info")
     gate_table_rows = "".join(
@@ -517,14 +747,15 @@ def _build_interactive_html(
             f"<img src='{html.escape(p)}' alt='{html.escape(Path(p).name)}'></figure>"
             for p in fig_rel_paths
         )
-        gallery_html = f"<h2>300-DPI Diagnostic Figures</h2><div class='gallery'>{cards}</div>"
+        gallery_html = f"<h2>300-DPI Diagnostic Figures Gallery ({len(fig_rel_paths)} Plots)</h2><div class='gallery'>{cards}</div>"
 
     summary_pre = html.escape(json.dumps(summary, indent=2))
     html_doc = (
         "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>"
         f"<title>IFOG Simulation Report — {html.escape(meta['run_id'])}</title>"
+        "<script src='https://cdn.plot.ly/plotly-2.35.2.min.js'></script>"
         "<style>"
-        "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1160px;margin:2rem auto;padding:0 1.25rem;color:#1A202C;background:#F8FAFC;}"
+        "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1200px;margin:2rem auto;padding:0 1.25rem;color:#1A202C;background:#F8FAFC;}"
         ".header{background:#1B365D;color:#FFF;padding:1.5rem 2rem;border-radius:10px;margin-bottom:1.5rem;}"
         ".header h1{margin:0 0 .5rem 0;font-size:1.6rem;}"
         ".meta{display:flex;flex-wrap:wrap;gap:.75rem;font-size:.9rem;opacity:.95;}"
@@ -534,7 +765,8 @@ def _build_interactive_html(
         "table{width:100%;border-collapse:collapse;background:#FFF;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);}"
         "th,td{padding:.65rem .9rem;border-bottom:1px solid #E2E8F0;text-align:left;font-size:.92rem;}"
         "th{background:#EDF2F7;color:#1B365D;}"
-        ".gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:1.25rem;}"
+        ".plot-card{background:#FFF;padding:.75rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:1.25rem;}"
+        ".gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:1.25rem;}"
         "figure{margin:0;background:#FFF;padding:1rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);}"
         "figcaption{font-weight:600;color:#1B365D;margin-bottom:.5rem;}"
         "figure img{width:100%;height:auto;border:1px solid #E2E8F0;border-radius:4px;}"
@@ -549,15 +781,14 @@ def _build_interactive_html(
         f"<span class='badge {status_cls}'>{html.escape(meta['overall_status'])}</span>"
         "</div></div>"
         + (
-            "<h2>Executive Gate & Run Summary</h2>"
-            "<table><thead><tr><th>Gate / Stage</th><th>Status</th><th>Quantitative Metrics</th></tr></thead>"
+            "<h2>Executive Gate & Scenario Verification Summary</h2>"
+            "<table><thead><tr><th>Gate / Scenario</th><th>Status</th><th>Quantitative Metrics</th></tr></thead>"
             f"<tbody>{gate_table_rows}</tbody></table>"
             if gate_rows
             else ""
         )
         + avar_section
-        + "<h2>Interactive Telemetry Plots</h2>"
-        + plot_html
+        + plot_sections_html
         + gallery_html
         + "<h2>Raw Metrics Summary (<code>metrics_summary.json</code>)</h2>"
         + f"<details><summary>Expand full JSON payload</summary><pre>{summary_pre}</pre></details>"

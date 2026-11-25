@@ -1,0 +1,48 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-004",
+  "formula_id": "EQ-27",
+  "f_test_Hz": 100.0,
+  "duration_s": 0.1,
+  "K_TIA_to_Omega_rad_s_per_V": 0.000678134653790857,
+  "K_DAC_to_Omega_rad_s_per_V": 0.00011327826327586203,
+  "K_xtalk_to_Omega_rad_s_per_A_per_V": 8382.290403119148,
+  "K_node_unit_vector": [
+    0.000678134653790857,
+    0.0006796695796551722,
+    8.382290403119147e-05
+  ],
+  "K_physical_vector": [
+    0.000678134653790857,
+    0.00011327826327586203,
+    8382.290403119148
+  ],
+  "probes": {
+    "tia": {
+      "target": "tia",
+      "freq_Hz": 100.0,
+      "inject_amp": 0.02,
+      "phys_delta": 0.02,
+      "omega_amp_rad_s": 1.356269307581714e-05,
+      "gain_phys": 0.000678134653790857,
+      "gain_node_unit": 0.000678134653790857
+    },
+    "dac": {
+      "target": "dac",
+      "freq_Hz": 100.0,
+      "inject_amp": 0.005,
+      "phys_delta": 0.03,
+      "omega_amp_rad_s": 3.398347898275861e-06,
+      "gain_phys": 0.00011327826327586203,
+      "gain_node_unit": 0.0006796695796551722
+    },
+    "xtalk": {
+      "target": "xtalk",
+      "freq_Hz": 100.0,
+      "inject_amp": 0.2,
+      "phys_delta": 2e-09,
+      "omega_amp_rad_s": 1.6764580806238296e-05,
+      "gain_phys": 8382.290403119148,
+      "gain_node_unit": 8.382290403119147e-05
+    }
+  }
+}

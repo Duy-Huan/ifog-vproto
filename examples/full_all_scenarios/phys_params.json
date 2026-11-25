@@ -1,0 +1,15 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-004",
+  "seed": 42004,
+  "visibility_V": 0.9999999686702052,
+  "phi_pol_rad": -2.220943718131611e-06,
+  "P_static_max": 3.8828752259010106,
+  "P_static_min": 6.082484294012147e-08,
+  "K_opt_rad_per_rad_s": 1.3521580786785043,
+  "tau_s": 4.8967209175088724e-06,
+  "f_eigen_Hz": 102109.14782016347,
+  "delta_nu_eff_Hz": 7513884342653.131,
+  "delta_phi_kerr_rad": -2.107907328860016e-06,
+  "n_spec": 64,
+  "m_segments": 200
+}

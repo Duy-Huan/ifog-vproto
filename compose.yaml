@@ -2,14 +2,14 @@
 # Usage:
 #   docker compose build
 #   docker compose run --rm ifog-vproto ./scripts/run_sim.sh --mode single --run-id compose_demo --duration-s 0.5
-#   podman compose run --rm ifog-vproto ./scripts/run_sim.sh --mode full --run-id full_eval
+#   podman compose run --rm ifog-vproto ./scripts/run_all_scenarios.sh --run-id full_all_scenarios
 
 services:
   ifog-vproto:
     build:
       context: .
       dockerfile: Containerfile
-    image: ifog-vproto:2.0.0
+    image: ifog-vproto:2.1.0
     working_dir: /workspace/ifog-vproto
     environment:
       MPLBACKEND: Agg

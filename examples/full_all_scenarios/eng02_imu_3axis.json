@@ -1,0 +1,43 @@
+{
+  "scenario_id": "ENG-02",
+  "formula_id": "EQ-36",
+  "title": "3-Axis IMU Shared-SLD & Shared-Rail Inter-Axis Crosstalk (Axis X = 500 deg/s)",
+  "axis_x_target_deg_per_s": 500.0,
+  "isolated_4state": {
+    "axis_x_flyback_count": 7503,
+    "axis_x_mean_rate_deg_per_s": 500.00478649554555,
+    "axis_y_mean_rate_deg_per_h": 17.10780075816295,
+    "axis_z_mean_rate_deg_per_h": 17.10780075816295,
+    "formula_id": "EQ-36",
+    "peak_rail_droop_V": 0.0,
+    "spec_id": "IFOG-SIM-SPEC-005",
+    "y_bias_err_deg_per_h": 17.10780075816295,
+    "z_bias_err_deg_per_h": 17.10780075816295
+  },
+  "coupled_4state": {
+    "axis_x_flyback_count": 7503,
+    "axis_x_mean_rate_deg_per_s": 500.0159978445034,
+    "axis_y_mean_rate_deg_per_h": 57.73405267789619,
+    "axis_z_mean_rate_deg_per_h": 57.73405267789619,
+    "formula_id": "EQ-36",
+    "peak_rail_droop_V": 0.09244427135664822,
+    "spec_id": "IFOG-SIM-SPEC-005",
+    "y_bias_err_deg_per_h": 57.73405267789619,
+    "z_bias_err_deg_per_h": 57.73405267789619
+  },
+  "coupled_6state": {
+    "axis_x_flyback_count": 7495,
+    "axis_x_mean_rate_deg_per_s": 499.9996702818978,
+    "axis_y_mean_rate_deg_per_h": -0.10644768104931769,
+    "axis_z_mean_rate_deg_per_h": -0.10644768104931769,
+    "formula_id": "EQ-36",
+    "peak_rail_droop_V": 0.04899431652726095,
+    "spec_id": "IFOG-SIM-SPEC-005",
+    "y_bias_err_deg_per_h": -0.10644768104931769,
+    "z_bias_err_deg_per_h": -0.10644768104931769
+  },
+  "inter_axis_y_crosstalk_4state_deg_per_h": 40.626251919733235,
+  "inter_axis_y_crosstalk_6state_deg_per_h": 0.10644768104931769,
+  "peak_rail_droop_V": 0.09244427135664822,
+  "pass": true
+}

@@ -11,12 +11,12 @@ set -euo pipefail
 #   build              Build the OCI container image (SystemC 2.3.4 + SystemC-AMS 2.3.4 + Python venv + Tier 2)
 #   shell              Start an interactive bash shell with data/ and report/ mounted
 #   sim [args...]      Run ./scripts/run_sim.sh inside the container (outputs appear in host report/ & data/)
-#   example            Run the complete real 4-Gate baseline example inside the container
-#   test               Run unit tests, 30 formulas, 100% C++ & Python coverage inside the container
-#   verify             Run full verification including real 4-Gate system tests inside the container
+#   example            Run ALL official scenarios (Gates 1-5 + 6 TD + 5 ENG, MC=500) inside the container -> report/
+#   test               Run unit tests, 41 formulas, 100% C++ & Python coverage inside the container
+#   verify             Run full verification including all real system scenario tests inside the container
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:2.0.0}"
+IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:2.1.0}"
 ENGINE="${CONTAINER_ENGINE:-}"
 
 while [ "$#" -gt 0 ]; do
@@ -77,7 +77,7 @@ case "${CMD}" in
         "${ENGINE}" run --rm "${EXTRA_RUN_ARGS[@]}" \
             -v "${REPO_ROOT}/data:/workspace/ifog-vproto/data${VOL_OPT}" \
             -v "${REPO_ROOT}/report:/workspace/ifog-vproto/report${VOL_OPT}" \
-            "${IMAGE_TAG}" ./scripts/run_sim.sh --mode full --run-id full_4gate_baseline "$@"
+            "${IMAGE_TAG}" ./scripts/run_all_scenarios.sh --run-id full_all_scenarios "$@"
         ;;
     test)
         "${ENGINE}" run --rm "${EXTRA_RUN_ARGS[@]}" "${IMAGE_TAG}" bash -lc \

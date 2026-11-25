@@ -614,10 +614,12 @@ def main(argv: list[str] | None = None) -> int:
         auto_build=args.auto_build,
     )
     rdir = Path(summary["report_dir"])
+    n_figs = sum(1 for a in summary.get("generated_artifacts", []) if str(a).endswith(".png"))
     print(f"[IFOG-SIM] Completed mode={args.mode} status={summary['report_meta']['overall_status']}")
-    print(f"[IFOG-SIM] Markdown report: {rdir / 'report.md'}")
-    print(f"[IFOG-SIM] HTML report:     {rdir / 'report.html'}")
-    print(f"[IFOG-SIM] Report index:    {rdir.parent / 'index.html'}")
+    print(f"[IFOG-SIM] Figures (300-DPI): {n_figs} plots in {rdir / 'figures'}")
+    print(f"[IFOG-SIM] Markdown report:   {rdir / 'report.md'}")
+    print(f"[IFOG-SIM] HTML report:       {rdir / 'report.html'}")
+    print(f"[IFOG-SIM] Report index:      {rdir.parent / 'index.html'}")
     return 0
 
 

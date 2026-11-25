@@ -1,0 +1,39 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-004",
+  "fast_dt_s": 1.958688367054151e-05,
+  "fast_duration_s": 59.9999914874443,
+  "fast_ensemble_count": 4,
+  "slow_dt_s": 0.01,
+  "slow_n_samples": 3600000,
+  "slow_ensemble_count": 12,
+  "Q_fast_rad": 1.0276046691140688e-08,
+  "Q_theory_rad": 9.994288806145839e-09,
+  "N_fast_rad_per_rt_s": 1.1232210670614468e-07,
+  "N_fast_deg_per_rt_h": 0.0003861349596168102,
+  "overlap_check": {
+    "overlap_t_min_s": 0.1,
+    "overlap_t_max_s": 5.0,
+    "max_relative_mismatch": 0.024214331337406355,
+    "max_relative_mismatch_pct": 2.4214331337406354,
+    "continuity_pass_lt_5pct": true
+  },
+  "fitted_ieee952": {
+    "Q_rad": 1.0311758461420307e-08,
+    "N_rad_per_rt_s": 1.1152589841293865e-07,
+    "B_rad_per_s": 2.162343449731094e-08,
+    "K_rad_per_s32": 1.6521509622762479e-09,
+    "R_rad_per_s2": 3.6796856055580365e-11,
+    "Q_arcsec": 0.002126952861111716,
+    "N_deg_per_rt_h": 0.000383397797127969,
+    "B_deg_per_h": 0.0044601535269846206,
+    "K_deg_per_rt_h3": 0.020446835887491844,
+    "R_deg_per_h2": 0.027323626985303683
+  },
+  "slow_synthesis_truth": {
+    "Q_arcsec": 0.0020614700441771955,
+    "N_deg_per_rt_h": 0.0003861349596168102,
+    "B_deg_per_h": 0.004235342231805852,
+    "K_deg_per_rt_h3": 0.022,
+    "R_deg_per_h2": 0.025
+  }
+}
