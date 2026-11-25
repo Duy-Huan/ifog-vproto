@@ -308,11 +308,12 @@ def test_gate4_dual_regime_60s_fast_and_10h_slow_avar_5regions(tmp_path: Path) -
         rel = abs(fit[key] - truth[key]) / truth[key]
         assert rel <= 0.10, f"Gate 4 WLS {label} mismatch {rel*100:.2f}% > 10% (fit={fit[key]}, truth={truth[key]})"
 
-    # Viz & Report export
-    report = export_run_report(run_dir, formats=("png", "html"))
+    # Viz & Auto-Report export (.png, .md, .html)
+    report = export_run_report(run_dir, formats=("png", "md", "html"))
     assert (run_dir / "metrics_summary.json").exists()
     assert (run_dir / "figures" / "avar_5regions.png").exists()
     assert (run_dir / "figures" / "waveforms.png").exists()
+    assert (run_dir / "report.md").exists()
     assert (run_dir / "report.html").exists()
     assert report["avar_metrics"]["overlap_check"]["continuity_pass_lt_5pct"] is True
 
@@ -320,13 +321,48 @@ def test_gate4_dual_regime_60s_fast_and_10h_slow_avar_5regions(tmp_path: Path) -
 @pytest.mark.regression
 @pytest.mark.system
 def test_deterministic_regression_and_spec_integrity(tmp_path: Path) -> None:
-    """Regression: Bit-exact identical sim_out.bin across repeated seeded runs + spec SHA-256 lock."""
+    """Regression: Bit-exact identical sim_out.bin across repeated seeded runs + spec SHA-256 + Rule 16 doc sync."""
     # Verify spec immutability checksum (Rule 7)
     sha_file = REPO_ROOT / "spec" / "IFOG-SIM-SPEC-004.sha256"
     expected_hash = sha_file.read_text(encoding="utf-8").strip().split()[0]
     actual_hash = hashlib.sha256((REPO_ROOT / "spec" / "IFOG-SIM-SPEC-004.tex").read_bytes()).hexdigest()
     assert actual_hash == expected_hash
     assert (REPO_ROOT / "spec" / "IFOG-SIM-SPEC-004.pdf").stat().st_size > 100_000
+
+    # Verify Rule 16 mandatory version-document synchronization via CLI script
+    sync_res = subprocess.run(
+        ["python3", str(REPO_ROOT / "scripts" / "verify_doc_sync.py")],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "PASSED (Rule 16)" in sync_res.stdout
+
+    # Verify real scripts/run_sim.sh end-to-end execution auto-generates .md & .html reports + index
+    rep_root = tmp_path / "report"
+    data_root = tmp_path / "data"
+    sim_res = subprocess.run(
+        [
+            "bash",
+            str(REPO_ROOT / "scripts" / "run_sim.sh"),
+            "--mode",
+            "gate1",
+            "--run-id",
+            "sys_gate1_auto",
+            "--data-dir",
+            str(data_root),
+            "--report-dir",
+            str(rep_root),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "status=PASS" in sim_res.stdout
+    assert (rep_root / "sys_gate1_auto" / "report.md").exists()
+    assert (rep_root / "sys_gate1_auto" / "report.html").exists()
+    assert (rep_root / "index.md").exists()
+    assert (rep_root / "index.html").exists()
 
     # Bit-exact deterministic Tier 2 regression check
     cfg = deep_merge(load_config(BASE_CFG), {"simulation": {"duration_s": 0.05, "decimation_tau": 4, "dump_micro_ms": 0.0}})
