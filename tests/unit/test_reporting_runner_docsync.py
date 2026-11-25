@@ -24,7 +24,7 @@ BASE_CFG = REPO_ROOT / "configs" / "baseline_1km.json"
 @pytest.mark.unit
 def test_export_report_md_html_and_index_100pct(tmp_path: Path) -> None:
     """Exercise every Markdown, HTML, status, and centralized report/index branch."""
-    assert export_report.get_project_version(REPO_ROOT) == "1.1.0"
+    assert export_report.get_project_version(REPO_ROOT) == doc_sync.read_pyproject_version(REPO_ROOT)
     assert export_report.get_project_version(tmp_path) == "0.0.0"
     assert export_report._fmt_num(None) == "N/A"
     assert export_report._fmt_num(1.2345, ".2f") == "1.23"
@@ -368,14 +368,16 @@ def test_sim_runner_cli_all_modes_and_error_branches(
 @pytest.mark.unit
 def test_doc_sync_rule16_pass_and_all_failure_branches(tmp_path: Path) -> None:
     """Exercise 100% of tier3_analysis/doc_sync.py (Rule 16 version-doc sync checks)."""
+    cur_ver = doc_sync.read_pyproject_version(REPO_ROOT)
+    cur_vtag = f"v{cur_ver}"
     # 1. Live repository must pass Rule 16 cleanly (with and without expected tag + json_out)
     json_out = tmp_path / "sync_report.json"
     rc = doc_sync.main(
-        ["--repo-root", str(REPO_ROOT), "--expected-tag", "v1.1.0", "--json-out", str(json_out)]
+        ["--repo-root", str(REPO_ROOT), "--expected-tag", cur_vtag, "--json-out", str(json_out)]
     )
     assert rc == 0
     report = json.loads(json_out.read_text(encoding="utf-8"))
-    assert report["ok"] is True and report["version"] == "1.1.0"
+    assert report["ok"] is True and report["version"] == cur_ver
 
     # 2. Error branches for read_pyproject_version & compute_tex_sha256_manifest
     with pytest.raises(FileNotFoundError, match="Missing pyproject.toml"):
@@ -414,7 +416,7 @@ def test_doc_sync_rule16_pass_and_all_failure_branches(tmp_path: Path) -> None:
     assert doc_sync.main(["--repo-root", str(sandbox), "--write-checksums"]) == 0
     sha_p = sandbox / "docs" / "DOCS_BUILD.sha256"
     sha_p.write_text(sha_p.read_text(encoding="utf-8") + "\n\n", encoding="utf-8")
-    assert doc_sync.main(["--repo-root", str(sandbox), "--expected-tag", "v1.1.0"]) == 0
+    assert doc_sync.main(["--repo-root", str(sandbox), "--expected-tag", cur_vtag]) == 0
 
     # Tamper .tex (stale PDF checksum), remove CHANGELOG (missing file), truncate PDF (empty PDF), mismatch README
     (sandbox / "docs" / "RELEASE_NOTES.tex").write_text("% drifted\n", encoding="utf-8")
@@ -427,3 +429,54 @@ def test_doc_sync_rule16_pass_and_all_failure_branches(tmp_path: Path) -> None:
     assert any("Missing required synchronized document" in e for e in res_bad["errors"])
     assert any("Compiled PDF missing or empty" in e for e in res_bad["errors"])
     assert any("README.md" in e for e in res_bad["errors"])
+
+
+@pytest.mark.unit
+def test_container_files_portable_scripts_and_curated_example() -> None:
+    """Verify Docker/Podman parity, portable scripts, and curated real 4-Gate example completeness."""
+    cur_ver = doc_sync.read_pyproject_version(REPO_ROOT)
+    cf = (REPO_ROOT / "Containerfile").read_text(encoding="utf-8")
+    df = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert cf == df, "Containerfile and Dockerfile must stay byte-identical"
+    assert f'org.opencontainers.image.version="{cur_ver}"' in cf
+    assert f"ifog-vproto:{cur_ver}" in (REPO_ROOT / "compose.yaml").read_text(encoding="utf-8")
+    assert (REPO_ROOT / ".dockerignore").exists()
+
+    for rel in (
+        "scripts/install_systemc.sh",
+        "scripts/install_systemc_ams.sh",
+        "scripts/setup_env.sh",
+        "scripts/env.sh",
+        "scripts/container_run.sh",
+        "examples/run_example.sh",
+    ):
+        p = REPO_ROOT / rel
+        assert p.exists() and p.stat().st_size > 100
+
+    ex = REPO_ROOT / "examples" / "full_4gate_baseline"
+    for fname in (
+        "README.md",
+        "report.md",
+        "report.html",
+        "metrics_summary.json",
+        "phys_params.json",
+        "shupe_summary.json",
+        "sim_summary.json",
+        "gate1_metrics.json",
+        "sweep_results.json",
+        "nonlinearity_summary.json",
+        "k_matrix.json",
+        "gate3_metrics.json",
+        "avar_metrics.json",
+        "figures/waveforms.png",
+        "figures/bunny_ears.png",
+        "figures/psd_flicker.png",
+        "figures/avar_5regions.png",
+    ):
+        fp = ex / fname
+        assert fp.exists() and fp.stat().st_size > 100, f"Missing example deliverable: {fname}"
+
+    ms = json.loads((ex / "metrics_summary.json").read_text(encoding="utf-8"))
+    assert ms["report_meta"]["overall_status"] == "PASS"
+    assert len(ms["gate_statuses"]) == 4
+    assert all(g["status"] == "PASS" for g in ms["gate_statuses"])

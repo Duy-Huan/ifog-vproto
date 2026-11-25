@@ -2,14 +2,14 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v1.1.0}
+\newcommand{\DocVersion}{v1.2.0}
 \newcommand{\DocDate}{2026-11-25}
 
 \usepackage{fontspec}
 \setmainfont{Noto Sans}
 \setmonofont{DejaVu Sans Mono}[Scale=0.84]
 
-\usepackage[a4paper,margin=1.9cm,headheight=14pt]{geometry}
+\usepackage[a4paper,margin=1.85cm,headheight=14pt]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs,tabularx}
 \usepackage[htt]{hyphenat}
@@ -36,7 +36,7 @@
 \fancyhead[R]{\small\color{TealDark}\textbf{\DocVersion} (\DocDate)}
 \fancyfoot[C]{\small\thepage}
 
-\setlength{\parskip}{0.35em}
+\setlength{\parskip}{0.32em}
 \setlength{\parindent}{0pt}
 \sloppy
 \emergencystretch=3em
@@ -44,23 +44,23 @@
 \begin{document}
 \small
 
-\begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=10pt,bottom=10pt]
-{\color{white}\Large\bfseries \texttt{ifog-vproto} --- Official Release Notes}\\[4pt]
+\begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=9pt,bottom=9pt]
+{\color{white}\Large\bfseries \texttt{ifog-vproto} --- Official Release Notes}\\[3pt]
 {\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-004} v4.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
-\section{Release v1.1.0 (2026-11-25)}
+\section{Release v1.2.0 (2026-11-25)}
 
 \subsection{Key New Features}
 \begin{enumerate}
-    \item \textbf{Automated Markdown (\texttt{.md}) \& Interactive HTML (\texttt{.html}) Simulation Reporting in \texttt{report/}:}
-    Upgraded \texttt{viz/export\_report.py} to emit version-stamped Markdown reports (\texttt{report.md}), self-contained interactive Plotly HTML5 reports (\texttt{report.html} featuring Dual-Regime AVAR, Deadband/Bunny Ears, and $1/f$ Flicker PSD plots + KPI tables + 300-DPI gallery), \texttt{metrics\_summary.json}, and auto-maintained \texttt{report/index.\{md,html\}} dashboards.
-    \item \textbf{Unified Simulation Runner Script Suite:}
-    Added \texttt{tier3\_analysis/sim\_runner\_cli.py}, \texttt{scripts/run\_sim.py}, executable \texttt{scripts/run\_sim.sh}, and console script \texttt{ifog-sim-run} supporting \texttt{single}, \texttt{gate1}, \texttt{gate2}, \texttt{gate3}, \texttt{gate4}, \texttt{full}, and \texttt{sweep} modes with automatic Tier 2 build check and automatic report publication into \texttt{report/}.
-    \item \textbf{Synchronized Release \& Architecture Documentation (\texttt{docs/}):}
-    Authored \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.\{md,tex,pdf\}}, \texttt{docs/RELEASE\_NOTES.\{md,tex,pdf\}}, \texttt{docs/CHANGELOG.md}, and reproducible LuaLaTeX builder \texttt{scripts/build\_docs.sh}.
-    \item \textbf{Mandatory Version--Document Synchronization Policy (\texttt{AGENT.md} Rule 16):}
-    Added Rule 16 and pure-stdlib verifier \texttt{tier3\_analysis/doc\_sync.py} / \texttt{scripts/verify\_doc\_sync.py} enforced in both \texttt{ci.yml} and \texttt{release.yml} (asserting exact alignment between Git release tag \texttt{vX.Y.Z}, \texttt{pyproject.toml}, \texttt{docs/*.\{md,tex,pdf\}}, \texttt{docs/DOCS\_BUILD.sha256}, \texttt{README.md}, and \texttt{AGENT.md}). Added project skill \texttt{skills/ifog-reporting-and-doc-sync/SKILL.md}.
+    \item \textbf{Portable Docker \& Podman Container Suite:}
+    Added byte-identical \texttt{Containerfile} and \texttt{Dockerfile}, \texttt{.dockerignore}, OCI \texttt{compose.yaml}, and auto-detecting \texttt{scripts/container\_run.sh} (supporting rootless SELinux Podman \texttt{:Z}/\texttt{--userns=keep-id} and Docker). Pre-builds SystemC 2.3.4, SystemC-AMS 2.3.4, \texttt{nlohmann/json} v3.11.3, isolated Python 3.12 venv, and Release \texttt{-O3} \texttt{build/ifog\_sim} ready out of the box, continuously verified via a dedicated CI container job.
+    \item \textbf{Distro-Independent Linux Git-Source Setup Toolchain:}
+    Added \texttt{scripts/install\_systemc.sh}, upgraded \texttt{scripts/install\_systemc\_ams.sh}, universal bootstrapper \texttt{scripts/setup\_env.sh}, and sourceable \texttt{scripts/env.sh} to build SystemC 2.3.4, SystemC-AMS PoC 2.3.4, \texttt{nlohmann/json}, and Python venv from Git on any Linux distro (Ubuntu/Debian, Fedora/RHEL/Rocky, Arch, rootless HPC) with multi-distro \texttt{CMakeLists.txt} library discovery.
+    \item \textbf{Committed Full Real 4-Gate Feasibility Example (\texttt{examples/full\_4gate\_baseline/}):}
+    Executed and committed a genuine full-scale 4-Gate baseline run (\texttt{README.md}, \texttt{report.md}, interactive \texttt{report.html}, all Tier 1--3 JSONs, and four 300-DPI PNG figures) plus \texttt{examples/run\_example.sh}: Gate 1 static error $3.10\times 10^{-16}\text{ rad}$ ($1{,}666$ wraps), Gate 2 $98.85\%$ Deadband \& Bunny Ears reduction, Gate 3 linear $-0.062$ vs nonlinear $-0.893$ $1/f$ PSD ($\mathbf{K}$ repeatability $0.000\%$), Gate 4 $4\times 60\text{ s}$ Fast + $12\times 10\text{ h}$ ($3.6\times 10^6$ pts @ $100\text{ Hz}$) Slow AVAR overlap $2.42\% < 5\%$ and all 5 WLS parameters within $\pm 10\%$.
+    \item \textbf{Governance \& Skills Sync (Rules 6 \& 16):}
+    Added \texttt{skills/ifog-portable-container-env/SKILL.md} and synchronized all \texttt{docs/*.\{md,tex,pdf\}}, \texttt{DOCS\_BUILD.sha256}, \texttt{CHANGELOG.md}, and \texttt{README.md} to \texttt{\DocVersion}.
 \end{enumerate}
 
 \subsection{Verified Quality Gates \& Attached Release Assets}
@@ -68,19 +68,18 @@
 \toprule
 \textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
 \midrule
-Spec Lock \& Branch Policy & \texttt{IFOG-SIM-SPEC-004.sha256} OK; strictly \texttt{\{main, dev\}} & \textcolor{TealDark}{\textbf{PASS}} \\
-Rule 16 Version--Doc Sync & \texttt{verify\_doc\_sync.py --expected-tag \DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
-Dual-Domain Coverage & C++ \texttt{gcovr} 100.0\% line/fn \& Python \texttt{pytest-cov} 100.0\% line & \textcolor{TealDark}{\textbf{PASS}} \\
-Formula Traceability & 30 / 30 individual spec formulas (\texttt{EQ-01}..\texttt{EQ-30}) & \textcolor{TealDark}{\textbf{PASS}} \\
-Full Real 4-Gate Acceptance & Gate 1--4 full-scale simulations + bit-exact regression & \textcolor{TealDark}{\textbf{PASS}} \\
+Spec Lock, Branch Policy \& Rule 16 & \texttt{IFOG-SIM-SPEC-004.sha256} OK; strictly \texttt{\{main, dev\}}; \texttt{verify\_doc\_sync.py --expected-tag \DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% line/fn \& Python \texttt{pytest-cov} 100.0\% line & \textcolor{TealDark}{\textbf{PASS}} \\
+Formula Traceability \& 4-Gate Sim & 30 / 30 formulas (\texttt{EQ-01}..\texttt{EQ-30}) + Full Real Gate 1--4 \& bit-exact regression & \textcolor{TealDark}{\textbf{PASS}} \\
+Container Build \& In-Container Sim & Live \texttt{Containerfile} build from Git + in-container \texttt{ifog\_cpp\_tests} \& Gate 1 report & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
 
-\vspace{0.5em}
-\textbf{Release Artifacts:} \texttt{IFOG-SIM-SPEC-004.pdf}, \texttt{IFOG\_VPROTO\_ARCHITECTURE.\{pdf,md,tex\}}, \texttt{RELEASE\_NOTES.\{pdf,md,tex\}}, \texttt{formula\_verification\_matrix.\{md,json\}}, \texttt{cpp\_coverage\_summary.json}.
+\section{Previous Releases}
 
-\section{Release v1.0.0 (2026-11-25)}
-
-Initial complete baseline release of the 3-Tier Closed-Loop IFOG Multi-Scale Virtual Prototype (\texttt{IFOG-SIM-SPEC-004} v4.0): checksum-locked spec \& PDF, Tier 1 Jones/Shupe solvers, Tier 2 C++17 IEEE 1666.1 SystemC/SystemC-AMS 2.3.4 closed-loop core, Tier 3 parallel sweeps, $\mathbf{K}$-matrix extractor, 10 h Dual-Regime Overlapping AVAR + 5-region WLS estimator, 30/30 formula checks, 100\% dual-domain coverage, 5 project skills, and strict 2-branch GitHub Actions CI/CD.
+\begin{itemize}
+    \item \textbf{Release v1.1.0 (2026-11-25):} Automated Markdown (\texttt{.md}) \& interactive HTML (\texttt{.html}) simulation reporting + dashboard index under \texttt{report/}, unified simulation runner (\texttt{scripts/run\_sim.\{sh,py\}}), synchronized architecture/release docs under \texttt{docs/}, and mandatory \texttt{AGENT.md} Rule 16 version--document sync CI gate.
+    \item \textbf{Release v1.0.0 (2026-11-25):} Initial complete 3-Tier Closed-Loop IFOG Virtual Prototype (\texttt{IFOG-SIM-SPEC-004} v4.0): locked spec \& PDF, Tier 1 Jones/Shupe solvers, Tier 2 C++17 IEEE 1666.1 SystemC/SystemC-AMS 2.3.4 closed-loop core, Tier 3 sweeps, $\mathbf{K}$-matrix, 10 h Dual-Regime AVAR + 5-region WLS, 30/30 formulas, 100\% coverage, and 2-branch CI/CD.
+\end{itemize}
 
 \end{document}

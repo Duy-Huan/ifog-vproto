@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-ARCH-001}
-\newcommand{\DocVersion}{v1.1.0}
+\newcommand{\DocVersion}{v1.2.0}
 \newcommand{\DocDate}{2026-11-25}
 
 \usepackage{fontspec}
@@ -79,6 +79,7 @@ Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \midrule
 \texttt{v1.0.0} & 2026-11-25 & Initial Full Release & Complete 3-Tier Virtual Prototype (\texttt{tier1\_offline}, C++17 SystemC-AMS 2.3.4 \texttt{tier2\_sysc\_ams}, \texttt{tier3\_analysis}, \texttt{viz}), 30/30 formula verification, 100\% C++ \& Python coverage, real 4-Gate acceptance suite, strict 2-branch CI/CD. \\
 \texttt{v1.1.0} & 2026-11-25 & Auto-Reporting \& Doc-Sync & Added automatic \texttt{.md} + interactive \texttt{.html} reporting and dashboard index under \texttt{report/}; unified simulation runner (\texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_sim.py}, \texttt{sim\_runner\_cli.py}); full release docs (\texttt{.md}/\texttt{.tex}/\texttt{.pdf}) under \texttt{docs/}; enacted \textbf{Rule 16} mandatory version--document sync CI gate. \\
+\texttt{v1.2.0} & 2026-11-25 & Portable Containers \& Example & Added universal Git-source installers for SystemC 2.3.4, SystemC-AMS 2.3.4, \texttt{nlohmann/json}, and Python venv (\texttt{scripts/setup\_env.sh}, \texttt{scripts/env.sh}); added Docker/Podman suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}); executed and committed full real 4-Gate feasibility example (\texttt{examples/full\_4gate\_baseline/}). \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -249,7 +250,16 @@ Every pull request (\texttt{dev -> main}) and SemVer release tag (\texttt{vX.Y.Z
     \item \textbf{Governance, Branch Policy, Spec Lock \& Rule 16 Doc-Sync:} Enforces strictly 2 branches (\texttt{\{main, dev\}}), verifies \texttt{spec/IFOG-SIM-SPEC-004.sha256}, verifies all project skills, and executes \texttt{python3 scripts/verify\_doc\_sync.py} (with \texttt{--expected-tag} on release tags) asserting exact synchronization across \texttt{pyproject.toml}, \texttt{docs/*.\{md,tex,pdf\}}, \texttt{docs/DOCS\_BUILD.sha256}, \texttt{docs/CHANGELOG.md}, \texttt{README.md}, and \texttt{AGENT.md}.
     \item \textbf{Dual-Domain 100.0\% Coverage (Rules 2 \& 14):} Enforces \texttt{100.0\%} C++ line coverage (\texttt{gcovr --fail-under-line 100}) and \texttt{100.0\%} Python line coverage (\texttt{pytest-cov}, \texttt{fail\_under = 100}).
     \item \textbf{30-Formula Independent CI Verification (Rule 3):} Runs \texttt{scripts/verify\_formulas\_ci.py} asserting all 30 equations pass individually.
-    \item \textbf{Full Real 4-Gate Acceptance \& Regression Suite (Rule 5):} Runs Gate 1 (static error $5.47\times 10^{-14}\text{ rad}$), Gate 2 ($>99\%$ Deadband \& Bunny Ears reduction), Gate 3 (flat linear vs $-1$ nonlinear PSD \& $\mathbf{K}$-matrix $< 2\%$), Gate 4 ($60\text{ s}$ Fast-Scale + $10\text{ h}$ Slow-Scale overlap $2.42\% < 5\%$ \& all 5 WLS parameters within $\pm 10\%$), and deterministic bit-exact regression.
+    \item \textbf{Full Real 4-Gate Acceptance \& Regression Suite (Rule 5):} Runs Gate 1 (static error $3.10\times 10^{-16}\text{ rad}$, $1{,}666$ wraps), Gate 2 ($98.85\%$ Deadband \& Bunny Ears reduction), Gate 3 (flat linear $-0.062$ vs $-0.893$ nonlinear $1/f$ PSD \& $\mathbf{K}$-matrix $0.000\%$ repeat), Gate 4 ($60\text{ s}$ Fast-Scale + $10\text{ h}$ Slow-Scale overlap $2.42\% < 5\%$ \& all 5 WLS parameters within $\pm 10\%$), and deterministic bit-exact regression.
+    \item \textbf{Container CI Verification:} Builds \texttt{Containerfile} cleanly from Git sources and runs live in-container C++ tests and Gate 1 simulation producing host-mounted reports.
 \end{enumerate}
+
+\section{Portable Linux Toolchain, OCI Containers \& Curated Example}
+
+\begin{itemize}
+    \item \textbf{Distro-Independent Source Setup (\texttt{scripts/setup\_env.sh}, \texttt{scripts/install\_systemc.sh}, \texttt{scripts/install\_systemc\_ams.sh}, \texttt{scripts/env.sh}):} Pulls and builds Accellera SystemC 2.3.4, SystemC-AMS PoC 2.3.4, \texttt{nlohmann/json} v3.11.3, and an isolated Python 3 virtual environment into \texttt{/opt/ifog-env} (root/container) or \texttt{\$HOME/.local/ifog-env} (rootless Linux/HPC), exporting all runtime and CMake variables via \texttt{source scripts/env.sh}.
+    \item \textbf{Docker \& Podman OCI Suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}):} Layer-cached Ubuntu 24.04 OCI image pre-built with SystemC 2.3.4, SystemC-AMS 2.3.4, Python venv, and Release \texttt{-O3} \texttt{build/ifog\_sim}. \texttt{scripts/container\_run.sh} auto-detects Podman (with rootless \texttt{:Z} and \texttt{--userns=keep-id}) or Docker.
+    \item \textbf{Curated Real 4-Gate Example (\texttt{examples/full\_4gate\_baseline/}, \texttt{examples/run\_example.sh}):} Complete real 4-Gate baseline outputs (\texttt{report.md}, interactive \texttt{report.html}, all Tier 1--3 JSON telemetry, and all four 300-DPI diagnostic figures) committed for zero-setup feasibility review.
+\end{itemize}
 
 \end{document}

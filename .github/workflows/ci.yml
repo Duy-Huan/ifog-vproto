@@ -67,10 +67,11 @@ jobs:
             ifog-tier2-sysc-ams-core \
             ifog-tier3-dual-regime-avar \
             ifog-reporting-and-doc-sync \
+            ifog-portable-container-env \
             ifog-cicd-release-workflow; do
             test -s "skills/${skill}/SKILL.md"
           done
-          echo "AGENT.md and all 6 project skills verified."
+          echo "AGENT.md and all 7 project skills verified."
 
       - name: Enforce Rule 16 — Mandatory Version-Document Synchronization
         run: |
@@ -150,3 +151,34 @@ jobs:
             data/cov_cpp_work/cpp_coverage_summary.json
             data/python_coverage.xml
           if-no-files-found: warn
+
+  container-build-and-verify:
+    name: Build OCI Containerfile (Git SystemC/SC-AMS) & Run Live In-Container Sim
+    needs: governance-and-spec-lock
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Containerfile (with GHA layer cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Containerfile
+          load: true
+          tags: ifog-vproto:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Verify live in-container simulation & auto-reporting into host report/
+        run: |
+          set -euo pipefail
+          ./scripts/container_run.sh --engine docker --tag ifog-vproto:ci sim --mode gate1 --run-id ci_container_gate1
+          test -s report/ci_container_gate1/report.md
+          test -s report/ci_container_gate1/report.html
+          test -s report/index.html
+          echo "Container build & live Gate 1 auto-report PASSED!"
