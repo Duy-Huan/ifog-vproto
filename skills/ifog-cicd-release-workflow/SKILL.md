@@ -33,3 +33,9 @@ description: Strict 2-branch (dev -> main) Git governance, zero-extra-branch enf
    ```
 6. Wait for `.github/workflows/release.yml` to re-verify all gates and publish the GitHub Release `vX.Y.Z` with attached spec PDF, formula verification matrix, and coverage reports.
 7. Sync `dev` back with `main` (`git checkout dev && git merge main && git push origin dev`).
+
+## 4. Empirical CI/CD Toolchain Gotchas (Accumulated Lessons)
+- **Pin `runs-on: ubuntu-24.04` (never `ubuntu-latest`):** GitHub's `ubuntu-latest` migrates to newer LTS images (e.g., `ubuntu-26.04`) with newer `automake` / GCC / SystemC versions that break `aclocal-1.16` and SystemC 2.3.4 ABI parity. Pinning `ubuntu-24.04` ensures bit-consistent SystemC 2.3.4 (`SC_CPLUSPLUS=201703L`), `gcovr`, and `actions/cache` keys across CI and Release workflows.
+- **Autotools Timestamp Trap on `git clone`:** When building SystemC-AMS PoC 2.3.4 from a fresh `git clone`, `configure.ac` can share the same mtime as `aclocal.m4`/`Makefile.in`, causing `make` to invoke version-pinned `aclocal-1.16` and fail with exit code 127. `scripts/install_systemc_ams.sh` explicitly orders generated-file timestamps (`aclocal.m4` < `configure` < `config.h.in` < `Makefile.in`) and passes `ACLOCAL=true AUTOMAKE=true AUTOCONF=true AUTOHEADER=true` to `make`.
+- **Private Repo Actions Quota:** A 1–2 s failure with `runner_id: 0`, `steps: []`, and `log not found` before any step executes indicates GitHub rejected runner allocation (e.g., private-repo free-tier quota / spending limit), not a workflow YAML error.
+

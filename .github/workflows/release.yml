@@ -11,7 +11,7 @@ permissions:
 jobs:
   release-verify-and-publish:
     name: Verify Release Tag, Full Gates & Publish GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
       SYSTEMC_AMS_HOME: ${{ github.workspace }}/.cache/systemc-ams

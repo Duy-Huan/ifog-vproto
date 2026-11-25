@@ -23,6 +23,13 @@ rm -rf "$WORK_DIR"
 git clone "$SYSTEMC_AMS_REPO" "$WORK_DIR"
 git -C "$WORK_DIR" checkout "$SYSTEMC_AMS_COMMIT"
 
+# Preserve autotools generated-file timestamp ordering after git checkout so
+# make never tries to regenerate aclocal.m4 / configure with version-pinned aclocal-1.16.
+touch -d "+2 seconds" "$WORK_DIR/aclocal.m4"
+touch -d "+4 seconds" "$WORK_DIR/configure"
+find "$WORK_DIR" -name 'config.h.in' -exec touch -d "+5 seconds" {} +
+find "$WORK_DIR" -name 'Makefile.in' -exec touch -d "+6 seconds" {} +
+
 # Create a SystemC staging view compatible with SystemC-AMS configure/CMake if using Debian/Ubuntu multiarch
 SYSTEMC_VIEW="$WORK_DIR/systemc-view"
 mkdir -p "$SYSTEMC_VIEW/include" "$SYSTEMC_VIEW/lib-linux64"
@@ -53,8 +60,8 @@ mkdir -p "$BUILD_DIR"
         --with-arch-suffix="" \
         --disable-systemc_compile_check \
         CXXFLAGS="-O3 -std=c++17 -DSC_CPLUSPLUS=201703L -fPIC"
-    make -j"$(nproc)"
-    make install
+    make -j"$(nproc)" ACLOCAL=true AUTOMAKE=true AUTOCONF=true AUTOHEADER=true
+    make install ACLOCAL=true AUTOMAKE=true AUTOCONF=true AUTOHEADER=true
 )
 
 rm -rf "$WORK_DIR"
