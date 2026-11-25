@@ -5,12 +5,28 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v2.0.0` |
+| **Current Version** | `v2.1.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0) & [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v2.1.0` (2026-11-25)
+
+### Highlights & New Capabilities
+1. **Complete Real All-Scenarios Curated Example Committed to Repo (`examples/full_all_scenarios/`):**
+   - Executed end-to-end via `./examples/run_example.sh --sync-example` (zero mocks, zero smoke tests): **Gates 1–4** (including $4\times 60\text{ s}$ Fast-Scale SystemC-AMS + $12\times 10\text{ h}$ / $3.6\times 10^6$-sample Slow-Scale AVAR) + **Gate 5 Official 6-State Symmetric DSP** + **6 Time-Domain (`TD-01`..`TD-06`)** + **5 System Engineering & Production (`ENG-01`..`ENG-05`, `MC=500`)** = **`16 / 16` PASS**.
+   - Committed complete deliverables for direct visual & technical review: [`README.md`](../examples/full_all_scenarios/README.md), full [`report.md`](../examples/full_all_scenarios/report.md), interactive [`report.html`](../examples/full_all_scenarios/report.html) (**15 interactive Plotly HTML5 charts** + 16-plot gallery), all **16 300-DPI PNG figures** under `figures/`, [`virtual_calibration_dataset.csv`](../examples/full_all_scenarios/virtual_calibration_dataset.csv), and all Gate/TD/ENG JSON telemetry.
+2. **Upgraded Full-Suite Interactive HTML5 & Markdown Reporting (`viz/export_report.py`):**
+   - Expanded `_build_interactive_html()` with modular `_build_plotly_sections()` rendering **15 interactive multi-panel Plotly HTML5 charts** covering Gate 2, Gate 3, Gate 4, Gate 5, `TD-01`..`TD-06`, and `ENG-01`..`ENG-05` (with single-load CDN for fast rendering) alongside the 16-figure 300-DPI PNG gallery.
+   - Expanded `_build_markdown_report()` with dedicated Gate 5 6-State DSP comparison, Group A Time-Domain (`TD-01`..`TD-06`), Group B System Engineering (`ENG-01`..`ENG-05`), ENG-04 5-fault FPGA BIT/FDIR, and ENG-05 Monte Carlo Yield / Virtual Thermal Calibration tables.
+3. **One-Command All-Scenarios Execution Across All Scripts:**
+   - Upgraded [`examples/run_example.sh`](../examples/run_example.sh), [`scripts/run_all_scenarios.sh`](../scripts/run_all_scenarios.sh) (default `--mc-runs 500`), and [`scripts/container_run.sh`](../scripts/container_run.sh) (`example` subcommand) so running any example or batch script executes **ALL 16 official gates & scenarios** and automatically generates `report.md`, interactive `report.html`, all 16 300-DPI PNG plots, CSV calibration data, and `report/index.{md,html}`.
+4. **Rule 6, Rule 14 & Rule 16 Verification:**
+   - Maintained **100.0% C++ (`1,546/1,546` lines, `109/109` functions)** & **100.0% Python line coverage**, **41/41 verified formulas**, updated [`skills/ifog-reporting-and-doc-sync/SKILL.md`](../skills/ifog-reporting-and-doc-sync/SKILL.md), and synchronized all `.md`/`.tex`/`.pdf`, `DOCS_BUILD.sha256`, `Containerfile`/`Dockerfile`/`compose.yaml`, and `README.md` to `v2.1.0`.
 
 ---
 

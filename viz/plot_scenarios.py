@@ -226,17 +226,30 @@ def plot_eng_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
     eng02 = _load_json(rdir / "eng02_imu_3axis.json")
     if eng02 is not None:
         out = fdir / "eng02_imu_3axis.png"
-        fig, ax = plt.subplots(figsize=(7.2, 4.0), dpi=300)
+        fig, ax = plt.subplots(figsize=(8.2, 4.3), dpi=300)
         cats = ["Isolated\n(4-State)", "Shared SLD/Rail\n(4-State)", "Shared SLD/Rail\n(6-State)"]
         vals = [
             abs(float(eng02["isolated_4state"]["y_bias_err_deg_per_h"])),
             abs(float(eng02["coupled_4state"]["y_bias_err_deg_per_h"])),
             abs(float(eng02["coupled_6state"]["y_bias_err_deg_per_h"])),
         ]
-        ax.bar(cats, vals, color=["#4A5568", "#C53030", "#0E6251"], width=0.5)
+        bars = ax.bar(cats, vals, color=["#4A5568", "#C53030", "#0E6251"], width=0.48)
+        ymax = max(vals) * 1.18 + 1e-6
+        ax.set_ylim(0.0, ymax)
+        for bar, val in zip(bars, vals):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2.0,
+                val + ymax * 0.02,
+                f"{val:.3g} deg/h",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+                fontweight="bold",
+            )
         ax.set_ylabel("Stationary Axis-Y Bias Error [deg/h]")
         ax.set_title(
-            f"ENG-02: 3-Axis IMU Inter-Axis Crosstalk (Axis X=500 deg/s, Rail Droop={eng02['peak_rail_droop_V']*1e3:.1f} mV)"
+            f"ENG-02: 3-Axis IMU Inter-Axis Crosstalk (Axis X=500 deg/s, Rail Droop={eng02['peak_rail_droop_V']*1e3:.1f} mV)",
+            fontsize=10,
         )
         ax.grid(True, axis="y", alpha=0.3)
         fig.tight_layout()

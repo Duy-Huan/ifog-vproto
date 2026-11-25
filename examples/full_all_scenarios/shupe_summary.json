@@ -1,0 +1,9 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-004",
+  "source_mode": "1d_diffusion",
+  "n_samples": 3601,
+  "duration_s": 36000.0,
+  "max_abs_delta_phi_rad": 2.439547046322408e-07,
+  "max_abs_omega_shupe_deg_per_h": 0.0372140437405181,
+  "final_delta_phi_rad": -2.4367841390357794e-07
+}

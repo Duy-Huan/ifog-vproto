@@ -1,0 +1,11 @@
+{
+  "slope_linear": -0.06208272936085279,
+  "slope_nonlinear": -0.8928326805844572,
+  "k_repeatability_max_rel_pct": 0.0,
+  "K_physical_vector": [
+    0.000678134653790857,
+    0.00011327826327586203,
+    8382.290403119148
+  ],
+  "gate3_pass": true
+}

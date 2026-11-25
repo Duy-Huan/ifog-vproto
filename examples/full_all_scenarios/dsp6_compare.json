@@ -1,0 +1,28 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-005",
+  "formula_ids": [
+    "EQ-31",
+    "EQ-32",
+    "EQ-33",
+    "EQ-34"
+  ],
+  "four_state": {
+    "alpha_rad": 0.7853981633974483,
+    "peak_bias_vpi_frac": 1.0,
+    "static_err_rad": 7.72090185233649e-17,
+    "final_eps_vpi_eff": 2.4424906541753444e-15,
+    "ram_xtalk_bias_deg_per_h": 354.5645706131619
+  },
+  "six_state": {
+    "alpha_rad": 1.0471975511965976,
+    "peak_bias_vpi_frac": 0.6666666666666666,
+    "static_err_rad": 1.277128666581187e-16,
+    "final_eps_vpi_eff": 1.3101963958206397e-11,
+    "ram_xtalk_bias_deg_per_h": 5.044904934279143e-05,
+    "e_asym_rms_counts": 169.8728094005025
+  },
+  "ram_xtalk_rejection_ratio": 7028171.496433262,
+  "ram_xtalk_rejection_dB": 136.9368470059413,
+  "peak_voltage_reduction_pct": 33.333333333333336,
+  "dsp6_pass": true
+}

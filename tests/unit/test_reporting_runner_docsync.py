@@ -486,3 +486,61 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
     assert ms["report_meta"]["overall_status"] == "PASS"
     assert len(ms["gate_statuses"]) == 4
     assert all(g["status"] == "PASS" for g in ms["gate_statuses"])
+
+    # Complete SPEC-005 All-Scenarios curated example (Gates 1-5 + 6 TD + 5 ENG = 16 PASS, 16 300-DPI PNGs)
+    ex_all = REPO_ROOT / "examples" / "full_all_scenarios"
+    for fname in (
+        "README.md",
+        "report.md",
+        "report.html",
+        "metrics_summary.json",
+        "virtual_calibration_dataset.csv",
+        "phys_params.json",
+        "shupe_summary.json",
+        "sim_summary.json",
+        "gate1_metrics.json",
+        "sweep_results.json",
+        "nonlinearity_summary.json",
+        "k_matrix.json",
+        "gate3_metrics.json",
+        "avar_metrics.json",
+        "dsp6_compare.json",
+        "td01_blanking.json",
+        "td02_step_sine.json",
+        "td03_vpi_shock.json",
+        "td04_high_rate.json",
+        "td05_shupe_shock.json",
+        "td06_limit_cycles.json",
+        "eng01_hw_sizing.json",
+        "eng02_imu_3axis.json",
+        "eng03_vre_faraday.json",
+        "eng04_fault_bit.json",
+        "eng05_mc_yield_cal.json",
+        "figures/waveforms.png",
+        "figures/bunny_ears.png",
+        "figures/psd_flicker.png",
+        "figures/avar_5regions.png",
+        "figures/dsp6_compare.png",
+        "figures/td01_blanking.png",
+        "figures/td02_step_bode.png",
+        "figures/td03_vpi_shock.png",
+        "figures/td04_high_rate.png",
+        "figures/td05_shupe_shock.png",
+        "figures/td06_limit_cycles.png",
+        "figures/eng01_hw_sizing.png",
+        "figures/eng02_imu_3axis.png",
+        "figures/eng03_vre_faraday.png",
+        "figures/eng04_fault_bit.png",
+        "figures/eng05_mc_yield_cal.png",
+    ):
+        fp = ex_all / fname
+        assert fp.exists() and fp.stat().st_size > 100, f"Missing all-scenarios example deliverable: {fname}"
+
+    ms_all = json.loads((ex_all / "metrics_summary.json").read_text(encoding="utf-8"))
+    assert ms_all["report_meta"]["overall_status"] == "PASS"
+    assert len(ms_all["gate_statuses"]) == 16
+    assert all(g["status"] == "PASS" for g in ms_all["gate_statuses"])
+    html_all = (ex_all / "report.html").read_text(encoding="utf-8")
+    assert "Interactive Telemetry — Core Acceptance Gates" in html_all
+    assert "Interactive Telemetry — Group A: 6 Time-Domain Scenarios" in html_all
+    assert "Interactive Telemetry — Group B: 5 System Engineering Scenarios" in html_all

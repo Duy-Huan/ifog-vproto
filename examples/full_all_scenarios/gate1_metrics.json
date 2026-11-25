@@ -1,0 +1,8 @@
+{
+  "small_signal_target_rad": 1e-08,
+  "small_signal_err_rad": 3.0962401491211434e-16,
+  "large_step_err_rad": 2.220446049250313e-16,
+  "flyback_count": 1666,
+  "final_eps_vpi_eff": 5.839773109528323e-14,
+  "gate1_pass": true
+}

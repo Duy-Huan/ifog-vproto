@@ -149,12 +149,30 @@ def test_td_and_eng_scenarios_real_coverage(tmp_path: Path, monkeypatch: pytest.
     (fail_dir / "eng04_fault_bit.json").write_text(json.dumps(e4_copy), encoding="utf-8")
     assert len(plot_eng_scenarios(fail_dir, fail_dir / "figs")) == 1
 
-    # Export full unified report (.png, .md, .html + CSV copy) covering all _summarize_scenario_detail branches
+    # Export full unified report (.png, .md, .html + CSV copy) covering all _summarize_scenario_detail & Plotly branches
     rep = export_run_report(out_all, formats=("png", "md", "html"), report_dir=tmp_path / "rep_all", update_index=True)
     assert rep["report_meta"]["overall_status"] == "PASS"
     assert (tmp_path / "rep_all" / "virtual_calibration_dataset.csv").exists()
     assert (tmp_path / "rep_all" / "figures" / "dsp6_compare.png").exists()
     assert plot_dsp6_compare(dsp6, tmp_path / "dsp6_single.png").exists()
+
+    md_text = (tmp_path / "rep_all" / "report.md").read_text(encoding="utf-8")
+    html_text = (tmp_path / "rep_all" / "report.html").read_text(encoding="utf-8")
+    assert "## 7. Gate 5 — Official 6-State Symmetric DSP Benchmark" in md_text
+    assert "## 8. Group A — Official Time-Domain Scenarios" in md_text
+    assert "## 9. Group B — System Engineering & Production Scenarios" in md_text
+    assert "ENG-04 — Real-Time FPGA BIT/FDIR" in md_text
+    assert "ENG-05 — Monte Carlo Production Yield" in md_text
+    for marker in (
+        "Interactive Telemetry — Core Acceptance Gates",
+        "Interactive Telemetry — Group A: 6 Time-Domain Scenarios",
+        "Interactive Telemetry — Group B: 5 System Engineering",
+        "Official 6-State DSP",
+        "12-Bit Quantization Idle Tones",
+        "Hardware Sizing & Cost Trade-Off",
+        "Monte Carlo Production Yield",
+    ):
+        assert marker in html_text
 
 
 @pytest.mark.unit
