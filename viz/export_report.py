@@ -25,6 +25,7 @@ from tier3_analysis.binary_io import compute_welch_psd, read_sim_records
 from viz.plot_avar_5regions import plot_avar_5regions
 from viz.plot_bunny_ears import plot_bunny_ears
 from viz.plot_psd_flicker import plot_psd_flicker
+from viz.plot_scenarios import plot_dsp6_compare, plot_eng_scenarios, plot_td_scenarios
 from viz.plot_waveforms import plot_waveforms
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -104,6 +105,35 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
         )
         rows.append({"gate": "Gate 4 — Dual-Regime 5-Region AVAR", "status": "PASS" if passed else "FAIL", "detail": detail})
 
+    dsp6 = summary.get("dsp6_compare")
+    if dsp6 is not None:
+        passed = bool(dsp6.get("dsp6_pass", False))
+        s6 = dsp6["six_state"]
+        detail = (
+            f"6-state static err={_fmt_num(s6.get('static_err_rad'), '.2e')} rad, "
+            f"eps_Vpi={_fmt_num(s6.get('final_eps_vpi_eff'), '.2e')}, "
+            f"RAM/xtalk gain={_fmt_num(dsp6.get('ram_xtalk_rejection_dB'), '.1f')} dB"
+        )
+        rows.append({"gate": "Gate 5 — Official 6-State DSP (EQ-31..34)", "status": "PASS" if passed else "FAIL", "detail": detail})
+
+    for sc_id, sc in summary.get("td_scenarios", {}).items():
+        rows.append(
+            {
+                "gate": f"{sc_id} — {sc.get('title', sc_id)}",
+                "status": "PASS" if bool(sc.get("pass", False)) else "FAIL",
+                "detail": _summarize_scenario_detail(sc_id, sc),
+            }
+        )
+
+    for sc_id, sc in summary.get("eng_scenarios", {}).items():
+        rows.append(
+            {
+                "gate": f"{sc_id} — {sc.get('title', sc_id)}",
+                "status": "PASS" if bool(sc.get("pass", False)) else "FAIL",
+                "detail": _summarize_scenario_detail(sc_id, sc),
+            }
+        )
+
     if not rows and summary.get("sim_summary") is not None:
         ss = summary["sim_summary"]
         detail = (
@@ -115,6 +145,32 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
         rows.append({"gate": "Closed-Loop Tier 2 Run", "status": "PASS", "detail": detail})
 
     return rows
+
+
+def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
+    """Build concise quantitative KPI summary string for TD-01..06 & ENG-01..05 rows."""
+    if sc_id == "TD-01":
+        return f"t_s={sc['tia_ts_0p1pct_ns']:.1f} ns, k*_opt={sc['k_start_optimal_0p5pct']}, clean_err={sc['clean_window_max_err_pct']:.3f}%, ARW x{sc['arw_blanking_penalty_factor']:.3f}"
+    if sc_id == "TD-02":
+        return f"t_r={sc['rise_time_10_90_ms']:.2f} ms, OS={sc['overshoot_pct']:.1f}%, BW={sc['bw_3db_measured_Hz']:.0f} Hz (theory {sc['bw_3db_theory_Hz']:.0f} Hz)"
+    if sc_id == "TD-03":
+        return f"4s eps={sc['four_state']['final_eps_vpi_eff']:.2e}, 6s eps={sc['six_state']['final_eps_vpi_eff']:.2e}, 6s conv={sc['six_state']['convergence_99pct_ms']:.1f} ms"
+    if sc_id == "TD-04":
+        return f"700 deg/s err={sc['hold_700_err_pct']:.3f}%, wraps={sc['flyback_count']:,} ({sc['flyback_rate_kHz']:.1f} kHz), anti-windup={sc['anti_windup_flag_count']}"
+    if sc_id == "TD-05":
+        return f"Peak={sc['peak_uncompensated_bias_deg_per_h']:.3f} deg/h, filter suppression={sc['thermal_compensation_reduction_pct']:.1f}%, r={sc['truth_correlation_r']:.4f}"
+    if sc_id == "TD-06":
+        return f"Bias reduction={sc['bias_err_reduction_pct']:.1f}%, unique DAC codes {sc['without_dither']['unique_dac_codes']}->{sc['with_dither']['unique_dac_codes']}"
+    if sc_id == "ENG-01":
+        return f"Min ENOB={sc['recommended_min_bits']}-bit, Jitter ARW deg={sc['jitter_sweep'][-1]['arw_degradation_pct']:+.1f}%, best Pareto ARW={sc['pareto_optimal']['arw_deg_per_rt_h']:.4e} deg/rt-h"
+    if sc_id == "ENG-02":
+        return f"Rail droop={sc['peak_rail_droop_V']*1e3:.1f} mV, Axis-Y xtalk 4s={sc['inter_axis_y_crosstalk_4state_deg_per_h']:.3e} vs 6s={sc['inter_axis_y_crosstalk_6state_deg_per_h']:.3e} deg/h"
+    if sc_id == "ENG-03":
+        return f"VRE={sc['vre']['vre_coeff_nonlinear_deg_h_per_g2']:.3e} deg/h/g^2, Faraday={sc['faraday']['sensitivity_measured_deg_h_per_G']:.3f} deg/h/G, Mu-metal={sc['faraday']['required_mumetal_shield_dB_for_1G_0p01degh']:.1f} dB"
+    if sc_id == "ENG-04":
+        max_tta = max(c["time_to_alert_us"] for c in sc["cases"])
+        return f"5/5 faults detected, max TTA={max_tta:.1f} us, SEU FDIR recovered={sc['cases'][-1]['fdir_recovered']}"
+    return f"MC Yield={sc['monte_carlo']['yield_pct']:.1f}% (N={sc['monte_carlo']['n_runs']}, Cpk={sc['monte_carlo']['cpk_bias_1degh']:.2f}), Cal Poly red={sc['virtual_calibration']['poly_reduction_pct']:.1f}%"
 
 
 def _overall_status(gate_rows: list[dict[str, str]]) -> str:
@@ -136,7 +192,7 @@ def _build_markdown_report(
         "",
         "| Field | Value |",
         "| :--- | :--- |",
-        f"| **Specification** | `{summary['spec_id']}` (v4.0) |",
+        f"| **Specification** | `{summary['spec_id']}` (v5.0) |",
         f"| **Software Version** | `v{meta['version']}` |",
         f"| **Run Mode** | `{meta['mode']}` |",
         f"| **Generated (UTC)** | `{meta['generated_utc']}` |",
@@ -414,7 +470,7 @@ def _build_interactive_html(
         fig.update_yaxes(type="log", title_text="PSD [(rad/s)^2/Hz]", row=3, col=1)
 
     fig.update_layout(
-        title=f"IFOG-SIM-SPEC-004 Interactive Diagnostics — {meta['run_id']} (v{meta['version']})",
+        title=f"IFOG-SIM-SPEC-005 Interactive Diagnostics — {meta['run_id']} (v{meta['version']})",
         height=420 * rows_count,
         template="plotly_white",
     )
@@ -485,7 +541,7 @@ def _build_interactive_html(
         "pre{background:#1A202C;color:#E2E8F0;padding:1rem;border-radius:8px;overflow-x:auto;font-size:.82rem;}"
         "</style></head><body>"
         "<div class='header'>"
-        f"<h1>IFOG-SIM-SPEC-004 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
+        f"<h1>IFOG-SIM-SPEC-005 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
         "<div class='meta'>"
         f"<span>Version: <strong>v{html.escape(meta['version'])}</strong></span>"
         f"<span>Mode: <strong>{html.escape(meta['mode'])}</strong></span>"
@@ -579,7 +635,7 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
         ".badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-weight:700;font-size:.8rem;color:#FFF;}"
         ".badge.pass{background:#0E6251;} .badge.fail{background:#9B2C2C;} .badge.info{background:#4A5568;}"
         "</style></head><body>"
-        f"<h1>IFOG-SIM-SPEC-004 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
+        f"<h1>IFOG-SIM-SPEC-005 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
         "<table><thead><tr><th>Run ID</th><th>Mode</th><th>Version</th><th>Generated (UTC)</th><th>Status</th><th>Markdown</th><th>HTML</th></tr></thead>"
         f"<tbody>{''.join(html_rows)}</tbody></table>"
         "</body></html>",
@@ -603,8 +659,27 @@ def export_run_report(
     fig_dir.mkdir(parents=True, exist_ok=True)
 
     meta_in = run_meta or {}
+    td_files = (
+        ("TD-01", "td01_blanking.json"),
+        ("TD-02", "td02_step_sine.json"),
+        ("TD-03", "td03_vpi_shock.json"),
+        ("TD-04", "td04_high_rate.json"),
+        ("TD-05", "td05_shupe_shock.json"),
+        ("TD-06", "td06_limit_cycles.json"),
+    )
+    eng_files = (
+        ("ENG-01", "eng01_hw_sizing.json"),
+        ("ENG-02", "eng02_imu_3axis.json"),
+        ("ENG-03", "eng03_vre_faraday.json"),
+        ("ENG-04", "eng04_fault_bit.json"),
+        ("ENG-05", "eng05_mc_yield_cal.json"),
+    )
+    td_loaded = {k: v for k, fname in td_files if (v := _load_optional_json(rdir / fname)) is not None}
+    eng_loaded = {k: v for k, fname in eng_files if (v := _load_optional_json(rdir / fname)) is not None}
+    dsp6_loaded = _load_optional_json(rdir / "dsp6_compare.json")
+
     summary: dict[str, Any] = {
-        "spec_id": "IFOG-SIM-SPEC-004",
+        "spec_id": "IFOG-SIM-SPEC-005",
         "run_dir": str(rdir),
         "report_dir": str(dest_dir),
         "phys_params": _load_optional_json(rdir / "phys_params.json"),
@@ -615,6 +690,9 @@ def export_run_report(
         "gate3_metrics": _load_optional_json(rdir / "gate3_metrics.json"),
         "nonlinearity_summary": _load_optional_json(rdir / "nonlinearity_summary.json"),
         "avar_metrics": _load_optional_json(rdir / "avar_metrics.json"),
+        "dsp6_compare": dsp6_loaded,
+        "td_scenarios": td_loaded,
+        "eng_scenarios": eng_loaded,
         "generated_artifacts": [],
     }
 
@@ -653,6 +731,24 @@ def export_run_report(
             summary["generated_artifacts"].append(str(p))
             fig_rel_paths.append("figures/avar_5regions.png")
 
+        if dsp6_loaded is not None:
+            p = plot_dsp6_compare(dsp6_loaded, fig_dir / "dsp6_compare.png")
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append("figures/dsp6_compare.png")
+
+        for p in plot_td_scenarios(rdir, fig_dir):
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append(f"figures/{p.name}")
+
+        for p in plot_eng_scenarios(rdir, fig_dir):
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append(f"figures/{p.name}")
+
+    cal_csv = rdir / "virtual_calibration_dataset.csv"
+    if cal_csv.exists() and dest_dir.resolve() != rdir.resolve():
+        shutil.copy2(cal_csv, dest_dir / cal_csv.name)
+        summary["generated_artifacts"].append(str(dest_dir / cal_csv.name))
+
     gate_rows = _compute_gate_statuses(summary)
     summary["gate_statuses"] = gate_rows
     summary["report_meta"] = {
@@ -689,7 +785,7 @@ def export_run_report(
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for unified diagnostic report export."""
     parser = argparse.ArgumentParser(
-        description="Export IFOG-SIM-SPEC-004 Metrics Summary, 300-DPI PNGs, Markdown & HTML Reports"
+        description="Export IFOG-SIM-SPEC-005 Metrics Summary, 300-DPI PNGs, Markdown & HTML Reports"
     )
     parser.add_argument("--run", required=True, help="Simulation data directory")
     parser.add_argument(

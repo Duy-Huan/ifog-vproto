@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ifog-vproto"
-version = "1.2.0"
-description = "Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-004)"
+version = "2.0.0"
+description = "Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-005 / SPEC-004)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -35,10 +35,10 @@ include = ["tier1_offline*", "tier3_analysis*", "viz*"]
 testpaths = ["tests"]
 addopts = "-v --strict-markers"
 markers = [
-    "formula: Individual spec formula verification test (EQ-01..EQ-30)",
+    "formula: Individual spec formula verification test (EQ-01..EQ-41)",
     "unit: Unit test",
     "system: Full end-to-end simulation system test",
-    "gate: Normative 4-gate acceptance test (Gate 1..Gate 4)",
+    "gate: Normative acceptance test (Gate 1..Gate 5 + 6 Time-Domain + 5 Engineering scenarios)",
     "regression: Deterministic regression test",
 ]
 

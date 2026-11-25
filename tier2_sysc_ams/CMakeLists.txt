@@ -85,6 +85,7 @@ set(IFOG_CORE_SOURCES
     src/analog_frontend_tdf.cpp
     src/adc_dac_bridge.cpp
     src/digital_dsp_sc.cpp
+    src/imu_3axis.cpp
     src/sim_runner.cpp
 )
 

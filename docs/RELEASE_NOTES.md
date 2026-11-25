@@ -5,11 +5,43 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v1.2.0` |
+| **Current Version** | `v2.0.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
-| **Normative Specification** | [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
+| **Normative Specification** | [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0) & [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
+| **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v2.0.0` (2026-11-25)
+
+### Highlights & New Capabilities
+1. **Owner-Authorized Normative Spec Upgrade — `IFOG-SIM-SPEC-005` (v5.0):**
+   - Added checksum-locked [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex), 3-pass LuaLaTeX compiled [`spec/IFOG-SIM-SPEC-005.pdf`](../spec/IFOG-SIM-SPEC-005.pdf), and [`spec/IFOG-SIM-SPEC-005.sha256`](../spec/IFOG-SIM-SPEC-005.sha256) while keeping `IFOG-SIM-SPEC-004` byte-identical and checksum-locked as archival baseline.
+   - Added backward-compatible [`configs/schema_v5.json`](../configs/schema_v5.json) (supporting `"4.0"` & `"5.0"`) and official 6-state reference config [`configs/baseline_1km_6state.json`](../configs/baseline_1km_6state.json).
+   - Expanded per-formula CI traceability from 30 to **41 / 41 independent formula tests (`EQ-01` .. `EQ-41`)**.
+2. **Official 6-State Symmetric DSP Modulation & Demodulation (`EQ-31`–`EQ-34`, Gate 5):**
+   - Implemented anti-periodic 6-state symmetric modulation (`dsp.mode = "6state"`, optimal angle $\alpha^* = \pi/3$) in Tier 2 C++ `DigitalDSP_SC` with 3-channel orthogonal demodulation ($e_\Omega^{(6)}, e_{V_\pi}^{(6)}, e_{\text{asym}}^{(6)}$) and Loop-1 anti-windup clamping (`FLAG_ANTI_WINDUP`).
+   - Verified **$-33.3\%$ peak MIOC drive voltage** ($0.667\,V_\pi$ vs $V_\pi$), static phase error `1.28e-16 rad`, $\epsilon_{V_\pi,\text{eff}} = 1.31\times 10^{-11}$, and **`+136.94 dB` (`7.03 × 10⁶×`) RAM/crosstalk/$\gamma_{\text{nl}}$ bias rejection** (`354.56 deg/h` $\to$ `5.04e-5 deg/h`) alongside online asymmetry monitoring (`e_asym_rms = 169.87 counts`).
+3. **Group A — 6 Official Time-Domain Scenarios (`TD-01`..`TD-06`, `--mode td_all` or individual CLI):**
+   - Added 64-byte cycle-accurate `DspTraceRecord` logger (`dsp_trace.bin`) and `tier3_analysis/scenarios_time_domain.py`:
+     - `td_blanking` (`TD-01`): TIA $t_s(0.1\%) = 174.1\text{ ns}$, optimal clean blanking $k_{\text{start}}^* = 5$, ARW $\times 1.155$.
+     - `td_step_sine` (`TD-02`): Step $0 \to 100^\circ/\text{s}$ ($t_r = 0.22\text{ ms}$, overshoot `0.008%`), measured $-3\text{ dB}$ BW = **`2,540 Hz`** vs analytical **`2,354 Hz`**.
+     - `td_vpi_shock` (`TD-03`): $+5\%$ $V_\pi$ thermal shock converges to `< 1.7e-11` in `4.2 ms` (4s) / `6.3 ms` (6s) with **2× lower Loop-1 disturbance** in 6-state (`0.269` vs `0.535 deg/s`).
+     - `td_high_rate` (`TD-04`): Smooth $300/500/700^\circ/\text{s}$ serrodyne tracking (`0.00028%` RMS err @ `700 deg/s`, `7,184` wraps @ `179.6 kHz`, zero slips) + exact anti-windup clamp (`200` events).
+     - `td_shupe_shock` (`TD-05`): Real-time Shupe shock peak `1,483.61 deg/h` (`r = 0.99998`); extrapolative filter suppresses **`99.74%`**.
+     - `td_limit_cycles` (`TD-06`): 12-bit quantization deadband unlocked by reflected PRBS dither (`3 -> 1,595` unique DAC codes).
+4. **Group B — 5 Official System Engineering & Production Scenarios (`ENG-01`..`ENG-05`, `--mode eng_all` or individual CLI):**
+   - Added concurrent 3-axis SystemC-AMS IMU engine (`tier2_sysc_ams/src/imu_3axis.cpp`, `./build/ifog_sim --imu3axis`), ADC aperture jitter, vibration/Faraday physics, 5-mode fault injection + real-time FPGA BIT/FDIR state machine, and `tier3_analysis/scenarios_engineering.py`:
+     - `eng_hw_sizing` (`ENG-01`, `EQ-35`): Minimum passing ENOB = **`12-bit`**; aperture jitter elevates ARW cleanly (`+2,216%` @ `10 ns`); Pareto TIA/SLD ARW = `1.412e-4 deg/rt-h`.
+     - `eng_imu_3axis` (`ENG-02`, `EQ-36`): Concurrent 3-axis SystemC-AMS IMU (Axis X @ `500 deg/s`): shared-rail droop `92.4 mV`; stationary Axis-Y crosstalk reduced from **`40.63 deg/h`** (4-state) to **`0.106 deg/h`** (6-state — **`+51.6 dB` rejection**).
+     - `eng_vre_faraday` (`ENG-03`, `EQ-37`, `EQ-38`): Pure quadratic $G_2 V^2$ VRE `-0.0189 deg/h/g²` (**$R^2 = 0.9998$**); Faraday sensitivity `0.18305 deg/h/G` (`< 10⁻⁸%` vs theory), requiring **`25.25 dB` Mu-metal shielding**.
+     - `eng_fault_bit` (`ENG-04`, `EQ-39`): All `5/5` injected faults (`sld_drop_50pct`, `fiber_break`, `mioc_electrode_open`, `adc_saturation`, `dsp_seu_bitflip`) detected in **`<= 30.0 us`** with automatic SEU FDIR soft-rollback recovery (`True`).
+     - `eng_mc_yield_cal` (`ENG-05`, `EQ-40`, `EQ-41`): Parallel Monte Carlo Yield (`N = 500`): **`97.2%`** (`486/500`, 95% Wilson CI `[95.36%, 98.32%]`, $C_{pk} = 0.604$); `-40..+85°C` Virtual Thermal Calibration CSV (`21` pts) with 2D polynomial (`99.98%` reduction) and 4-state EKF (`99.95%` reduction).
+5. **Unified Official Flow, Scenarios Documentation & Governance Sync (`v2.0.0`):**
+   - Added [`scripts/run_all_scenarios.sh`](../scripts/run_all_scenarios.sh), expanded `sim_runner_cli.py` to 22 CLI modes (`--dsp-mode`, `--mc-runs`), added 300-DPI scenario plotters (`viz/plot_scenarios.py`), and integrated all SPEC-005 metrics/figures/CSVs into `viz/export_report.py`.
+   - Authored [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`.tex`](IFOG_SIMULATION_SCENARIOS.tex) / [`.pdf`](IFOG_SIMULATION_SCENARIOS.pdf), added project skill [`skills/ifog-6state-and-scenarios/SKILL.md`](../skills/ifog-6state-and-scenarios/SKILL.md) (8 skills total), and enforced **100.0% C++ (`1,546/1,546` lines, `109/109` functions)** & **100.0% Python (`2,631/2,631` statements)** coverage.
 
 ---
 

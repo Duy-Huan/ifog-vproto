@@ -34,10 +34,11 @@ jobs:
             echo "ERROR (Rule 8): Release tag '$TAG' must point to a commit on main!"
             exit 1
           fi
-          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256
+          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256
           test -s spec/IFOG-SIM-SPEC-004.pdf
+          test -s spec/IFOG-SIM-SPEC-005.pdf
           python3 scripts/verify_doc_sync.py --expected-tag "${TAG}"
-          echo "Release tag $TAG validated on main with locked spec and Rule 16 synchronized docs."
+          echo "Release tag $TAG validated on main with dual locked specs and Rule 16 synchronized docs."
 
       - name: Install system toolchain
         run: |
@@ -75,7 +76,7 @@ jobs:
           ./build/ifog_cpp_tests
           bash scripts/run_cpp_coverage.sh
 
-      - name: Verify 30 Formulas, 100% Python Coverage & Full Real 4-Gate Acceptance Suite
+      - name: Verify 41 Formulas, 100% Python Coverage & Full Real 5-Gate + 11-Scenario Suite
         run: |
           python3 scripts/verify_formulas_ci.py --out-dir data/release_artifacts
           pytest tests/unit tests/formula_verification --cov --cov-report=term-missing
@@ -89,9 +90,13 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           mkdir -p data/release_bundle
           cp spec/IFOG-SIM-SPEC-004.pdf data/release_bundle/
+          cp spec/IFOG-SIM-SPEC-005.pdf data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.pdf data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.md data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.tex data/release_bundle/
+          cp docs/IFOG_SIMULATION_SCENARIOS.pdf data/release_bundle/
+          cp docs/IFOG_SIMULATION_SCENARIOS.md data/release_bundle/
+          cp docs/IFOG_SIMULATION_SCENARIOS.tex data/release_bundle/
           cp docs/RELEASE_NOTES.pdf data/release_bundle/
           cp docs/RELEASE_NOTES.md data/release_bundle/
           cp docs/RELEASE_NOTES.tex data/release_bundle/
@@ -99,27 +104,31 @@ jobs:
           cp data/release_artifacts/formula_verification_matrix.json data/release_bundle/
           cp data/cov_cpp_work/cpp_coverage_summary.json data/release_bundle/
           cat > data/release_bundle/RELEASE_BODY.md <<EOF
-          # Release ${TAG} — Closed-Loop IFOG Multi-Scale Virtual Prototype (\`IFOG-SIM-SPEC-004\`)
+          # Release ${TAG} — Closed-Loop IFOG Multi-Scale Virtual Prototype (\`IFOG-SIM-SPEC-005\`)
 
           ## Verified Release Gates (100% Passed on \`main\`)
-          - **Specification Lock (Rule 7):** \`spec/IFOG-SIM-SPEC-004.tex\` SHA-256 verified + compiled \`IFOG-SIM-SPEC-004.pdf\` attached.
-          - **Version–Document Synchronization (Rule 16):** \`pyproject.toml\`, \`docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}\`, \`docs/RELEASE_NOTES.{md,tex,pdf}\`, \`docs/DOCS_BUILD.sha256\`, \`docs/CHANGELOG.md\`, and \`README.md\` strictly verified against tag \`${TAG}\`.
-          - **Formula Traceability (Rule 3):** All **30 / 30** normative formulas (\`EQ-01\` .. \`EQ-30\`) individually verified.
-          - **Dual-Domain 100% Coverage (Rules 2 & 14):** C++ SystemC-AMS core = **100.0%** line coverage (\`gcovr\`); Python Tier 1 / Tier 3 / Viz = **100.0%** line coverage (\`pytest-cov\`).
-          - **Full Real Simulations (Rule 5):** Gate 1 (Golden Linear Baseline & Continuous 2*pi Flyback), Gate 2 (Full Slow Rate Ramp Deadband & Bunny Ears >= 90% Mitigation), Gate 3 (2 s Shifted 1/f Flicker PSD & 100 Hz K-matrix < 2%), Gate 4 (60 s Fast-Scale + 10 h / 3.6M-sample Slow-Scale Dual-Regime Overlapping AVAR < 5% overlap & +-10% 5-region WLS recovery).
+          - **Dual Specification Lock (Rule 7):** \`spec/IFOG-SIM-SPEC-004.tex\` & \`spec/IFOG-SIM-SPEC-005.tex\` SHA-256 verified + both compiled PDFs attached.
+          - **Version–Document Synchronization (Rule 16):** \`pyproject.toml\`, \`docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}\`, \`docs/IFOG_SIMULATION_SCENARIOS.{md,tex,pdf}\`, \`docs/RELEASE_NOTES.{md,tex,pdf}\`, \`docs/DOCS_BUILD.sha256\`, \`docs/CHANGELOG.md\`, and \`README.md\` strictly verified against tag \`${TAG}\`.
+          - **Formula Traceability (Rule 3):** All **41 / 41** normative formulas (\`EQ-01\` .. \`EQ-41\`) individually verified.
+          - **Dual-Domain 100% Coverage (Rules 2 & 14):** C++ SystemC-AMS core = **100.0%** line & function coverage (\`gcovr\`); Python Tier 1 / Tier 3 / Viz = **100.0%** line coverage (\`pytest-cov\`).
+          - **Full Real Simulations (Rule 5):** Gates 1–4 (Golden Linear, Deadband & Bunny Ears, 1/f Flicker & K-Matrix, 60 s Fast + 10 h Slow Dual-Regime AVAR), Gate 5 (Official 6-State Symmetric DSP \`+136.94 dB\` RAM/xtalk rejection & \`-33.3%\` peak MIOC voltage), all 6 Time-Domain scenarios (\`TD-01\`..\`TD-06\`), and all 5 System Engineering & Production scenarios (\`ENG-01\`..\`ENG-05\`, including concurrent 3-axis SystemC-AMS IMU \`+51.6 dB\` crosstalk rejection, 5-fault FPGA BIT/FDIR, and parallel Monte Carlo Yield + \`-40..+85 C\` Virtual Thermal Calibration).
 
-          See attached \`RELEASE_NOTES.md\` / \`RELEASE_NOTES.pdf\` and \`IFOG_VPROTO_ARCHITECTURE.md\` / \`IFOG_VPROTO_ARCHITECTURE.pdf\` for full details.
+          See attached \`RELEASE_NOTES.pdf\`, \`IFOG_VPROTO_ARCHITECTURE.pdf\`, and \`IFOG_SIMULATION_SCENARIOS.pdf\` for complete details.
           EOF
           gh release create "${TAG}" \
             data/release_bundle/IFOG-SIM-SPEC-004.pdf \
+            data/release_bundle/IFOG-SIM-SPEC-005.pdf \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.pdf \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.md \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.tex \
+            data/release_bundle/IFOG_SIMULATION_SCENARIOS.pdf \
+            data/release_bundle/IFOG_SIMULATION_SCENARIOS.md \
+            data/release_bundle/IFOG_SIMULATION_SCENARIOS.tex \
             data/release_bundle/RELEASE_NOTES.pdf \
             data/release_bundle/RELEASE_NOTES.md \
             data/release_bundle/RELEASE_NOTES.tex \
             data/release_bundle/formula_verification_matrix.md \
             data/release_bundle/formula_verification_matrix.json \
             data/release_bundle/cpp_coverage_summary.json \
-            --title "Release ${TAG} — IFOG Virtual Prototype (IFOG-SIM-SPEC-004)" \
+            --title "Release ${TAG} — IFOG Virtual Prototype (IFOG-SIM-SPEC-005)" \
             --notes-file data/release_bundle/RELEASE_BODY.md

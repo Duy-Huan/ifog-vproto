@@ -2,6 +2,7 @@
 #include <iostream>
 #include <systemc.h>
 #include "ifog_config.hpp"
+#include "imu_3axis.hpp"
 #include "sim_runner.hpp"
 
 int sc_main(int argc, char* argv[]) {
@@ -13,6 +14,13 @@ int sc_main(int argc, char* argv[]) {
         }
         if (args.override_dump_micro_ms >= 0.0) {
             cfg.dump_micro_ms = args.override_dump_micro_ms;
+        }
+        if (args.imu_3axis) {
+            const ifog::Imu3AxisSummary im = ifog::run_ifog_imu3axis_simulation(cfg, args.out_dir);
+            std::cout << "[ifog_sim] 3-Axis IMU completed: peak_rail_droop=" << im.peak_rail_droop_V
+                      << " V, y_bias_err=" << im.y_bias_err_deg_per_h
+                      << " deg/h, z_bias_err=" << im.z_bias_err_deg_per_h << " deg/h\n";
+            return 0;
         }
         const ifog::SimSummary summary = ifog::run_ifog_simulation(cfg, args.out_dir);
         std::cout << "[ifog_sim] Completed " << summary.total_tau_steps

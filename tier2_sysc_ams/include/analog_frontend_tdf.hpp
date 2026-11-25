@@ -10,7 +10,7 @@ namespace ifog {
 
 // AnalogFrontEnd_TDF: 6-component noise, capacitive/resistive crosstalk, 2nd-order TIA LTF
 // (SystemC-AMS sca_ltf_nd in non-stiff regime & exact ZOH matrix-exponential in stiff regime),
-// 1/f offset, and cubic polynomial nonlinearity + clipping (EQ-14..EQ-18).
+// 1/f offset, shared rail-droop PSRR coupling (EQ-36), ADC saturation fault, and cubic nonlinearity (EQ-14..EQ-18).
 SCA_TDF_MODULE(AnalogFrontEnd_TDF) {
 public:
     sca_tdf::sca_in<double> p_det_in;
@@ -18,6 +18,7 @@ public:
     sca_tdf::sca_in<double> dv_drv_dt_in;
     sca_tdf::sca_in<double> pink_tia_in;
     sca_tdf::sca_in<double> pink_xtalk_in;
+    sca_tdf::sca_in<double> rail_droop_in;
     sca_tdf::sca_out<double> v_adc_out;
 
     AnalogFrontEnd_TDF(

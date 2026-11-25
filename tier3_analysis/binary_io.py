@@ -31,7 +31,24 @@ MICRO_RECORD_DTYPE = np.dtype(
         ("adc_code", "<i4"),
         ("k_idx", "<u4"),
         ("in_blanking", "<u4"),
-        ("reserved", "<u4"),
+        ("dac_code", "<i4"),
+    ],
+    align=False,
+)
+
+DSP_TRACE_DTYPE = np.dtype(
+    [
+        ("t", "<f8"),
+        ("phi_ramp", "<f8"),
+        ("delta_phi_step", "<f8"),
+        ("g_dac", "<f8"),
+        ("e_omega", "<f8"),
+        ("e_asym", "<f8"),
+        ("adc_code", "<i4"),
+        ("dac_code", "<i4"),
+        ("e_vpi", "<i4"),
+        ("prbs_bit", "<i2"),
+        ("bit_fault_code", "<u2"),
     ],
     align=False,
 )
@@ -65,6 +82,26 @@ def read_micro_records(bin_path: Path | str) -> dict[str, np.ndarray]:
         "adc_code": raw["adc_code"],
         "k_idx": raw["k_idx"],
         "in_blanking": raw["in_blanking"],
+        "dac_code": raw["dac_code"],
+    }
+
+
+def read_dsp_trace(bin_path: Path | str) -> dict[str, np.ndarray]:
+    """Read 64-byte packed DspTraceRecord internal DSP register stream (IFOG-SIM-SPEC-005)."""
+    path = Path(bin_path)
+    raw = np.fromfile(path, dtype=DSP_TRACE_DTYPE)
+    return {
+        "t": raw["t"].astype(np.float64, copy=False),
+        "phi_ramp": raw["phi_ramp"].astype(np.float64, copy=False),
+        "delta_phi_step": raw["delta_phi_step"].astype(np.float64, copy=False),
+        "g_dac": raw["g_dac"].astype(np.float64, copy=False),
+        "e_omega": raw["e_omega"].astype(np.float64, copy=False),
+        "e_asym": raw["e_asym"].astype(np.float64, copy=False),
+        "adc_code": raw["adc_code"],
+        "dac_code": raw["dac_code"],
+        "e_vpi": raw["e_vpi"],
+        "prbs_bit": raw["prbs_bit"],
+        "bit_fault_code": raw["bit_fault_code"],
     }
 
 

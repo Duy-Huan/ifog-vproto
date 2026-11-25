@@ -17,7 +17,7 @@ constexpr double TWO_PI = 2.0 * PI;
 constexpr double RAD_S_TO_DEG_H = (180.0 / PI) * 3600.0;
 constexpr double OMEGA_OUT_LSB = 1.0e-12;          // rad/s per raw LSB in SimRecord
 
-// Normative 32-byte binary output record (IFOG-SIM-SPEC-004 Section 2, I/O Contract)
+// Normative 32-byte binary output record (IFOG-SIM-SPEC-004/005 I/O Contract)
 #pragma pack(push, 1)
 struct SimRecord {
     double t;
@@ -28,7 +28,7 @@ struct SimRecord {
 };
 #pragma pack(pop)
 
-static_assert(sizeof(SimRecord) == 32, "SimRecord must be exactly 32 bytes per IFOG-SIM-SPEC-004");
+static_assert(sizeof(SimRecord) == 32, "SimRecord must be exactly 32 bytes per IFOG-SIM-SPEC-005");
 
 // Flag bit definitions for SimRecord::flags
 constexpr uint32_t FLAG_FLYBACK_RESET = 1u << 0;
@@ -36,6 +36,17 @@ constexpr uint32_t FLAG_ADC_CLIPPED = 1u << 1;
 constexpr uint32_t FLAG_DSP_4STATE = 1u << 2;
 constexpr uint32_t FLAG_VPI_LOOP_EN = 1u << 3;
 constexpr uint32_t FLAG_PRBS_DITHER_EN = 1u << 4;
+constexpr uint32_t FLAG_DSP_6STATE = 1u << 5;
+constexpr uint32_t FLAG_BIT_FAULT = 1u << 6;
+constexpr uint32_t FLAG_ANTI_WINDUP = 1u << 7;
+
+// BIT/FDIR fault status codes (IFOG-SIM-SPEC-005 EQ-39)
+constexpr uint16_t BIT_OK = 0u;
+constexpr uint16_t BIT_SLD_DROP = 1u;
+constexpr uint16_t BIT_FIBER_BREAK = 2u;
+constexpr uint16_t BIT_MIOC_OPEN = 3u;
+constexpr uint16_t BIT_ADC_SAT = 4u;
+constexpr uint16_t BIT_DSP_SEU = 5u;
 
 // Optional micro-sample waveform diagnostic record (64 bytes, local window dump for plot_waveforms.py)
 #pragma pack(push, 1)
@@ -49,13 +60,32 @@ struct MicroRecord {
     int32_t adc_code;
     uint32_t k_idx;
     uint32_t in_blanking;
-    uint32_t reserved;
+    int32_t dac_code;
 };
 #pragma pack(pop)
 
 static_assert(sizeof(MicroRecord) == 64, "MicroRecord must be exactly 64 bytes");
 
-// 10 normative physical/analog impairment isolation flags (IFOG-SIM-SPEC-004)
+// Optional internal DSP register trace record (64 bytes per tau, IFOG-SIM-SPEC-005 TD-01..TD-06 & ENG-04)
+#pragma pack(push, 1)
+struct DspTraceRecord {
+    double t;
+    double phi_ramp;
+    double delta_phi_step;
+    double g_dac;
+    double e_omega;
+    double e_asym;
+    int32_t adc_code;
+    int32_t dac_code;
+    int32_t e_vpi;
+    int16_t prbs_bit;
+    uint16_t bit_fault_code;
+};
+#pragma pack(pop)
+
+static_assert(sizeof(DspTraceRecord) == 64, "DspTraceRecord must be exactly 64 bytes");
+
+// 10 normative physical/analog impairment isolation flags (IFOG-SIM-SPEC-004/005)
 struct AblationConfig {
     bool en_pol_error = true;
     bool en_kerr = true;
@@ -71,7 +101,8 @@ struct AblationConfig {
 
 enum class DspMode {
     TwoState,
-    FourState
+    FourState,
+    SixState
 };
 
 enum class StimulusType {
@@ -86,6 +117,15 @@ enum class SineInjectTarget {
     Tia,
     Dac,
     Xtalk
+};
+
+enum class FaultType {
+    None = 0,
+    SldDrop50Pct = 1,
+    FiberBreak = 2,
+    MiocElectrodeOpen = 3,
+    AdcSaturation = 4,
+    DspSeuBitflip = 5
 };
 
 struct ShupeSample {
@@ -113,16 +153,20 @@ struct IfogConfig {
     double tau_s = 4.8967209e-6;
     double delta_phi_kerr_rad = 0.0;
 
-    // Magneto-optic Faraday (EQ-10)
+    // Magneto-optic Faraday (EQ-10, EQ-38)
     double verdet_rad_per_Tm = 0.6;
     double B_ext_T = 0.0;
     double effective_loop_m = 0.0;
+    double B_ac_T = 0.0;
+    double B_freq_Hz = 0.0;
 
-    // MIOC (EQ-11, EQ-13)
+    // MIOC (EQ-11, EQ-13, TD-03 thermal V_pi step shock)
     double V_pi_0_V = 3.0;
     double eps_vpi = 0.02;
     double gamma_nl_rad_per_V2 = 1.0e-3;
     double alpha_ram_per_V = 2.0e-3;
+    double eps_vpi_step_time_s = -1.0;
+    double eps_vpi_step_delta = 0.0;
 
     // Analog Front-End (EQ-14..EQ-18)
     double responsivity_A_per_W = 0.95;
@@ -143,7 +187,7 @@ struct IfogConfig {
     double C_xtalk_F = 0.5e-12;
     double k_xtalk_A_per_V = 1.0e-7;
 
-    // ADC / DAC (EQ-19, EQ-21)
+    // ADC / DAC (EQ-19, EQ-21, EQ-35 aperture jitter)
     int K_oversample = 16;
     int N_adc_bits = 16;
     double V_fs_adc_V = 5.0;
@@ -153,8 +197,9 @@ struct IfogConfig {
     double V_ref_dac_V = 6.0;
     double drv_omega0_rad_per_s = 1.0e8;
     double drv_zeta = 0.7071067811865476;
+    double aperture_jitter_s = 0.0;
 
-    // Digital DSP (EQ-01, EQ-03, EQ-20..EQ-23)
+    // Digital DSP (EQ-01, EQ-03, EQ-20..EQ-23, EQ-31..EQ-34)
     DspMode dsp_mode = DspMode::FourState;
     double alpha_rad = PI / 4.0;
     double K_tot_1 = 0.25;
@@ -164,6 +209,7 @@ struct IfogConfig {
     bool en_vpi_loop = true;
     bool en_prbs_dither = true;
     double prbs_amplitude_rad = 0.02;
+    double max_delta_phi_step_rad = 20.0;
 
     // Noise (EQ-15 & PinkNoise_TDF)
     bool en_white_noise = true;
@@ -184,6 +230,7 @@ struct IfogConfig {
     double duration_s = 1.0;
     uint32_t decimation_tau = 4;
     double dump_micro_ms = 0.0;
+    bool dump_dsp_trace = false;
 
     // Stimulus
     StimulusType stimulus_type = StimulusType::Constant;
@@ -194,6 +241,34 @@ struct IfogConfig {
     double sine_freq_Hz = 0.0;
     double sine_amp_rad_per_s = 0.0;
 
+    // Mechanical Vibration Rectification Error (EQ-37, ENG-03)
+    bool en_vibration = false;
+    double vib_freq_Hz = 200.0;
+    double vib_g_rms = 0.0;
+    double vib_loss_mod_per_g = 0.0;
+    double vib_phase_mod_rad_per_g = 0.0;
+
+    // Fault Injection & Real-Time FPGA BIT/FDIR (EQ-39, ENG-04)
+    FaultType fault_type = FaultType::None;
+    double fault_inject_time_s = 0.0;
+    double fault_duration_s = 0.0;
+    double fault_seu_delta_phi_rad = 0.5;
+    bool en_bit = false;
+    bool en_fdir_recovery = true;
+    double bit_sld_drop_ratio = 0.65;
+    double bit_fiber_break_ratio = 0.15;
+    double bit_vpi_err_threshold = 4000.0;
+    double bit_seu_err_threshold = 4000.0;
+
+    // 3-Axis Shared-SLD / Shared-Rail IMU Parameters (EQ-36, ENG-02)
+    double imu_omega_x_rad_per_s = 500.0 * (PI / 180.0);
+    double imu_omega_y_rad_per_s = 0.0;
+    double imu_omega_z_rad_per_s = 0.0;
+    double imu_rho_opt_coupling = 2.0e-3;
+    double imu_z_rail_ohm = 0.25;
+    double imu_r_load_ohm = 50.0;
+    double imu_c_load_F = 200.0e-12;
+
     // Optional Shupe LUT loaded from shupe_lut.bin
     std::vector<ShupeSample> shupe_lut;
 };
@@ -202,8 +277,10 @@ struct SimSummary {
     uint64_t total_tau_steps = 0;
     uint64_t total_records_written = 0;
     uint64_t total_micro_records = 0;
+    uint64_t total_dsp_trace_records = 0;
     uint64_t flyback_count = 0;
     uint64_t adc_clip_count = 0;
+    uint64_t anti_windup_count = 0;
     double final_omega_out_rad_per_s = 0.0;
     double final_delta_phi_step_rad = 0.0;
     double final_g_dac = 1.0;
@@ -215,6 +292,20 @@ struct SimSummary {
     double tia_ts_0p1pct_s = 0.0;
     double eta_blanking = 1.0;
     double S_alpha_counts_per_rad = 0.0;
+    uint16_t bit_first_fault_code = BIT_OK;
+    double bit_alert_time_s = -1.0;
+    double bit_time_to_alert_s = -1.0;
+    bool fdir_recovered = false;
+    double e_asym_rms = 0.0;
+};
+
+struct Imu3AxisSummary {
+    SimSummary axis_x;
+    SimSummary axis_y;
+    SimSummary axis_z;
+    double peak_rail_droop_V = 0.0;
+    double y_bias_err_deg_per_h = 0.0;
+    double z_bias_err_deg_per_h = 0.0;
 };
 
 }  // namespace ifog

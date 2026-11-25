@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-ARCH-001}
-\newcommand{\DocVersion}{v1.2.0}
+\newcommand{\DocVersion}{v2.0.0}
 \newcommand{\DocDate}{2026-11-25}
 
 \usepackage{fontspec}
@@ -53,7 +53,7 @@
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=10pt,bottom=10pt]
 {\color{white}\Large\bfseries Closed-Loop IFOG Multi-Scale Virtual Prototype}\\[4pt]
 {\color{white}\large System Architecture \& Implementation Specification}\\[6pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-004} v4.0 \quad|\quad Date: \DocDate}
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-005} v5.0 / \texttt{SPEC-004} v4.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
 \section{Document Control \& Revision History}
@@ -65,8 +65,9 @@
 \midrule
 Document Identifier & \texttt{\DocID} \\
 Current Version & \texttt{\DocVersion} (Synchronized with \texttt{pyproject.toml} per \texttt{AGENT.md} Rule 16) \\
-Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD \& 4-Gate Verified}} \\
-Normative Authority & \texttt{spec/IFOG-SIM-SPEC-004.tex} (SHA-256 locked) \& \texttt{AGENT.md} (Rules 1--16) \\
+Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 41-Formula \& 5-Gate + 11-Scenario Verified}} \\
+Normative Authority & \texttt{spec/IFOG-SIM-SPEC-005.tex} (v5.0) \& \texttt{spec/IFOG-SIM-SPEC-004.tex} (v4.0) (both SHA-256 locked) \\
+Scenarios Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}} (\DocVersion) \\
 Reference Standards & IEEE Std 952-2020 (IFOG Test \& AVAR); IEEE Std 1666.1-2016 (SystemC-AMS) \\
 Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \bottomrule
@@ -80,6 +81,7 @@ Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \texttt{v1.0.0} & 2026-11-25 & Initial Full Release & Complete 3-Tier Virtual Prototype (\texttt{tier1\_offline}, C++17 SystemC-AMS 2.3.4 \texttt{tier2\_sysc\_ams}, \texttt{tier3\_analysis}, \texttt{viz}), 30/30 formula verification, 100\% C++ \& Python coverage, real 4-Gate acceptance suite, strict 2-branch CI/CD. \\
 \texttt{v1.1.0} & 2026-11-25 & Auto-Reporting \& Doc-Sync & Added automatic \texttt{.md} + interactive \texttt{.html} reporting and dashboard index under \texttt{report/}; unified simulation runner (\texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_sim.py}, \texttt{sim\_runner\_cli.py}); full release docs (\texttt{.md}/\texttt{.tex}/\texttt{.pdf}) under \texttt{docs/}; enacted \textbf{Rule 16} mandatory version--document sync CI gate. \\
 \texttt{v1.2.0} & 2026-11-25 & Portable Containers \& Example & Added universal Git-source installers for SystemC 2.3.4, SystemC-AMS 2.3.4, \texttt{nlohmann/json}, and Python venv (\texttt{scripts/setup\_env.sh}, \texttt{scripts/env.sh}); added Docker/Podman suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}); executed and committed full real 4-Gate feasibility example (\texttt{examples/full\_4gate\_baseline/}). \\
+\texttt{v2.0.0} & 2026-11-25 & \texttt{SPEC-005} 6-State DSP \& 11 Scenarios & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-005} v5.0 (41/41 formulas \texttt{EQ-01}--\texttt{EQ-41}); implemented official 6-state symmetric DSP ($+136.94\text{ dB}$ RAM/xtalk rejection, $-33.3\%$ $V_{\text{peak}}$), 64 B \texttt{dsp\_trace.bin}, real-time FPGA BIT/FDIR, ADC aperture jitter, VRE/Faraday, concurrent 3-axis SystemC-AMS IMU (\texttt{--imu3axis}), 6 Time-Domain + 5 Engineering scenarios (\texttt{scripts/run\_all\_scenarios.sh}, 22 CLI modes), and \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}. \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -201,7 +203,7 @@ Tier 2 is compiled in C++17 (\texttt{SC\_CPLUSPLUS=201703L}) against Ubuntu 24.0
     \item \textbf{Automatic Reporting Engine (\texttt{viz/export\_report.py}):} Produces \texttt{report/<run\_id>/report.md}, \texttt{report/<run\_id>/report.html} (interactive Plotly AVAR/Bunny Ears/PSD charts + styled KPI tables + 300-DPI gallery + JSON inspector), \texttt{metrics\_summary.json}, and refreshes \texttt{report/index.\{md,html\}}.
 \end{itemize}
 
-\section{Normative 30-Formula White-Box Traceability Matrix}
+\section{Normative 41-Formula White-Box Traceability Matrix}
 
 \scriptsize
 \begin{longtable}{@{}l l l l@{}}
@@ -209,36 +211,47 @@ Tier 2 is compiled in C++17 (\texttt{SC\_CPLUSPLUS=201703L}) against Ubuntu 24.0
 \textbf{ID} & \textbf{Spec Ref} & \textbf{Equation Summary} & \textbf{Primary Source Binding} \\
 \midrule
 \endhead
-\texttt{EQ-01} & \S 1 Eq. (1) & 4-state differential bias sequence $\phi_1..\phi_4$ & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
-\texttt{EQ-02} & \S 1 Eqs. (2)--(5) & 1st-order Taylor expansion at 4 states & \texttt{tests/formula\_verification/test\_formulas\_dsp.py} \\
-\texttt{EQ-03} & \S 1 Eq. (6) & Orthogonal demodulation ($e_\Omega, e_{V_\pi}, S_\alpha$) & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
-\texttt{EQ-04} & \S 3.1.1 Eq. (7) & Spectral-sliced Jones matrices $\mathbf{J}_{\text{CW}}, \mathbf{J}_{\text{CCW}}$ & \texttt{tier1\_offline/jones\_spectral.py} \\
-\texttt{EQ-05} & \S 3.1.1 Eq. (8) & Visibility $V$ \& polarization phase $\phi_{\text{pol}}$ & \texttt{tier1\_offline/jones\_spectral.py} \\
-\texttt{EQ-06} & \S 3.1.2 Eq. (9) & Transit time $\tau$ \& total $\Delta\phi_{\text{NR}}[m]$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
-\texttt{EQ-07} & \S 3.1.2 Eq. (10a) & Sagnac scale factor $K_{\text{opt}} = 2\pi L D/(\bar{\lambda} c)$ & \texttt{tier1\_offline/jones\_spectral.py} \\
-\texttt{EQ-08} & \S 3.1.2 Eq. (10b) & Coherence-weighted Kerr bias $\Delta\phi_{\text{Kerr}}$ & \texttt{tier1\_offline/jones\_spectral.py} \\
-\texttt{EQ-09} & \S 3.1.2 Eq. (11) & Thermal Shupe integral with $\delta z_{\text{quad}}$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
-\texttt{EQ-10} & \S 3.1.2 Eq. (12) & Magneto-optic Faraday phase $\Delta\phi_{\text{Faraday}}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
-\texttt{EQ-11} & \S 3.1.2 Eq. (13) & MIOC phase with $\epsilon_{V_\pi}, \gamma_{\text{nl}}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
-\texttt{EQ-12} & \S 3.1.2 Eq. (14) & Differential modulation $\Delta\phi_{\text{mod}}$ \& $\operatorname{wrap}_{2\pi}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
-\texttt{EQ-13} & \S 3.1.2 Eq. (15) & Photodiode power $P_{\text{det}}$ with $\alpha_{\text{RAM}}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
-\texttt{EQ-14} & \S 3.2.1 Eq. (16) & TIA inverting-node current $I_{\text{in}}$ + crosstalk & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
-\texttt{EQ-15} & \S 3.2.1 Eq. (17) & 6-component noise PSD $S_{i,\text{tot}}$ \& $\sigma_{i,\text{w}}^2$ & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
-\texttt{EQ-16} & \S 3.2.2 Eqs. (18)--(19) & 2nd-order TIA LTF $H_{\text{TIA}}(s), \omega_0, \zeta$ & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
-\texttt{EQ-17} & \S 3.2.2 Eq. (20) & Butterworth $C_{f,\text{opt}}$ \& settling $t_s(0.1\%)$ & \texttt{tier2\_sysc\_ams/include/ifog\_math.hpp} \\
-\texttt{EQ-18} & \S 3.2.3 Eqs. (21)--(22) & TIA $1/f$ offset \& cubic NL + rail clipping & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
-\texttt{EQ-19} & \S 3.2.3 Eq. (23) & ADC blanking $\eta_b$, $N_{\text{ADC}}$, $1/\sqrt{\eta_b}$ & \texttt{tier2\_sysc\_ams/src/adc\_dac\_bridge.cpp} \\
-\texttt{EQ-20} & \S 3.3.1 Eqs. (24)--(27) & 2-state \& 4-state Loop-1/Loop-2 integrators & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
-\texttt{EQ-21} & \S 3.3.1 Eqs. (28)--(29) & Phase ramp $\operatorname{wrap}_{2\pi}$ \& PRBS DAC code & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
-\texttt{EQ-22} & \S 3.3.2 Eqs. (30)--(31) & $L_1(z)$ Jury stability \& Loop-2 separation & \texttt{tier2\_sysc\_ams/include/ifog\_math.hpp} \\
-\texttt{EQ-23} & \S 3.3.2 Eq. (32) & Closed-loop output rate $\Omega_{\text{out}}$ & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
-\texttt{EQ-24} & \S 3.4 Eq. (33) & IEEE Std 952-2020 5-component AVAR model & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
-\texttt{EQ-25} & \S 3.4 Eq. (34) & RRW Wiener \& Gauss--Markov AR(1) models & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
-\texttt{EQ-26} & \S 4.1 Eq. (35) & Inter-tier phase-to-rate conversion & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
-\texttt{EQ-27} & \S 4.2 Eq. (36) & Leakage gain matrix $\mathbf{K}$ ($100\text{ Hz}$ FFT) & \texttt{tier3\_analysis/extract\_k\_matrix.py} \\
-\texttt{EQ-28} & \S 4.3 Eq. (37) & Slow-scale $10\text{ h}$ / $100\text{ Hz}$ synthesis & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
-\texttt{EQ-29} & \S 4.3 Eq. (38) & Overlapping Allan Variance $\sigma^2(T_m)$ & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
-\texttt{EQ-30} & \S 4.3 Eq. (39) & Dual-regime overlap continuity $< 5\%$ & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-01} & SPEC-004 \S 1 Eq. (1) & 4-state differential bias sequence $\phi_1..\phi_4$ & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-02} & SPEC-004 \S 1 Eqs. (2)--(5) & 1st-order Taylor expansion at 4 states & \texttt{tests/formula\_verification/test\_formulas\_dsp.py} \\
+\texttt{EQ-03} & SPEC-004 \S 1 Eq. (6) & Orthogonal demodulation ($e_\Omega, e_{V_\pi}, S_\alpha$) & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-04} & SPEC-004 \S 3.1.1 Eq. (7) & Spectral-sliced Jones matrices $\mathbf{J}_{\text{CW}}, \mathbf{J}_{\text{CCW}}$ & \texttt{tier1\_offline/jones\_spectral.py} \\
+\texttt{EQ-05} & SPEC-004 \S 3.1.1 Eq. (8) & Visibility $V$ \& polarization phase $\phi_{\text{pol}}$ & \texttt{tier1\_offline/jones\_spectral.py} \\
+\texttt{EQ-06} & SPEC-004 \S 3.1.2 Eq. (9) & Transit time $\tau$ \& total $\Delta\phi_{\text{NR}}[m]$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-07} & SPEC-004 \S 3.1.2 Eq. (10a) & Sagnac scale factor $K_{\text{opt}} = 2\pi L D/(\bar{\lambda} c)$ & \texttt{tier1\_offline/jones\_spectral.py} \\
+\texttt{EQ-08} & SPEC-004 \S 3.1.2 Eq. (10b) & Coherence-weighted Kerr bias $\Delta\phi_{\text{Kerr}}$ & \texttt{tier1\_offline/jones\_spectral.py} \\
+\texttt{EQ-09} & SPEC-004 \S 3.1.2 Eq. (11) & Thermal Shupe integral with $\delta z_{\text{quad}}$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-10} & SPEC-004 \S 3.1.2 Eq. (12) & Magneto-optic Faraday phase $\Delta\phi_{\text{Faraday}}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-11} & SPEC-004 \S 3.1.2 Eq. (13) & MIOC phase with $\epsilon_{V_\pi}, \gamma_{\text{nl}}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-12} & SPEC-004 \S 3.1.2 Eq. (14) & Differential modulation $\Delta\phi_{\text{mod}}$ \& $\operatorname{wrap}_{2\pi}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-13} & SPEC-004 \S 3.1.2 Eq. (15) & Photodiode power $P_{\text{det}}$ with $\alpha_{\text{RAM}}$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-14} & SPEC-004 \S 3.2.1 Eq. (16) & TIA inverting-node current $I_{\text{in}}$ + crosstalk & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
+\texttt{EQ-15} & SPEC-004 \S 3.2.1 Eq. (17) & 6-component noise PSD $S_{i,\text{tot}}$ \& $\sigma_{i,\text{w}}^2$ & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
+\texttt{EQ-16} & SPEC-004 \S 3.2.2 Eqs. (18)--(19) & 2nd-order TIA LTF $H_{\text{TIA}}(s), \omega_0, \zeta$ & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
+\texttt{EQ-17} & SPEC-004 \S 3.2.2 Eq. (20) & Butterworth $C_{f,\text{opt}}$ \& settling $t_s(0.1\%)$ & \texttt{tier2\_sysc\_ams/include/ifog\_math.hpp} \\
+\texttt{EQ-18} & SPEC-004 \S 3.2.3 Eqs. (21)--(22) & TIA $1/f$ offset \& cubic NL + rail clipping & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
+\texttt{EQ-19} & SPEC-004 \S 3.2.3 Eq. (23) & ADC blanking $\eta_b$, $N_{\text{ADC}}$, $1/\sqrt{\eta_b}$ & \texttt{tier2\_sysc\_ams/src/adc\_dac\_bridge.cpp} \\
+\texttt{EQ-20} & SPEC-004 \S 3.3.1 Eqs. (24)--(27) & 2-state \& 4-state Loop-1/Loop-2 integrators & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-21} & SPEC-004 \S 3.3.1 Eqs. (28)--(29) & Phase ramp $\operatorname{wrap}_{2\pi}$ \& PRBS DAC code & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-22} & SPEC-004 \S 3.3.2 Eqs. (30)--(31) & $L_1(z)$ Jury stability \& Loop-2 separation & \texttt{tier2\_sysc\_ams/include/ifog\_math.hpp} \\
+\texttt{EQ-23} & SPEC-004 \S 3.3.2 Eq. (32) & Closed-loop output rate $\Omega_{\text{out}}$ & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-24} & SPEC-004 \S 3.4 Eq. (33) & IEEE Std 952-2020 5-component AVAR model & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-25} & SPEC-004 \S 3.4 Eq. (34) & RRW Wiener \& Gauss--Markov AR(1) models & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-26} & SPEC-004 \S 4.1 Eq. (35) & Inter-tier phase-to-rate conversion & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-27} & SPEC-004 \S 4.2 Eq. (36) & Leakage gain matrix $\mathbf{K}$ ($100\text{ Hz}$ FFT) & \texttt{tier3\_analysis/extract\_k\_matrix.py} \\
+\texttt{EQ-28} & SPEC-004 \S 4.3 Eq. (37) & Slow-scale $10\text{ h}$ / $100\text{ Hz}$ synthesis & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-29} & SPEC-004 \S 4.3 Eq. (38) & Overlapping Allan Variance $\sigma^2(T_m)$ & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-30} & SPEC-004 \S 4.3 Eq. (39) & Dual-regime overlap continuity $< 5\%$ & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-31} & SPEC-005 \S 2.1 & 6-state anti-periodic bias phases $\psi_1..\psi_6$ & \texttt{tier2\_sysc\_ams/include/ifog\_math.hpp} \\
+\texttt{EQ-32} & SPEC-005 \S 2.2 & 6-state Taylor expansion \& $\alpha^*=\pi/3$ ($-33.3\%$ $V_{\text{peak}}$) & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-33} & SPEC-005 \S 2.3 & 6-state 3-channel orthogonal demodulation & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-34} & SPEC-005 \S 2.4 & 6-state gains, $-3\text{ dB}$ BW \& anti-windup clamp & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-35} & SPEC-005 \S 4.1 & ADC sampling aperture jitter $\sigma_{V,\text{jit}}$ \& RSS ARW & \texttt{tier2\_sysc\_ams/src/adc\_dac\_bridge.cpp} \\
+\texttt{EQ-36} & SPEC-005 \S 4.2 & Concurrent 3-axis IMU shared-SLD \& rail PSRR & \texttt{tier2\_sysc\_ams/src/imu\_3axis.cpp} \\
+\texttt{EQ-37} & SPEC-005 \S 4.3 & Vibration Rectification Error $K_{\text{VRE}}g_{\text{rms}}^2$ & \texttt{tier2\_sysc\_ams/src/optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-38} & SPEC-005 \S 4.3 & Dynamic Faraday $S_B$ \& Mu-metal shielding $A_{\text{dB}}$ & \texttt{tier3\_analysis/scenarios\_engineering.py} \\
+\texttt{EQ-39} & SPEC-005 \S 4.4 & Real-time FPGA BIT/FDIR 5-fault \& SEU recovery & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
+\texttt{EQ-40} & SPEC-005 \S 4.5 & Monte Carlo yield, 95\% Wilson CI \& $C_{pk}$ & \texttt{tier3\_analysis/scenarios\_engineering.py} \\
+\texttt{EQ-41} & SPEC-005 \S 4.5 & $-40..+85^\circ\text{C}$ 2D thermal poly \& 4-state EKF & \texttt{tier3\_analysis/scenarios\_engineering.py} \\
 \bottomrule
 \end{longtable}
 \normalsize
@@ -247,10 +260,10 @@ Tier 2 is compiled in C++17 (\texttt{SC\_CPLUSPLUS=201703L}) against Ubuntu 24.0
 
 Every pull request (\texttt{dev -> main}) and SemVer release tag (\texttt{vX.Y.Z}) is gated by \texttt{.github/workflows/ci.yml} and \texttt{.github/workflows/release.yml} on pinned \texttt{ubuntu-24.04} runners:
 \begin{enumerate}
-    \item \textbf{Governance, Branch Policy, Spec Lock \& Rule 16 Doc-Sync:} Enforces strictly 2 branches (\texttt{\{main, dev\}}), verifies \texttt{spec/IFOG-SIM-SPEC-004.sha256}, verifies all project skills, and executes \texttt{python3 scripts/verify\_doc\_sync.py} (with \texttt{--expected-tag} on release tags) asserting exact synchronization across \texttt{pyproject.toml}, \texttt{docs/*.\{md,tex,pdf\}}, \texttt{docs/DOCS\_BUILD.sha256}, \texttt{docs/CHANGELOG.md}, \texttt{README.md}, and \texttt{AGENT.md}.
-    \item \textbf{Dual-Domain 100.0\% Coverage (Rules 2 \& 14):} Enforces \texttt{100.0\%} C++ line coverage (\texttt{gcovr --fail-under-line 100}) and \texttt{100.0\%} Python line coverage (\texttt{pytest-cov}, \texttt{fail\_under = 100}).
-    \item \textbf{30-Formula Independent CI Verification (Rule 3):} Runs \texttt{scripts/verify\_formulas\_ci.py} asserting all 30 equations pass individually.
-    \item \textbf{Full Real 4-Gate Acceptance \& Regression Suite (Rule 5):} Runs Gate 1 (static error $3.10\times 10^{-16}\text{ rad}$, $1{,}666$ wraps), Gate 2 ($98.85\%$ Deadband \& Bunny Ears reduction), Gate 3 (flat linear $-0.062$ vs $-0.893$ nonlinear $1/f$ PSD \& $\mathbf{K}$-matrix $0.000\%$ repeat), Gate 4 ($60\text{ s}$ Fast-Scale + $10\text{ h}$ Slow-Scale overlap $2.42\% < 5\%$ \& all 5 WLS parameters within $\pm 10\%$), and deterministic bit-exact regression.
+    \item \textbf{Governance, Branch Policy, Dual Spec Lock \& Rule 16 Doc-Sync:} Enforces strictly 2 branches (\texttt{\{main, dev\}}), verifies both \texttt{spec/IFOG-SIM-SPEC-004.sha256} and \texttt{spec/IFOG-SIM-SPEC-005.sha256}, verifies all 8 project skills, and executes \texttt{python3 scripts/verify\_doc\_sync.py} (with \texttt{--expected-tag} on release tags) asserting exact synchronization across \texttt{pyproject.toml}, all 3 \texttt{docs/*.\{md,tex,pdf\}} documents, \texttt{docs/DOCS\_BUILD.sha256}, \texttt{docs/CHANGELOG.md}, \texttt{README.md}, and \texttt{AGENT.md}.
+    \item \textbf{Dual-Domain 100.0\% Coverage (Rules 2 \& 14):} Enforces \texttt{100.0\%} C++ line \& function coverage (\texttt{gcovr --fail-under-line 100}, $1{,}546/1{,}546$ lines, $109/109$ functions) and \texttt{100.0\%} Python line coverage (\texttt{pytest-cov}, \texttt{fail\_under = 100}, $2{,}631/2{,}631$ statements).
+    \item \textbf{41-Formula Independent CI Verification (Rule 3):} Runs \texttt{scripts/verify\_formulas\_ci.py} asserting all 41 equations (\texttt{EQ-01}--\texttt{EQ-41}) pass individually.
+    \item \textbf{Full Real 5-Gate + 11-Scenario Suite (Rule 5):} Executes Gates 1--4 (including $60\text{ s}$ Fast-Scale + $10\text{ h}$ Slow-Scale AVAR overlap $2.42\% < 5\%$ \& all 5 WLS parameters within $\pm 10\%$), Gate 5 (Official 6-State DSP $+136.94\text{ dB}$ RAM/xtalk rejection \& $-33.3\%$ $V_{\text{peak}}$), all 6 Time-Domain scenarios (\texttt{TD-01}--\texttt{TD-06}), and all 5 System Engineering scenarios (\texttt{ENG-01}--\texttt{ENG-05}, including concurrent 3-axis SystemC-AMS IMU $+51.6\text{ dB}$ rejection and $N=500$ MC Yield $97.2\%$).
     \item \textbf{Container CI Verification:} Builds \texttt{Containerfile} cleanly from Git sources and runs live in-container C++ tests and Gate 1 simulation producing host-mounted reports.
 \end{enumerate}
 
@@ -259,7 +272,7 @@ Every pull request (\texttt{dev -> main}) and SemVer release tag (\texttt{vX.Y.Z
 \begin{itemize}
     \item \textbf{Distro-Independent Source Setup (\texttt{scripts/setup\_env.sh}, \texttt{scripts/install\_systemc.sh}, \texttt{scripts/install\_systemc\_ams.sh}, \texttt{scripts/env.sh}):} Pulls and builds Accellera SystemC 2.3.4, SystemC-AMS PoC 2.3.4, \texttt{nlohmann/json} v3.11.3, and an isolated Python 3 virtual environment into \texttt{/opt/ifog-env} (root/container) or \texttt{\$HOME/.local/ifog-env} (rootless Linux/HPC), exporting all runtime and CMake variables via \texttt{source scripts/env.sh}.
     \item \textbf{Docker \& Podman OCI Suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}):} Layer-cached Ubuntu 24.04 OCI image pre-built with SystemC 2.3.4, SystemC-AMS 2.3.4, Python venv, and Release \texttt{-O3} \texttt{build/ifog\_sim}. \texttt{scripts/container\_run.sh} auto-detects Podman (with rootless \texttt{:Z} and \texttt{--userns=keep-id}) or Docker.
-    \item \textbf{Curated Real 4-Gate Example (\texttt{examples/full\_4gate\_baseline/}, \texttt{examples/run\_example.sh}):} Complete real 4-Gate baseline outputs (\texttt{report.md}, interactive \texttt{report.html}, all Tier 1--3 JSON telemetry, and all four 300-DPI diagnostic figures) committed for zero-setup feasibility review.
+    \item \textbf{Official Scenarios \& Curated Example (\texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, \texttt{examples/full\_4gate\_baseline/}):} Complete individual and batch scenario CLI (\texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_all\_scenarios.sh}) plus committed real 4-Gate baseline outputs for zero-setup feasibility evaluation.
 \end{itemize}
 
 \end{document}

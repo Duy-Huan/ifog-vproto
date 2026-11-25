@@ -96,11 +96,58 @@ run_cfg("nonstiff_sca_ltf_xtalk", {
                    "stimulus": {"type": "sine", "omega_rad_per_s": 0.0, "freq_Hz": 100.0, "amp_rad_per_s": 0.05}},
 })
 
-# (e) Negative validation & CLI error branches in ifog_config.cpp / main.cpp / digital_dsp_sc.cpp
+# (e) 6-state symmetric DSP (alpha=pi/3) + DspTraceCollector (>4096 flush) + eps_vpi step shock + aperture jitter + vibration + dynamic Faraday
+run_cfg("mode_6s_full_spec005", {
+    "dsp": {"mode": "6state", "alpha_rad": 1.0471975511965976, "en_vpi_loop": True, "en_prbs_dither": True, "prbs_amplitude_rad": 0.001},
+    "mioc": {"eps_vpi": 0.01, "eps_vpi_step_time_s": 0.005, "eps_vpi_step_delta": 0.04},
+    "adc_dac": {"aperture_jitter_s": 5.0e-10},
+    "magneto_optic": {"B_ext_T": 1.0e-4, "effective_loop_m": 0.5, "B_ac_T": 5.0e-5, "B_freq_Hz": 200.0},
+    "vibration": {"en_vibration": True, "freq_Hz": 300.0, "g_rms": 2.0, "loss_mod_per_g": 0.01, "phase_mod_rad_per_g": 1.0e-4},
+    "ablation_flags": {"en_faraday": True, "en_mioc_vpi_err": True, "en_tia_poly_nl": True},
+    "fault_injection": {"type": "none", "inject_time_s": 0.0, "duration_s": 0.0},
+    "bit_fdir": {"en_bit": True, "en_fdir_recovery": True},
+    "simulation": {"duration_s": 0.025, "decimation_tau": 1, "dump_micro_ms": 0.05, "dump_dsp_trace": True},
+})
+
+# (f) Anti-windup positive & negative clamping
+run_cfg("anti_windup_pos_neg", {
+    "dsp": {"mode": "4state", "max_delta_phi_step_rad": 0.05, "en_prbs_dither": False},
+    "noise": {"en_white_noise": False, "en_pink_noise": False},
+    "simulation": {
+        "duration_s": 0.015, "decimation_tau": 1, "dump_micro_ms": 0.0,
+        "stimulus": {"type": "step", "omega_start_rad_per_s": 0.5, "omega_end_rad_per_s": -0.5, "step_time_s": 0.007},
+    },
+})
+
+# (g) All 5 BIT/FDIR fault injection modes (EQ-39)
+for ftype, extra_fi in [
+    ("sld_drop_50pct", {"inject_time_s": 0.002, "duration_s": 0.0}),
+    ("fiber_break", {"inject_time_s": 0.002, "duration_s": 0.0}),
+    ("mioc_electrode_open", {"inject_time_s": 0.002, "duration_s": 0.0}),
+    ("adc_saturation", {"inject_time_s": 0.002, "duration_s": 0.002}),
+    ("dsp_seu_bitflip", {"inject_time_s": 0.002, "duration_s": 0.0, "seu_delta_phi_rad": 0.4}),
+]:
+    run_cfg(f"fault_{ftype}", {
+        "dsp": {"mode": "6state", "alpha_rad": 1.0471975511965976, "en_prbs_dither": False},
+        "noise": {"en_white_noise": False, "en_pink_noise": False},
+        "fault_injection": {"type": ftype, **extra_fi},
+        "bit_fdir": {"en_bit": True, "en_fdir_recovery": True, "vpi_err_threshold": 2000.0, "seu_err_threshold": 2000.0},
+        "simulation": {"duration_s": 0.01, "decimation_tau": 1, "dump_micro_ms": 0.0, "dump_dsp_trace": True},
+    })
+
+# (h) Concurrent 3-Axis Shared-SLD / Shared-Rail IMU (--imu3axis, EQ-36)
+run_cfg("imu_3axis_cov", {
+    "dsp": {"mode": "6state", "alpha_rad": 1.0471975511965976, "en_prbs_dither": False},
+    "noise": {"en_white_noise": False, "en_pink_noise": False},
+    "imu_3axis": {"omega_x_rad_per_s": 2.0, "omega_y_rad_per_s": 0.0, "omega_z_rad_per_s": 0.0, "rho_opt_coupling": 2.0e-3, "z_rail_ohm": 0.25},
+    "simulation": {"duration_s": 0.005, "decimation_tau": 6, "dump_micro_ms": 0.0},
+}, extra_args=["--imu3axis"])
+
+# (i) Negative validation & CLI error branches in ifog_config.cpp / main.cpp / digital_dsp_sc.cpp
 run_cfg("bad_dsp_mode", {"dsp": {"mode": "8state"}}, expect_fail=True)
 run_cfg("bad_sine_target", {"noise": {"sine_inject_target": "bogus"}}, expect_fail=True)
 run_cfg("bad_stim_type", {"simulation": {"stimulus": {"type": "chirp"}}}, expect_fail=True)
-# Unwritable bin_out path (pass a directory as file? Use /dev/null/sub)
+run_cfg("bad_fault_type", {"fault_injection": {"type": "cosmic_ray"}}, expect_fail=True)
 res_err = subprocess.run([sim_bin, "--bad-flag"], capture_output=True, text=True)
 assert res_err.returncode != 0
 # Unwritable sim_out.bin path (pre-create directory named sim_out.bin so ofstream::open fails cleanly)

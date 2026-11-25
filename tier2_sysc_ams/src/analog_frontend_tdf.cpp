@@ -14,6 +14,7 @@ AnalogFrontEnd_TDF::AnalogFrontEnd_TDF(
       dv_drv_dt_in("dv_drv_dt_in"),
       pink_tia_in("pink_tia_in"),
       pink_xtalk_in("pink_xtalk_in"),
+      rail_droop_in("rail_droop_in"),
       v_adc_out("v_adc_out"),
       cfg_(cfg),
       dt_fast_(cfg.tau_s / static_cast<double>(cfg.K_oversample)),
@@ -57,6 +58,7 @@ void AnalogFrontEnd_TDF::set_attributes() {
     dv_drv_dt_in.set_rate(cfg_.K_oversample);
     pink_tia_in.set_rate(1);
     pink_xtalk_in.set_rate(1);
+    rail_droop_in.set_rate(cfg_.K_oversample);
     v_adc_out.set_rate(cfg_.K_oversample);
     set_timestep(sca_core::sca_time(cfg_.tau_s, sc_core::SC_SEC));
 }
@@ -85,11 +87,15 @@ void AnalogFrontEnd_TDF::processing() {
     const double n_pink_tia = pink_tia_in.read();
     const double n_pink_xtalk = pink_xtalk_in.read();
     const double k_xtalk_mod = k_xtalk_eff_ * (1.0 + n_pink_xtalk);
+    const bool adc_sat_fault =
+        (cfg_.fault_type == FaultType::AdcSaturation) &&
+        is_fault_active(t_cluster, cfg_.fault_inject_time_s, cfg_.fault_duration_s);
 
     for (int k = 0; k < K; ++k) {
         const double p_det = p_det_in.read(k);
         const double v_drv = v_drv_in.read(k);
         const double dv_dt = dv_drv_dt_in.read(k);
+        const double rail_droop = rail_droop_in.read(k);
 
         // EQ-15: Exact 6-component input current noise variance integrated over [0, B_fast]
         double i_white = 0.0;
@@ -114,10 +120,13 @@ void AnalogFrontEnd_TDF::processing() {
             }
         }
 
-        // EQ-18: TIA 1/f offset + cubic polynomial nonlinearity + clipping
-        const double v_lin = v_tia + cfg_.V_off_0_V + n_pink_tia;
+        // EQ-18 & EQ-36: TIA 1/f offset + shared power-rail PSRR (-40 dB) + cubic nonlinearity + clipping
+        const double v_lin = v_tia + cfg_.V_off_0_V + n_pink_tia + 0.01 * rail_droop;
         double v_adc = cfg_.G1 * v_lin;
-        if (cfg_.ablation.en_tia_poly_nl) {
+        if (adc_sat_fault) {
+            v_adc = cfg_.V_max_V;
+            ++clip_count_;
+        } else if (cfg_.ablation.en_tia_poly_nl) {
             const double v_poly =
                 cfg_.G1 * v_lin
                 + cfg_.G2_per_V * v_lin * v_lin

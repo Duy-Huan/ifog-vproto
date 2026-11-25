@@ -11,6 +11,10 @@ set -euo pipefail
 #   ./scripts/run_sim.sh --mode gate3
 #   ./scripts/run_sim.sh --mode gate4
 #   ./scripts/run_sim.sh --mode full --run-id full_4gate_verification
+#   ./scripts/run_sim.sh --mode dsp6_compare --run-id gate5_6state
+#   ./scripts/run_sim.sh --mode td_blanking          # or td_step_sine, td_vpi_shock, td_high_rate, td_shupe_shock, td_limit_cycles, td_all
+#   ./scripts/run_sim.sh --mode eng_imu_3axis        # or eng_hw_sizing, eng_vre_faraday, eng_fault_bit, eng_mc_yield_cal, eng_all
+#   ./scripts/run_sim.sh --mode all_scenarios --run-id complete_suite --mc-runs 500
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -f "${REPO_ROOT}/scripts/env.sh" ]; then

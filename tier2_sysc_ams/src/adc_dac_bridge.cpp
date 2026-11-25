@@ -20,8 +20,11 @@ ADC_Bridge_TDF::ADC_Bridge_TDF(
       win_len_(win_end_ - win_start_ + 1),
       eta_blanking_(static_cast<double>(win_len_) / static_cast<double>(cfg.K_oversample)),
       delta_adc_(compute_adc_lsb(cfg.V_fs_adc_V, cfg.N_adc_bits)),
+      inv_dt_fast_(static_cast<double>(cfg.K_oversample) / cfg.tau_s),
+      prev_v_adc_(0.0),
       code_min_(-(1LL << (cfg.N_adc_bits - 1))),
       code_max_((1LL << (cfg.N_adc_bits - 1)) - 1LL),
+      rng_(cfg.seed ^ 0x517CC1B727220A95ULL),
       cluster_idx_(0),
       micro_trace_(micro_trace) {}
 
@@ -32,11 +35,27 @@ void ADC_Bridge_TDF::set_attributes() {
 }
 
 void ADC_Bridge_TDF::processing() {
-    // EQ-19: Average over blanking window [win_start_, win_end_]
+    // EQ-19 & EQ-35: Average over blanking window [win_start_, win_end_] with optional aperture jitter
+    const int K = cfg_.K_oversample;
     double sum_v = 0.0;
-    for (int k = win_start_; k <= win_end_; ++k) {
-        sum_v += v_adc_in.read(k);
+    double max_edge_slew = 0.0;
+    double prev = (cluster_idx_ == 0u) ? v_adc_in.read(0) : prev_v_adc_;
+    for (int k = 0; k < K; ++k) {
+        const double v_k = v_adc_in.read(k);
+        const double slew_k = (v_k - prev) * inv_dt_fast_;
+        max_edge_slew = std::max(max_edge_slew, std::fabs(slew_k));
+        if (k >= win_start_ && k <= win_end_) {
+            double v_sample = v_k;
+            if (cfg_.aperture_jitter_s > 0.0) {
+                // EQ-35: dV_j = (dV_adc/dt) * delta_t_j combining local & switching-edge slew
+                const double eff_slew = std::hypot(slew_k, 0.25 * max_edge_slew);
+                v_sample += eff_slew * cfg_.aperture_jitter_s * rng_.normal01();
+            }
+            sum_v += v_sample;
+        }
+        prev = v_k;
     }
+    prev_v_adc_ = prev;
     const double raw_counts = sum_v / (delta_adc_ * static_cast<double>(win_len_));
 
     double out_val = raw_counts;
@@ -68,6 +87,7 @@ DAC_Driver_TDF::DAC_Driver_TDF(
     : sca_tdf::sca_module(name),
       dac_code_in("dac_code_in"),
       pink_dac_in("pink_dac_in"),
+      rail_droop_in("rail_droop_in"),
       v_drv_out("v_drv_out"),
       dv_drv_dt_out("dv_drv_dt_out"),
       cfg_(cfg),
@@ -89,6 +109,8 @@ void DAC_Driver_TDF::set_attributes() {
     // Rule 10 (Spec Fig. 2): Mandatory set_delay(1) breaking closed-loop algebraic dependency
     dac_code_in.set_delay(1);
     pink_dac_in.set_rate(1);
+    rail_droop_in.set_rate(1);
+    rail_droop_in.set_delay(1);
     v_drv_out.set_rate(cfg_.K_oversample);
     dv_drv_dt_out.set_rate(cfg_.K_oversample);
     set_timestep(sca_core::sca_time(cfg_.tau_s, sc_core::SC_SEC));
@@ -96,6 +118,7 @@ void DAC_Driver_TDF::set_attributes() {
 
 void DAC_Driver_TDF::initialize() {
     dac_code_in.initialize(init_dac_code_, 0);
+    rail_droop_in.initialize(0.0, 0);
     const double w0_sq = cfg_.drv_omega0_rad_per_s * cfg_.drv_omega0_rad_per_s;
     num_drv_(0) = w0_sq;
     den_drv_(0) = w0_sq;
@@ -111,7 +134,8 @@ void DAC_Driver_TDF::processing() {
     const int K = cfg_.K_oversample;
     const double code = dac_code_in.read();
     const double n_pink_dac = pink_dac_in.read();
-    const double v_target = code * dac_lsb_scale_ * (1.0 + n_pink_dac);
+    const double rail_droop = rail_droop_in.read();
+    const double v_target = code * dac_lsb_scale_ * (1.0 + n_pink_dac + (rail_droop / cfg_.V_ref_dac_V));
 
     for (int k = 0; k < K; ++k) {
         double v_now = v_target;

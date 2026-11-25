@@ -49,12 +49,13 @@ jobs:
           fi
           echo "PR branch policy OK: dev -> main."
 
-      - name: Enforce Rule 7 — Spec SHA-256 Immutability & PDF Presence
+      - name: Enforce Rule 7 — Dual Spec SHA-256 Immutability & PDF Presence
         run: |
           set -euo pipefail
-          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256
+          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256
           test -s spec/IFOG-SIM-SPEC-004.pdf
-          echo "Spec checksum and compiled PDF verified."
+          test -s spec/IFOG-SIM-SPEC-005.pdf
+          echo "Both spec checksums (SPEC-004 & SPEC-005) and compiled PDFs verified."
 
       - name: Enforce Rule 6 — Governance & Project Skills Presence
         run: |
@@ -65,13 +66,14 @@ jobs:
             ifog-spec-formula-verification \
             ifog-tier1-optical-thermal \
             ifog-tier2-sysc-ams-core \
+            ifog-6state-and-scenarios \
             ifog-tier3-dual-regime-avar \
             ifog-reporting-and-doc-sync \
             ifog-portable-container-env \
             ifog-cicd-release-workflow; do
             test -s "skills/${skill}/SKILL.md"
           done
-          echo "AGENT.md and all 7 project skills verified."
+          echo "AGENT.md and all 8 project skills verified."
 
       - name: Enforce Rule 16 — Mandatory Version-Document Synchronization
         run: |
@@ -79,10 +81,10 @@ jobs:
           python3 scripts/verify_doc_sync.py
 
   build-and-verify:
-    name: Build SystemC-AMS, 30 Formulas, 100% C++/Py Coverage & Real 4-Gate Sim
+    name: Build SystemC-AMS, 41 Formulas, 100% C++/Py Coverage & Full Real Scenarios
     needs: governance-and-spec-lock
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
       SYSTEMC_AMS_HOME: ${{ github.workspace }}/.cache/systemc-ams
     steps:
@@ -127,7 +129,7 @@ jobs:
       - name: Gate A — C++ 100.0% Line Coverage Verification (gcovr)
         run: bash scripts/run_cpp_coverage.sh
 
-      - name: Gate B — Per-Formula Verification Matrix (EQ-01 .. EQ-30, Rule 3)
+      - name: Gate B — Per-Formula Verification Matrix (EQ-01 .. EQ-41, Rule 3)
         run: |
           python3 scripts/verify_formulas_ci.py --out-dir data/ci_formula_report
           cat data/ci_formula_report/formula_verification_matrix.md
@@ -137,7 +139,7 @@ jobs:
           pytest tests/unit tests/formula_verification \
             --cov --cov-report=term-missing --cov-report=xml:data/python_coverage.xml
 
-      - name: Gate D — Full Real 4-Gate Acceptance & Regression Simulations (No Smoke Tests, Rule 5)
+      - name: Gate D — Full Real 5-Gate + 11-Scenario & Regression Simulations (No Smoke Tests, Rule 5)
         run: pytest tests/system -v -s
 
       - name: Upload CI Verification Artifacts
@@ -174,11 +176,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Verify live in-container simulation & auto-reporting into host report/
+      - name: Verify live in-container simulation (Gate 1 & Gate 5 6-State DSP) & auto-reporting
         run: |
           set -euo pipefail
-          ./scripts/container_run.sh --engine docker --tag ifog-vproto:ci sim --mode gate1 --run-id ci_container_gate1
-          test -s report/ci_container_gate1/report.md
-          test -s report/ci_container_gate1/report.html
+          ./scripts/container_run.sh --engine docker --tag ifog-vproto:ci sim --mode dsp6_compare --run-id ci_container_dsp6
+          test -s report/ci_container_dsp6/report.md
+          test -s report/ci_container_dsp6/report.html
           test -s report/index.html
-          echo "Container build & live Gate 1 auto-report PASSED!"
+          echo "Container build & live 6-State DSP auto-report PASSED!"

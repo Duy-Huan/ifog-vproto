@@ -9,7 +9,8 @@ DigitalDSP_SC::DigitalDSP_SC(
     sc_core::sc_module_name name,
     const IfogConfig& cfg,
     const std::string& bin_out_path,
-    MicroTraceCollector* micro_trace
+    MicroTraceCollector* micro_trace,
+    DspTraceCollector* dsp_trace
 )
     : sc_core::sc_module(name),
       adc_code_in("adc_code_in"),
@@ -23,42 +24,67 @@ DigitalDSP_SC::DigitalDSP_SC(
       g_dac_(g_dac_nom_),
       init_dac_code_(0.0),
       init_v_drv_(0.0),
+      y_nom_(
+          (cfg.G1 * cfg.responsivity_A_per_W * cfg.R_f_ohm / compute_adc_lsb(cfg.V_fs_adc_V, cfg.N_adc_bits))
+          * (0.5 * cfg.P_peak_W * (1.0 - cfg.visibility_V * std::cos(cfg.alpha_rad)))
+      ),
+      adc_code_max_(static_cast<double>((1LL << (cfg.N_adc_bits - 1)) - 1LL)),
       delta_phi_step_(0.0),
+      filtered_dphi_step_(0.0),
       prev_e_omega_(0.0),
       phi_ramp_(0.0),
       phi_dither_(0.0),
       active_dither_step_(0.0),
+      active_prbs_bit_(0),
       omega_out_(0.0),
+      last_e_omega_(0.0),
+      last_e_asym_(0.0),
       last_e_vpi_raw_(0),
       pipe_{},
       pipe_head_(0),
       emit_state_(0),
-      y_frame_{0.0, 0.0, 0.0, 0.0},
+      y_frame_{0.0, 0.0, 0.0, 0.0, 0.0, 0.0},
       prev_y_2state_(0.0),
       has_prev_y_2state_(false),
       two_state_rx_count_(0),
       lfsr_(static_cast<uint32_t>(cfg.seed ^ 0xA5A55A5Au)),
+      seu_injected_(false),
+      last_bit_fault_code_(BIT_OK),
+      bit_first_fault_code_(BIT_OK),
+      bit_alert_time_s_(-1.0),
+      bit_time_to_alert_s_(-1.0),
+      fdir_recovery_active_(false),
+      fdir_calm_frames_(0),
+      fdir_recovered_(false),
       record_buf_(),
       step_idx_(0),
       total_expected_steps_(static_cast<uint64_t>(std::llround(cfg.duration_s / cfg.tau_s))),
       records_written_(0),
       flyback_count_(0),
+      anti_windup_count_(0),
       second_half_sum_(0.0),
       second_half_count_(0),
-      micro_trace_(micro_trace) {
-    // EQ-22: Loop-1 & Loop-2 gains calibrated directly from K_tot_1 and K_tot_2
-    if (cfg_.dsp_mode == DspMode::FourState) {
+      e_asym_sq_sum_(0.0),
+      e_asym_count_(0),
+      micro_trace_(micro_trace),
+      dsp_trace_(dsp_trace) {
+    // EQ-22 & EQ-34: Loop-1 & Loop-2 gains calibrated directly from K_tot_1 and K_tot_2
+    double init_bias = 0.0;
+    if (cfg_.dsp_mode == DspMode::SixState) {
+        k_i1_ = cfg_.K_tot_1 / (6.0 * s_alpha_);
+        k_i2_ = cfg_.K_tot_2 / (8.0 * PI * s_alpha_);
+        // Pre-State-0 bias phase = psi_5 so State 0 yields psi_0 - psi_5 = +(pi - alpha)
+        init_bias = compute_6state_bias_phase(5, cfg_.alpha_rad);
+    } else if (cfg_.dsp_mode == DspMode::FourState) {
         k_i1_ = cfg_.K_tot_1 / (4.0 * s_alpha_);
         k_i2_ = cfg_.K_tot_2 / (4.0 * PI * s_alpha_);
+        init_bias = cfg_.alpha_rad;
     } else {
         k_i1_ = cfg_.K_tot_1 / (2.0 * s_alpha_);
         k_i2_ = 0.0;
+        init_bias = -0.5 * (PI - cfg_.alpha_rad);
     }
 
-    // Pre-State-0 bias phase so first differential transition yields exact +(pi - alpha)
-    const double init_bias = (cfg_.dsp_mode == DspMode::FourState)
-        ? cfg_.alpha_rad
-        : (-0.5 * (PI - cfg_.alpha_rad));
     init_dac_code_ = encode_dac_phase(init_bias);
     init_v_drv_ = init_dac_code_ * (cfg_.V_ref_dac_V / static_cast<double>(1ULL << cfg_.N_dac_bits));
 
@@ -82,12 +108,12 @@ DigitalDSP_SC::~DigitalDSP_SC() {
 }
 
 double DigitalDSP_SC::bias_phase_for_state(int state_idx) const {
+    if (cfg_.dsp_mode == DspMode::SixState) {
+        // EQ-31: Anti-periodic 6-state sequence with zero DC drive mean & zero RAM/xtalk at alpha=pi/3
+        return compute_6state_bias_phase(state_idx, cfg_.alpha_rad);
+    }
     if (cfg_.dsp_mode == DspMode::FourState) {
-        // Bounded instantaneous phases in [-pi, +pi] producing exact EQ-01 differential sequence:
-        //   state 0: +pi    - (+alpha) = +(pi - alpha)
-        //   state 1: +alpha - (+pi)    = -(pi - alpha)
-        //   state 2: -pi    - (+alpha) = -(pi + alpha)
-        //   state 3: +alpha - (-pi)    = +(pi + alpha)
+        // Bounded instantaneous phases in [-pi, +pi] producing exact EQ-01 differential sequence
         switch (state_idx) {
             case 0:
                 return PI;
@@ -119,26 +145,128 @@ double DigitalDSP_SC::encode_dac_phase(double phi_total) const {
     return static_cast<double>(q_dac.to_int());
 }
 
+bool DigitalDSP_SC::apply_loop1_update(double e_omega) {
+    // EQ-20 & EQ-34: Loop-1 PI integrator with anti-windup clamping
+    const double raw_dphi = delta_phi_step_ + k_i1_ * e_omega + k_p1_ * (e_omega - prev_e_omega_);
+    prev_e_omega_ = e_omega;
+    last_e_omega_ = e_omega;
+    if (raw_dphi > cfg_.max_delta_phi_step_rad) {
+        delta_phi_step_ = cfg_.max_delta_phi_step_rad;
+        ++anti_windup_count_;
+        return true;
+    }
+    if (raw_dphi < -cfg_.max_delta_phi_step_rad) {
+        delta_phi_step_ = -cfg_.max_delta_phi_step_rad;
+        ++anti_windup_count_;
+        return true;
+    }
+    delta_phi_step_ = raw_dphi;
+    return false;
+}
+
+void DigitalDSP_SC::record_bit_fault(uint16_t code, double t_now) {
+    last_bit_fault_code_ = code;
+    if (bit_first_fault_code_ == BIT_OK) {
+        bit_first_fault_code_ = code;
+        bit_alert_time_s_ = t_now;
+        bit_time_to_alert_s_ = std::max(0.0, t_now - cfg_.fault_inject_time_s);
+    }
+}
+
+void DigitalDSP_SC::evaluate_frame_bit(
+    double t_now,
+    double y_mean,
+    double y_min,
+    double y_max,
+    double e_omega,
+    double e_vpi
+) {
+    if (!cfg_.en_bit || step_idx_ < 12u) {
+        return;
+    }
+    if (y_mean < cfg_.bit_fiber_break_ratio * y_nom_ || y_min < cfg_.bit_fiber_break_ratio * y_nom_) {
+        record_bit_fault(BIT_FIBER_BREAK, t_now);
+    } else if (y_mean < cfg_.bit_sld_drop_ratio * y_nom_ ||
+               (y_min < cfg_.bit_sld_drop_ratio * y_nom_ && y_max <= 1.05 * y_nom_)) {
+        record_bit_fault(BIT_SLD_DROP, t_now);
+    } else if (std::fabs(e_vpi) > cfg_.bit_vpi_err_threshold ||
+               g_dac_ <= 0.501 * g_dac_nom_ ||
+               g_dac_ >= 1.999 * g_dac_nom_) {
+        record_bit_fault(BIT_MIOC_OPEN, t_now);
+    } else if (std::fabs(e_omega) > cfg_.bit_seu_err_threshold) {
+        record_bit_fault(BIT_DSP_SEU, t_now);
+        if (cfg_.en_fdir_recovery) {
+            // FDIR soft-recovery: restore Loop-1 integrator to pre-fault smoothed estimate
+            delta_phi_step_ = filtered_dphi_step_;
+            prev_e_omega_ = 0.0;
+            fdir_recovery_active_ = true;
+            fdir_calm_frames_ = 0;
+        }
+    } else {
+        filtered_dphi_step_ = 0.85 * filtered_dphi_step_ + 0.15 * delta_phi_step_;
+        if (fdir_recovery_active_ && std::fabs(e_omega) < 0.05 * cfg_.bit_seu_err_threshold) {
+            ++fdir_calm_frames_;
+            if (fdir_calm_frames_ >= 4) {
+                fdir_recovered_ = true;
+                fdir_recovery_active_ = false;
+            }
+        }
+    }
+}
+
 void DigitalDSP_SC::on_adc_sample() {
+    const double t_now = static_cast<double>(step_idx_) * cfg_.tau_s;
     const double y_now = adc_code_in.read();
+
+    // EQ-39: Per-tau ADC rail saturation check (when BIT enabled)
+    last_bit_fault_code_ = BIT_OK;
+    if (cfg_.en_bit && step_idx_ >= 12u && std::fabs(y_now) >= 0.98 * adc_code_max_) {
+        record_bit_fault(BIT_ADC_SAT, t_now);
+    }
 
     // Pop the tag that generated y_now (exact PIPE_DEPTH = 2 cluster delay)
     const PipeTag rx_tag = pipe_[static_cast<size_t>(pipe_head_)];
+    bool anti_windup_hit = false;
 
     if (rx_tag.valid) {
-        if (cfg_.dsp_mode == DspMode::FourState) {
+        if (cfg_.dsp_mode == DspMode::SixState) {
+            y_frame_[static_cast<size_t>(rx_tag.state_idx)] = y_now;
+            if (rx_tag.state_idx == 5) {
+                // EQ-33: Official 6-state 3-channel orthogonal demodulation
+                const double e_omega_raw =
+                    (y_frame_[3] + y_frame_[4] + y_frame_[5])
+                    - (y_frame_[0] + y_frame_[1] + y_frame_[2]);
+                const double e_omega = e_omega_raw + 6.0 * s_alpha_ * std::sin(rx_tag.dither_step);
+                anti_windup_hit = apply_loop1_update(e_omega);
+
+                const double e_vpi =
+                    2.0 * (y_frame_[1] + y_frame_[4])
+                    - (y_frame_[0] + y_frame_[2] + y_frame_[3] + y_frame_[5]);
+                last_e_vpi_raw_ = static_cast<int32_t>(std::llround(e_vpi));
+                if (cfg_.en_vpi_loop) {
+                    g_dac_ -= k_i2_ * e_vpi;
+                    g_dac_ = std::clamp(g_dac_, 0.5 * g_dac_nom_, 2.0 * g_dac_nom_);
+                }
+
+                last_e_asym_ = (y_frame_[0] - y_frame_[2]) + (y_frame_[5] - y_frame_[3]);
+                e_asym_sq_sum_ += last_e_asym_ * last_e_asym_;
+                ++e_asym_count_;
+
+                const double y_mean =
+                    (y_frame_[0] + y_frame_[1] + y_frame_[2] + y_frame_[3] + y_frame_[4] + y_frame_[5])
+                    / 6.0;
+                const auto [it_min, it_max] = std::minmax_element(y_frame_.begin(), y_frame_.end());
+                evaluate_frame_bit(t_now, y_mean, *it_min, *it_max, e_omega, e_vpi);
+            }
+        } else if (cfg_.dsp_mode == DspMode::FourState) {
             y_frame_[static_cast<size_t>(rx_tag.state_idx)] = y_now;
             if (rx_tag.state_idx == 3) {
                 // EQ-03 & EQ-20: Corrected orthogonal 4-state demodulation (Lefevre Ch. 8)
                 const double e_omega_raw =
                     (y_frame_[1] - y_frame_[0]) + (y_frame_[3] - y_frame_[2]);
-                // Exact PRBS dither cancellation before Loop-1 integrator (EQ-21)
                 const double e_omega = e_omega_raw + 4.0 * s_alpha_ * std::sin(rx_tag.dither_step);
+                anti_windup_hit = apply_loop1_update(e_omega);
 
-                delta_phi_step_ += k_i1_ * e_omega + k_p1_ * (e_omega - prev_e_omega_);
-                prev_e_omega_ = e_omega;
-
-                // Loop-2 V_pi error channel (orthogonal to Delta_phi_NR)
                 const double e_vpi =
                     (y_frame_[2] + y_frame_[3]) - (y_frame_[0] + y_frame_[1]);
                 last_e_vpi_raw_ = static_cast<int32_t>(std::llround(e_vpi));
@@ -146,6 +274,10 @@ void DigitalDSP_SC::on_adc_sample() {
                     g_dac_ -= k_i2_ * e_vpi;
                     g_dac_ = std::clamp(g_dac_, 0.5 * g_dac_nom_, 2.0 * g_dac_nom_);
                 }
+
+                const double y_mean = 0.25 * (y_frame_[0] + y_frame_[1] + y_frame_[2] + y_frame_[3]);
+                const auto [it_min, it_max] = std::minmax_element(y_frame_.begin(), y_frame_.begin() + 4);
+                evaluate_frame_bit(t_now, y_mean, *it_min, *it_max, e_omega, e_vpi);
             }
         } else {
             // EQ-20: 2-state demodulation with alternating sign s[n] = (-1)^n
@@ -153,8 +285,7 @@ void DigitalDSP_SC::on_adc_sample() {
                 const double sign = (rx_tag.state_idx == 1) ? 1.0 : -1.0;
                 const double e_omega_raw = sign * (y_now - prev_y_2state_);
                 const double e_omega = e_omega_raw + 2.0 * s_alpha_ * std::sin(rx_tag.dither_step);
-                delta_phi_step_ += k_i1_ * e_omega + k_p1_ * (e_omega - prev_e_omega_);
-                prev_e_omega_ = e_omega;
+                anti_windup_hit = apply_loop1_update(e_omega);
             }
             prev_y_2state_ = y_now;
             has_prev_y_2state_ = true;
@@ -162,11 +293,18 @@ void DigitalDSP_SC::on_adc_sample() {
         }
     }
 
+    // EQ-39: Single-Event Upset (SEU) one-shot register bit-flip fault injection
+    if (cfg_.fault_type == FaultType::DspSeuBitflip &&
+        !seu_injected_ &&
+        t_now >= cfg_.fault_inject_time_s) {
+        delta_phi_step_ += cfg_.fault_seu_delta_phi_rad;
+        seu_injected_ = true;
+    }
+
     // EQ-23: Closed-loop angular rate output Omega_out = Delta_phi_step / SF_CL (SF_CL = K_opt)
     omega_out_ = delta_phi_step_ / cfg_.K_opt;
 
     // Update frame-constant PRBS dither at start of each modulation frame so Loop-2 cancels identically.
-    // Reflect direction when |phi_dither_| approaches pi/4 to prevent spurious 2*pi flybacks at zero rate.
     if (emit_state_ == 0) {
         if (cfg_.en_prbs_dither && cfg_.prbs_amplitude_rad > 0.0) {
             int dir = lfsr_.next_bit_signed();
@@ -175,8 +313,10 @@ void DigitalDSP_SC::on_adc_sample() {
             } else if (phi_dither_ < -0.25 * PI) {
                 dir = 1;
             }
+            active_prbs_bit_ = static_cast<int16_t>(dir);
             active_dither_step_ = static_cast<double>(dir) * cfg_.prbs_amplitude_rad;
         } else {
+            active_prbs_bit_ = 0;
             active_dither_step_ = 0.0;
         }
     }
@@ -198,14 +338,30 @@ void DigitalDSP_SC::on_adc_sample() {
     dac_code_out.write(next_dac_code);
 
     if (micro_trace_ != nullptr) {
-        micro_trace_->set_phi_ramp(phi_ramp_);
+        micro_trace_->set_dsp_state(phi_ramp_, static_cast<int32_t>(std::llround(next_dac_code)));
+    }
+    if (dsp_trace_ != nullptr && dsp_trace_->enabled()) {
+        DspTraceRecord tr{};
+        tr.t = t_now;
+        tr.phi_ramp = phi_ramp_;
+        tr.delta_phi_step = delta_phi_step_;
+        tr.g_dac = g_dac_;
+        tr.e_omega = last_e_omega_;
+        tr.e_asym = last_e_asym_;
+        tr.adc_code = static_cast<int32_t>(std::llround(y_now));
+        tr.dac_code = static_cast<int32_t>(std::llround(next_dac_code));
+        tr.e_vpi = last_e_vpi_raw_;
+        tr.prbs_bit = active_prbs_bit_;
+        tr.bit_fault_code = last_bit_fault_code_;
+        dsp_trace_->push(tr);
     }
 
     // Push tag for the DAC code just emitted into the 2-slot pipeline FIFO
     pipe_[static_cast<size_t>(pipe_head_)] = {true, emit_state_, active_dither_step_};
     pipe_head_ = (pipe_head_ + 1) % PIPE_DEPTH;
 
-    const int n_states = (cfg_.dsp_mode == DspMode::FourState) ? 4 : 2;
+    const int n_states =
+        (cfg_.dsp_mode == DspMode::SixState) ? 6 : ((cfg_.dsp_mode == DspMode::FourState) ? 4 : 2);
     emit_state_ = (emit_state_ + 1) % n_states;
 
     // Accumulate second-half steady-state mean rate for summary diagnostics
@@ -216,19 +372,26 @@ void DigitalDSP_SC::on_adc_sample() {
 
     // Buffered binary logging at decimation_tau
     if ((step_idx_ % cfg_.decimation_tau) == 0u) {
-        const double t_now = static_cast<double>(step_idx_) * cfg_.tau_s;
         uint32_t flags = 0u;
         if (flyback) {
             flags |= FLAG_FLYBACK_RESET;
         }
         if (cfg_.dsp_mode == DspMode::FourState) {
             flags |= FLAG_DSP_4STATE;
+        } else if (cfg_.dsp_mode == DspMode::SixState) {
+            flags |= FLAG_DSP_6STATE;
         }
         if (cfg_.en_vpi_loop) {
             flags |= FLAG_VPI_LOOP_EN;
         }
         if (cfg_.en_prbs_dither) {
             flags |= FLAG_PRBS_DITHER_EN;
+        }
+        if (last_bit_fault_code_ != BIT_OK) {
+            flags |= FLAG_BIT_FAULT;
+        }
+        if (anti_windup_hit) {
+            flags |= FLAG_ANTI_WINDUP;
         }
 
         SimRecord rec{};
@@ -255,10 +418,17 @@ void DigitalDSP_SC::flush_records() {
         records_written_ += record_buf_.size();
         record_buf_.clear();
     }
+    if (dsp_trace_ != nullptr) {
+        dsp_trace_->flush();
+    }
 }
 
 double DigitalDSP_SC::mean_omega_second_half() const {
     return (second_half_count_ > 0u) ? (second_half_sum_ / static_cast<double>(second_half_count_)) : 0.0;
+}
+
+double DigitalDSP_SC::e_asym_rms() const {
+    return (e_asym_count_ > 0u) ? std::sqrt(e_asym_sq_sum_ / static_cast<double>(e_asym_count_)) : 0.0;
 }
 
 }  // namespace ifog

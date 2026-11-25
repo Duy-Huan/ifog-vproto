@@ -1,86 +1,86 @@
 # `ifog-vproto` — Closed-Loop IFOG Multi-Scale Virtual Prototype
 
-[![Version](https://img.shields.io/badge/Release-v1.2.0-0E6251)](docs/RELEASE_NOTES.md)
-[![Spec](https://img.shields.io/badge/Spec-IFOG--SIM--SPEC--004%20v4.0-1B365D)](spec/IFOG-SIM-SPEC-004.pdf)
-[![Standards](https://img.shields.io/badge/Standards-IEEE%20952--2020%20%7C%20IEEE%201666.1-0E6251)](spec/IFOG-SIM-SPEC-004.pdf)
+[![Version](https://img.shields.io/badge/Release-v2.0.0-0E6251)](docs/RELEASE_NOTES.md)
+[![Spec](https://img.shields.io/badge/Spec-IFOG--SIM--SPEC--005%20v5.0-1B365D)](spec/IFOG-SIM-SPEC-005.pdf)
+[![Formulas](https://img.shields.io/badge/Formulas-41%2F41%20Verified-0E6251)](AGENT.md)
 [![Coverage](https://img.shields.io/badge/Coverage-100%25%20C%2B%2B%20%26%20Python-brightgreen)](AGENT.md)
 
-A spec-driven, 3-Tier Hybrid Multi-Scale Co-Simulation Virtual Prototype for a **Closed-Loop Interferometric Fiber-Optic Gyroscope (2-State & 4-State Lefèvre Modulation)** built on **Python + C++17 / IEEE Std 1666.1 SystemC + SystemC-AMS PoC 2.3.4**.
+A spec-driven, 3-Tier Hybrid Multi-Scale Co-Simulation Virtual Prototype for a **Closed-Loop Interferometric Fiber-Optic Gyroscope (2-State, 4-State Lefèvre, and Official 6-State Symmetric Modulation)** built on **Python + C++17 / IEEE Std 1666.1 SystemC + SystemC-AMS PoC 2.3.4** (`IFOG-SIM-SPEC-005` v5.0 & `IFOG-SIM-SPEC-004` v4.0).
+
+---
+
+## Official Simulation Flow — 5 Gates + 6 Time-Domain + 5 System Engineering Scenarios
+
+Every scenario is runnable **individually via CLI** (`./scripts/run_sim.sh --mode <mode>`) or **end-to-end in one command** (`./scripts/run_all_scenarios.sh`), automatically exporting Markdown (`report.md`), interactive Plotly HTML5 (`report.html`), 300-DPI figures, and CSV/JSON datasets into `report/<run_id>/`.
+
+Full methodology, equations, and verified real-simulation benchmarks are documented in [`docs/IFOG_SIMULATION_SCENARIOS.md`](docs/IFOG_SIMULATION_SCENARIOS.md) | [`.tex`](docs/IFOG_SIMULATION_SCENARIOS.tex) | [`.pdf`](docs/IFOG_SIMULATION_SCENARIOS.pdf).
+
+| Category | CLI Mode (`--mode`) | Highlighted Verified Real SystemC-AMS Result |
+| :--- | :--- | :--- |
+| **Complete Official Suite** | `all_scenarios` (`scripts/run_all_scenarios.sh`) | Executes Gates 1–5 + all 6 Time-Domain + all 5 Engineering scenarios end-to-end |
+| **Core Acceptance Gates** | `full` (`gate1`, `gate2`, `gate3`, `gate4`) | Gate 1 `3.10e-16 rad` (`1,666` wraps) \| Gate 2 `98.85%` reduction \| Gate 3 `-0.062` vs `-0.893` PSD \| Gate 4 `2.42%` overlap & 5 WLS params $\pm 10\%$ |
+| **Gate 5 — Official 6-State DSP** | `dsp6_compare` (`configs/baseline_1km_6state.json`) | **$-33.3\%$ peak MIOC voltage**, `1.28e-16 rad` error, **`+136.94 dB`** (`7.03e6×`) RAM/xtalk/$\gamma_{\text{nl}}$ rejection (`EQ-31`–`EQ-34`) |
+| **Group A — 6 Time-Domain** | `td_all` (`td_blanking`, `td_step_sine`, `td_vpi_shock`, `td_high_rate`, `td_shupe_shock`, `td_limit_cycles`) | Sub-$\tau$ $k_{\text{start}}^*=5$ \| $-3\text{ dB}$ BW `2,540 Hz` \| $+5\%$ $V_\pi$ shock (`2×` lower 6s disturbance) \| `700 deg/s` (`7,184` wraps, anti-windup) \| Shupe `99.74%` filter \| 12-bit PRBS (`3->1,595` codes) |
+| **Group B — 5 Engineering** | `eng_all` (`eng_hw_sizing`, `eng_imu_3axis`, `eng_vre_faraday`, `eng_fault_bit`, `eng_mc_yield_cal`) | Min ENOB `12-bit` \| 3-Axis IMU Axis-Y xtalk `40.63 -> 0.106 deg/h` (`+51.6 dB`) \| VRE $R^2=0.9998$ & Mu-metal `25.25 dB` \| 5/5 BIT faults $\le 30\ \mu\text{s}$ + SEU FDIR \| `N=500` MC Yield `97.2%` ($C_{pk}=0.604$) & `-40..+85°C` Cal (`99.98%` Poly / `99.95%` EKF) |
 
 ---
 
 ## Live Feasibility Example (Real 4-Gate Outputs Committed to Repo)
 
-Inspect the complete real full-scale baseline simulation output (4×60 s Fast-Scale SystemC-AMS + 12×10 h Slow-Scale AVAR = 3.6M samples, zero smoke tests) directly in [`examples/full_4gate_baseline/`](examples/full_4gate_baseline/README.md):
-- **Walkthrough & Embedded 300-DPI Figures:** [`examples/full_4gate_baseline/README.md`](examples/full_4gate_baseline/README.md)
-- **Auto-Generated Markdown & Interactive HTML5 Reports:** [`report.md`](examples/full_4gate_baseline/report.md) | [`report.html`](examples/full_4gate_baseline/report.html) | [`metrics_summary.json`](examples/full_4gate_baseline/metrics_summary.json)
-- **Measured Results:** Gate 1 `3.10e-16 rad` (`1,666` wraps) **PASS** | Gate 2 `98.85%` Deadband & Bunny Ears reduction **PASS** | Gate 3 `-0.062` linear vs `-0.893` nonlinear $1/f$ PSD (`0.000%` $\mathbf{K}$ repeat) **PASS** | Gate 4 `2.42%` overlap (`< 5%`) & all 5 IEEE 952 WLS parameters within `±10%` **PASS**.
+Inspect the complete committed real full-scale baseline simulation output (4×60 s Fast-Scale SystemC-AMS + 12×10 h Slow-Scale AVAR = 3.6M samples, zero smoke tests) in [`examples/full_4gate_baseline/`](examples/full_4gate_baseline/README.md):
+- **Walkthrough & 300-DPI Figures:** [`examples/full_4gate_baseline/README.md`](examples/full_4gate_baseline/README.md)
+- **Auto-Generated Reports:** [`report.md`](examples/full_4gate_baseline/report.md) | [`report.html`](examples/full_4gate_baseline/report.html) | [`metrics_summary.json`](examples/full_4gate_baseline/metrics_summary.json)
 
 ---
 
-## Architecture Overview (`IFOG-SIM-SPEC-004` & `IFOG-VPROTO-ARCH-001`)
+## Architecture & Synchronized Documentation (`v2.0.0`, Rule 16)
 
-Full architecture design documents (Markdown, LaTeX, and compiled PDF) are synchronized with every release version (`v1.2.0`) under [`docs/`](docs/):
-- [`docs/IFOG_VPROTO_ARCHITECTURE.md`](docs/IFOG_VPROTO_ARCHITECTURE.md) | [`docs/IFOG_VPROTO_ARCHITECTURE.tex`](docs/IFOG_VPROTO_ARCHITECTURE.tex) | [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](docs/IFOG_VPROTO_ARCHITECTURE.pdf)
-- [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | [`docs/RELEASE_NOTES.tex`](docs/RELEASE_NOTES.tex) | [`docs/RELEASE_NOTES.pdf`](docs/RELEASE_NOTES.pdf) | [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
+All architecture, scenario, and release documents (Markdown, LaTeX, and compiled PDFs) are strictly synchronized with `pyproject.toml` (`v2.0.0`) under [`docs/`](docs/):
+- [`docs/IFOG_VPROTO_ARCHITECTURE.md`](docs/IFOG_VPROTO_ARCHITECTURE.md) | [`.tex`](docs/IFOG_VPROTO_ARCHITECTURE.tex) | [`.pdf`](docs/IFOG_VPROTO_ARCHITECTURE.pdf)
+- [`docs/IFOG_SIMULATION_SCENARIOS.md`](docs/IFOG_SIMULATION_SCENARIOS.md) | [`.tex`](docs/IFOG_SIMULATION_SCENARIOS.tex) | [`.pdf`](docs/IFOG_SIMULATION_SCENARIOS.pdf)
+- [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | [`.tex`](docs/RELEASE_NOTES.tex) | [`.pdf`](docs/RELEASE_NOTES.pdf) | [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 
 | Subsystem | Directory | Responsibility |
 | :--- | :--- | :--- |
-| **Specification** | [`spec/`](spec/) | Checksum-locked LaTeX source (`IFOG-SIM-SPEC-004.tex`), rendered PDF (`IFOG-SIM-SPEC-004.pdf`), and `CHANGELOG.md` |
-| **Release & Arch Docs** | [`docs/`](docs/) | Version-synchronized architecture specification & release notes (`.md`, `.tex`, `.pdf`, `CHANGELOG.md`, `DOCS_BUILD.sha256` — enforced by Rule 16) |
-| **Container & Setup** | [`Containerfile`](Containerfile), [`Dockerfile`](Dockerfile), [`compose.yaml`](compose.yaml), [`scripts/`](scripts/) | Ready-to-run Docker/Podman OCI environment + distro-independent Git-source installers for SystemC 2.3.4, SystemC-AMS 2.3.4, `nlohmann/json`, and Python venv (`setup_env.sh`, `env.sh`, `container_run.sh`) |
-| **Feasibility Example** | [`examples/`](examples/) | Complete real 4-Gate baseline outputs (`examples/full_4gate_baseline/`) + one-command reproduction script (`examples/run_example.sh`) |
-| **Configuration** | [`configs/`](configs/) | Normative JSON Schema v4 (`schema_v4.json`), reference 1 km coil baseline (`baseline_1km.json`), and parallel sweep definitions (`ablation_sweeps/`) |
+| **Specifications** | [`spec/`](spec/) | Checksum-locked `IFOG-SIM-SPEC-005.{tex,pdf,sha256}` (v5.0) & `IFOG-SIM-SPEC-004.{tex,pdf,sha256}` (v4.0) + `CHANGELOG.md` |
+| **Release & Scenario Docs** | [`docs/`](docs/) | Version-synchronized architecture, scenarios guide, and release notes (`.md`, `.tex`, `.pdf`, `CHANGELOG.md`, `DOCS_BUILD.sha256` — enforced by Rule 16) |
+| **Container & Setup** | [`Containerfile`](Containerfile), [`Dockerfile`](Dockerfile), [`compose.yaml`](compose.yaml), [`scripts/`](scripts/) | Turnkey Docker/Podman OCI image + distro-independent Git-source installers for SystemC 2.3.4, SystemC-AMS 2.3.4, `nlohmann/json`, and Python venv |
+| **Configuration** | [`configs/`](configs/) | `schema_v5.json` (backward-compatible with v4.0/v5.0), `baseline_1km.json` (4-state), `baseline_1km_6state.json` (official 6-state), and `ablation_sweeps/` |
 | **Tier 1 (Offline Physics)** | [`tier1_offline/`](tier1_offline/) | Spectral-sliced Jones matrix solver (`jones_spectral.py` -> `phys_params.json`) & 1D Crank–Nicolson / FEM thermal Shupe solver (`shupe_thermal.py` -> `shupe_lut.bin`) |
-| **Tier 2 (Fast-Scale Core)** | [`tier2_sysc_ams/`](tier2_sysc_ams/) | High-speed C++17 `-O3` SystemC + SystemC-AMS PoC 2.3.4 closed-loop core (`OpticalEnvelope_TDF`, `AnalogFrontEnd_TDF`, `PinkNoise_TDF`, `ADC_Bridge_TDF2DE`, `DAC_Driver_TDF` with `set_delay(1)`, bit-true `DigitalDSP_SC`) writing 32-byte binary `sim_out.bin` |
-| **Tier 3 (Long-Term & Runner)** | [`tier3_analysis/`](tier3_analysis/) | Parallel sweep runner (`run_sweep_parallel.py`), $100\text{ Hz}$ FFT leakage matrix $\mathbf{K}$ extractor (`extract_k_matrix.py`), Deadband & Bunny Ears analyzer (`analyze_nonlinearity.py`), 10 h / $100\text{ Hz}$ Dual-Regime IEEE Std 952 Overlapping AVAR (`dual_regime_avar.py`), unified simulation orchestrator (`sim_runner_cli.py`), and Rule 16 doc-sync verifier (`doc_sync.py`) |
-| **Auto-Reporting & Viz** | [`viz/`](viz/), [`report/`](report/) | 300-DPI Matplotlib diagnostics and automated Markdown (`.md`) + Interactive Plotly HTML5 (`.html`) report & dashboard generation in `report/<run_id>/` + `report/index.{md,html}` |
-| **Verification Suite** | [`tests/`](tests/) | Unit tests, 30 individual per-formula CI verifications (`EQ-01`..`EQ-30`), deterministic bit-exact regression tests, and full real 4-Gate acceptance tests (Gate 1..Gate 4) |
-| **Governance & Skills** | [`AGENT.md`](AGENT.md), [`skills/`](skills/) | Strict 16-rule engineering contract, 2-branch (`dev` -> `main`) & SemVer `vX.Y.Z` tag workflow, mandatory Rule 16 version–doc sync, and 7 accumulated project skills |
+| **Tier 2 (Fast-Scale Core)** | [`tier2_sysc_ams/`](tier2_sysc_ams/) | C++17 `-O3` SystemC + SystemC-AMS PoC 2.3.4 closed-loop core (2/4/6-state `DigitalDSP_SC`, real-time BIT/FDIR, 64 B `dsp_trace.bin`, aperture jitter, VRE/Faraday, fault injection, and concurrent 3-axis IMU `--imu3axis`) |
+| **Tier 3 (Scenarios & AVAR)** | [`tier3_analysis/`](tier3_analysis/) | `scenarios_time_domain.py`, `scenarios_engineering.py`, `dual_regime_avar.py`, `extract_k_matrix.py`, `run_sweep_parallel.py`, `analyze_nonlinearity.py`, 22-mode `sim_runner_cli.py`, and Rule 16 `doc_sync.py` |
+| **Auto-Reporting & Viz** | [`viz/`](viz/), [`report/`](report/) | 300-DPI Matplotlib diagnostics (`plot_scenarios.py`, `plot_avar_5regions.py`, ...) and automatic Markdown (`.md`) + Interactive Plotly HTML5 (`.html`) reports in `report/<run_id>/` + `report/index.{md,html}` |
+| **Verification Suite** | [`tests/`](tests/) | Unit tests, **41 individual per-formula CI verifications (`EQ-01`..`EQ-41`)**, bit-exact regression tests, and full real Gate 1–5 + 6 TD + 5 ENG system tests |
+| **Governance & Skills** | [`AGENT.md`](AGENT.md), [`skills/`](skills/) | Strict 16-rule contract, 2-branch (`dev` -> `main`) & SemVer `vX.Y.Z` workflow, mandatory Rule 16 doc-sync, and 8 accumulated project skills |
 
 ---
 
 ## Quickstart
 
-### Option A — Docker or Podman (Instant Turnkey Environment)
-Works seamlessly with both **Docker** and **rootless Podman** (auto-detected by `scripts/container_run.sh`):
+### Option A — Docker or Podman (Turnkey Environment)
 ```bash
-# Build ready-to-run image (SystemC 2.3.4 + SystemC-AMS 2.3.4 + Python 3.12 venv + Tier 2 -O3)
 ./scripts/container_run.sh build
-
-# Run a single simulation or full 4-Gate example -> reports appear directly in host report/
-./scripts/container_run.sh sim --mode single --run-id container_demo --duration-s 0.5
-./scripts/container_run.sh example
-
-# Or use OCI Compose (docker compose / podman compose)
-docker compose build
-docker compose run --rm ifog-vproto ./scripts/run_sim.sh --mode gate1
+./scripts/container_run.sh sim --mode dsp6_compare --run-id gate5_6state
+./scripts/container_run.sh sim --mode td_all --run-id td_suite
+./scripts/container_run.sh sim --mode eng_all --run-id eng_suite --mc-runs 500
 ```
 
 ### Option B — Native Linux (Any Distro: Ubuntu/Debian, Fedora/RHEL/Rocky, Arch, HPC Rootless)
-Pulls and builds Accellera SystemC `2.3.4`, SystemC-AMS PoC `2.3.4`, `nlohmann/json` `v3.11.3`, and an isolated Python virtual environment directly from Git:
 ```bash
-# Full one-command setup (omit --with-system-deps on non-root HPC if gcc/cmake/python3 already exist)
 bash scripts/setup_env.sh --with-system-deps --build-tier2 --verify
-
-# Activate environment in any shell
 source scripts/env.sh
 
-# Run simulations -> auto-generates report/<run_id>/{report.md, report.html, figures/} + report/index.{md,html}
-./scripts/run_sim.sh --mode single --run-id baseline_run --duration-s 0.5
-./scripts/run_sim.sh --mode full --run-id full_v1_2_0
-```
+# Run any individual scenario via CLI -> auto-generates report/<run_id>/report.{md,html}
+./scripts/run_sim.sh --mode dsp6_compare --run-id gate5_6state
+./scripts/run_sim.sh --mode td_blanking --run-id td01
+./scripts/run_sim.sh --mode td_step_sine --run-id td02
+./scripts/run_sim.sh --mode eng_imu_3axis --run-id eng02
+./scripts/run_sim.sh --mode eng_mc_yield_cal --run-id eng05 --mc-runs 500
 
-### Low-Level Tier-by-Tier Spec CLI (`IFOG-SIM-SPEC-004` Section 5.2)
-```bash
-source scripts/env.sh
-cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j
-python3 tier1_offline/jones_spectral.py --cfg configs/baseline_1km.json --out data/run01/
-python3 tier1_offline/shupe_thermal.py  --cfg configs/baseline_1km.json --out data/run01/
-./build/ifog_sim --phys data/run01/phys_params.json --cfg configs/baseline_1km.json --out data/run01/
-python3 tier3_analysis/extract_k_matrix.py --bin ./build/ifog_sim --cfg configs/baseline_1km.json --phys data/run01/phys_params.json --out data/run01/
-python3 tier3_analysis/dual_regime_avar.py --run data/run01/
-python3 viz/export_report.py --run data/run01/ --report-dir report/run01 --format png,md,html --update-index
+# Or run a full category or the entire official suite in one command
+./scripts/run_sim.sh --mode td_all --run-id all_time_domain
+./scripts/run_sim.sh --mode eng_all --run-id all_engineering --mc-runs 500
+./scripts/run_all_scenarios.sh --run-id complete_v2_0_0 --mc-runs 500
 ```
 
 ---
@@ -88,14 +88,14 @@ python3 viz/export_report.py --run data/run01/ --report-dir report/run01 --forma
 ## Verification & Quality Gates
 
 ```bash
-# Spec immutability lock (Rule 7) & Mandatory Version-Document Sync (Rule 16)
-sha256sum -c spec/IFOG-SIM-SPEC-004.sha256
+# Dual Spec immutability lock (Rule 7) & Mandatory Version-Document Sync (Rule 16)
+sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256
 python3 scripts/verify_doc_sync.py
 
-# Recompile release LaTeX docs -> PDFs & refresh docs/DOCS_BUILD.sha256
+# Recompile all 3 LaTeX docs -> PDFs & refresh docs/DOCS_BUILD.sha256
 bash scripts/build_docs.sh
 
-# 30-Formula individual verification matrix EQ-01..EQ-30 (Rule 3)
+# 41-Formula individual verification matrix EQ-01..EQ-41 (Rule 3)
 python3 scripts/verify_formulas_ci.py
 
 # 100.0% C++ line coverage via gcovr (Rules 2 & 14)
@@ -104,16 +104,6 @@ bash scripts/run_cpp_coverage.sh
 # 100.0% Python line coverage via pytest-cov (Rules 2 & 14)
 pytest tests/unit tests/formula_verification --cov --cov-report=term-missing
 
-# Full real 4-Gate acceptance & deterministic regression suite (Rule 5 — no smoke tests)
+# Full real Gate 1-5 + 6 TD + 5 ENG system & regression suite (Rule 5 — no smoke tests)
 pytest tests/system -v
 ```
-
----
-
-## Governance & Maintenance Rules
-
-All contributors and AI agents MUST follow [`AGENT.md`](AGENT.md) and load [`skills/README.md`](skills/README.md) before making any changes:
-- Only two branches exist: `dev` (development) and `main` (protected release branch).
-- Every change merges strictly `dev` -> `main` after all CI/CD gates pass.
-- **Rule 16:** Every version bump (`vX.Y.Z`) MUST keep `pyproject.toml`, `docs/*.{md,tex,pdf}`, `docs/DOCS_BUILD.sha256`, `docs/CHANGELOG.md`, `README.md`, and `skills/` 100% synchronized before merging or tagging.
-- Releases are tagged on `main` using annotated SemVer tags `vX.Y.Z` (see `AGENT.md` §5).
