@@ -66,10 +66,16 @@ jobs:
             ifog-tier1-optical-thermal \
             ifog-tier2-sysc-ams-core \
             ifog-tier3-dual-regime-avar \
+            ifog-reporting-and-doc-sync \
             ifog-cicd-release-workflow; do
             test -s "skills/${skill}/SKILL.md"
           done
-          echo "AGENT.md and all project skills verified."
+          echo "AGENT.md and all 6 project skills verified."
+
+      - name: Enforce Rule 16 — Mandatory Version-Document Synchronization
+        run: |
+          set -euo pipefail
+          python3 scripts/verify_doc_sync.py
 
   build-and-verify:
     name: Build SystemC-AMS, 30 Formulas, 100% C++/Py Coverage & Real 4-Gate Sim

@@ -64,8 +64,8 @@ def plot_avar_5regions(
     ax.loglog(t_line, total_fit, "-", color="#1A202C", linewidth=1.8, label="Total IEEE 952 WLS 5-Region Fit")
 
     # Individual 5 asymptotes (only plot positive fitted components)
-    y_min = float(np.min(adev_merged)) * 0.25
-    y_max = float(np.max(adev_merged)) * 4.0
+    y_min = max(1.0e-12, float(np.min(adev_merged)) * 0.25)
+    y_max = max(y_min * 10.0, float(np.max(adev_merged)) * 4.0)
 
     if q_si > 0.0:
         sig_q = (math.sqrt(3.0) * q_si / t_line) * RAD_S_TO_DEG_H

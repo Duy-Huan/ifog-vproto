@@ -20,6 +20,10 @@ data/
 *.bin
 !tests/fixtures/*.bin
 
+# Auto-generated simulation reports (keep report/README.md tracked)
+report/*
+!report/README.md
+
 # LaTeX build intermediates
 *.aux
 *.log

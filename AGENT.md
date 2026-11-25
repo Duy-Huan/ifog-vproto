@@ -67,9 +67,20 @@
   - Keep unit conversion constant exact: $1\text{ rad/s} = (180/\pi)\times 3600 \approx 206264.806247\,^\circ/\text{h}$.
 - **Rule 14 — Dual-Domain 100% Coverage & Zero Untested Dead Code:**
   - No dead branches, unexecuted error handlers, or uncovered helper utilities are permitted. Any code added to `tier1_offline/`, `tier2_sysc_ams/`, `tier3_analysis/`, or `viz/` MUST have immediate deterministic tests keeping both Python and C++ coverage at exactly `100.0%`.
-- **Rule 15 — Self-Contained Reproducibility & Documentation Hygiene:**
+- **Rule 15 — Self-Contained Reproducibility & Automated Reporting:**
   - Never hardcode machine-specific paths; all build scripts, CMake files, and CLI invocations must match Section 5.2 of `IFOG-SIM-SPEC-004`.
-  - Keep `README.md`, `spec/CHANGELOG.md`, `AGENT.md`, and `skills/` synchronized on every release.
+  - All orchestrated simulation runs via `scripts/run_sim.sh` / `scripts/run_sim.py` MUST automatically generate both Markdown (`report.md`) and interactive HTML (`report.html`) reports plus refreshed `report/index.{md,html}` under `report/`.
+- **Rule 16 — Mandatory Version–Document Synchronization (Release Documentation Lock):**
+  - `pyproject.toml` (`[project].version`, SemVer `X.Y.Z`) is the **single source of truth** for the project release version.
+  - Every version bump (`vX.Y.Z`) or architectural/feature change MUST synchronously update ALL canonical architecture and release documents BEFORE merging `dev -> main` or tagging `vX.Y.Z`:
+    1. `pyproject.toml` (`version = "X.Y.Z"`)
+    2. `docs/IFOG_VPROTO_ARCHITECTURE.md` (Document Control Header `vX.Y.Z` + Revision History row `vX.Y.Z`)
+    3. `docs/IFOG_VPROTO_ARCHITECTURE.tex` (`\newcommand{\DocVersion}{vX.Y.Z}` + Revision History row `vX.Y.Z`) and freshly compiled `docs/IFOG_VPROTO_ARCHITECTURE.pdf`
+    4. `docs/RELEASE_NOTES.md` & `docs/RELEASE_NOTES.tex` (`vX.Y.Z`) and freshly compiled `docs/RELEASE_NOTES.pdf`
+    5. `docs/DOCS_BUILD.sha256` (locking every compiled PDF to its exact `.tex` source SHA-256 via `bash scripts/build_docs.sh`)
+    6. `docs/CHANGELOG.md` (`## [X.Y.Z]`)
+    7. `README.md` (version badge `vX.Y.Z` & architecture/CLI sync) and `skills/` (`skills/README.md` + affected `SKILL.md`)
+  - CI/CD enforces this fail-closed via `python3 scripts/verify_doc_sync.py` on every push/PR and `python3 scripts/verify_doc_sync.py --expected-tag vX.Y.Z` on every release tag. No PR may merge or release tag may publish if any document version or compiled PDF is out of sync!
 
 ---
 
@@ -84,10 +95,10 @@ Every agent MUST execute these steps in order before writing or editing any code
    git pull origin dev
    ```
 2. **Verify Branch Policy (Rule 1):** Confirm ONLY `main` and `dev` exist (`git branch -a`). Never create any third branch.
-3. **Verify Spec Integrity (Rule 7):** Run `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256`.
+3. **Verify Spec Integrity & Doc Sync (Rules 7 & 16):** Run `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256` and `python3 scripts/verify_doc_sync.py`.
 4. **Load Project Skills (Rule 6):** Read `skills/README.md` and all `skills/*/SKILL.md` relevant to the target subsystem(s).
 5. **Implement, Test & Verify (Rules 2, 3, 5, 14):** Run unit tests, 30-formula verification, 100% coverage checks (Python + C++), and full-scale simulation gates.
-6. **Accumulate Skills (Rule 6):** Update the relevant `skills/*/SKILL.md` with any newly learned design invariants, pitfalls, or calibration findings before committing.
+6. **Synchronize Docs & Accumulate Skills (Rules 6 & 16):** Update `docs/*.{md,tex}`, recompile PDFs via `bash scripts/build_docs.sh`, verify `python3 scripts/verify_doc_sync.py`, and record new lessons into `skills/*/SKILL.md` before committing.
 
 ---
 
@@ -136,18 +147,21 @@ Every release MUST follow this exact, gated sequence without skipping any step:
 
 1. **Pre-Release Verification on `dev`:**
    - Ensure `git status` is clean on branch `dev` and synced with `origin/dev`.
+   - Bump `pyproject.toml` version to `X.Y.Z`, update `docs/IFOG_VPROTO_ARCHITECTURE.{md,tex}`, `docs/RELEASE_NOTES.{md,tex}`, `docs/CHANGELOG.md`, `README.md`, and `skills/`, compile PDFs via `bash scripts/build_docs.sh`, and verify Rule 16 synchronization:
+     ```bash
+     python3 scripts/verify_doc_sync.py --expected-tag vX.Y.Z
+     ```
    - Verify spec checksum: `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256`.
    - Run full local verification suite:
      - C++ Release build + SystemC-AMS unit/system/gate tests
      - C++ Coverage build -> `gcovr` confirms `100.0%` line coverage
-     - Python unit, regression, visualization, and 30-formula tests -> `pytest --cov` confirms `100.0%` line coverage
-     - Full 4-Gate real simulations (Gate 1..Gate 4, including 60 s Fast-Scale + 10 h Slow-Scale AVAR)
-   - Confirm `skills/` and `README.md` / `CHANGELOG.md` are updated for the release version `x.y.z`.
+     - Python unit, regression, visualization, doc-sync, runner, and 30-formula tests -> `pytest --cov` confirms `100.0%` line coverage
+     - Full 4-Gate real simulations (Gate 1..Gate 4, including 60 s Fast-Scale + 10 h Slow-Scale AVAR) + auto-generated `report/` `.md` & `.html` verification
 2. **Push `dev` & Open Pull Request (`dev` -> `main`):**
    - Push `dev` to `origin/dev`: `git push origin dev`
    - Wait for the GitHub Actions `CI` workflow on `dev` to finish with status `success`.
    - Open a PR from `dev` to `main` via `gh pr create --base main --head dev --title "Release vX.Y.Z: ..." --body "..."`.
-   - Wait for ALL required CI checks on the PR (Branch Policy, Spec Checksum, C++ Build & 100% Coverage, Python 100% Coverage, 30-Formula Verification, and Full 4-Gate System Simulation) to pass (`success`).
+   - Wait for ALL required CI checks on the PR (Branch Policy, Spec Checksum, Rule 16 Doc-Sync, C++ Build & 100% Coverage, Python 100% Coverage, 30-Formula Verification, and Full 4-Gate System Simulation) to pass (`success`).
 3. **Merge PR into `main` (Preserving `dev`):**
    - Merge via `gh pr merge --merge` (**NEVER** use `--delete-branch`; `dev` MUST remain intact).
    - Pull `main` locally (`git checkout main && git pull origin main`) and wait for the `CI` workflow triggered on `main` to pass `success`.
@@ -157,6 +171,6 @@ Every release MUST follow this exact, gated sequence without skipping any step:
      git tag -a vX.Y.Z -m "Release vX.Y.Z — Closed-Loop IFOG Virtual Prototype (IFOG-SIM-SPEC-004)"
      git push origin vX.Y.Z
      ```
-   - Verify the GitHub Actions `Release` workflow triggered by `vX.Y.Z` runs the full release validation gate, packages release artifacts (spec PDF, formula verification matrix, coverage reports, benchmark Gate 1–4 report & plots), and publishes the GitHub Release `vX.Y.Z`.
+   - Verify the GitHub Actions `Release` workflow triggered by `vX.Y.Z` enforces `--expected-tag vX.Y.Z` doc sync, re-runs all verification gates, packages release artifacts (`IFOG-SIM-SPEC-004.pdf`, `IFOG_VPROTO_ARCHITECTURE.{pdf,md,tex}`, `RELEASE_NOTES.{pdf,md,tex}`, `formula_verification_matrix.{md,json}`, `cpp_coverage_summary.json`), and publishes the GitHub Release `vX.Y.Z`.
 5. **Return to `dev` and Sync:**
    - Fast-forward `dev` to match `main` if a merge commit was created (`git checkout dev && git merge main && git push origin dev`), ensuring `dev` and `main` stay clean and aligned for subsequent maintenance.
