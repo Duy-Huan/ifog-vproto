@@ -1,0 +1,457 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[a4paper, margin=2.0cm]{geometry}
+\usepackage{fontspec}
+\usepackage[vietnamese, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{english}
+\babelfont{rm}{Noto Sans}
+\usepackage{enumitem}
+\setlist[itemize]{label=-, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{topsep=3pt, itemsep=2pt}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds, shapes.geometric, babel}
+\usepackage{hyperref}
+
+\definecolor{primaryblue}{HTML}{1B365D}
+\definecolor{accentteal}{HTML}{0E6251}
+\definecolor{alertred}{HTML}{9B2C2C}
+\definecolor{warmamber}{HTML}{975A16}
+\definecolor{mutedgray}{HTML}{4A5568}
+\definecolor{rulegray}{HTML}{CBD5E0}
+\definecolor{softblue}{HTML}{EBF4FF}
+\definecolor{softteal}{HTML}{E6FFFA}
+\definecolor{softamber}{HTML}{FEFCBF}
+\definecolor{softred}{HTML}{FFF5F5}
+\definecolor{softgray}{HTML}{F7FAFC}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryblue,
+    citecolor=accentteal,
+    urlcolor=primaryblue,
+    pdftitle={IFOG-SIM-SPEC-005 - Dac ta Nguyen mau Ao IFOG Toan dien (DSP 2/4/6 Trang thai & 11 Kich ban He thong)},
+    pdfauthor={Technical Design Specification v5.0}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\setlength{\headheight}{16pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.5pt}
+\emergencystretch=2em
+\raggedbottom
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{mutedgray}Đặc tả Kỹ thuật Nguyên mẫu Ảo IFOG Đa thang đo Toàn diện}
+\fancyhead[R]{\small\color{mutedgray}\texttt{IFOG-SIM-SPEC-005}}
+\fancyfoot[L]{\small\color{mutedgray}Phiên bản 5.0 --- DSP 2/4/6 Trạng thái, 41 Công thức \& 11 Kịch bản Nghiệm thu Hệ thống}
+\fancyfoot[R]{\small\color{mutedgray}Trang \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+% --- TITLE BLOCK ---
+\thispagestyle{plain}
+{\color{primaryblue}\rule{\textwidth}{1.5pt}}
+\vspace{0.3cm}
+
+{\Large\bfseries\color{primaryblue} ĐẶC TẢ KỸ THUẬT \& XÁC MINH CÔNG THỨC NGUYÊN MẪU ẢO ĐỒNG MÔ PHỎNG ĐA THANG ĐO HOÀN CHỈNH CHO IFOG VÒNG KÍN}
+
+\vspace{0.15cm}
+{\normalsize\color{mutedgray} Phiên bản 5.0 --- Mở rộng DSP 6 Trạng thái Đối xứng Chuẩn hóa, 6 Kịch bản Miền Thời gian, 5 Bài toán Kỹ thuật Hệ thống \& Sản xuất, IMU 3 Trục, BIT/FDIR và Ma trận 41 Công thức Kiểm chứng}
+
+\vspace{0.2cm}
+{\color{rulegray}\rule{\textwidth}{0.6pt}}
+\vspace{0.15cm}
+
+\begin{tabular}{@{}l L{4.7cm} l L{5.1cm}@{}}
+\textbf{Mã tài liệu:} & \texttt{IFOG-SIM-SPEC-005} & \textbf{Phiên bản:} & 5.0 (Kế thừa \& mở rộng \texttt{SPEC-004}) \\
+\textbf{Hệ thống:} & Closed-Loop IFOG (2/4/6-State) & \textbf{Chuẩn tham chiếu:} & IEEE Std 952-2020; IEEE Std 1666.1 \\
+\textbf{Kiến trúc:} & 3-Tier Hybrid + 3-Axis IMU & \textbf{Nền tảng chạy:} & C++17 / SystemC-AMS (PoC) + Python \\
+\end{tabular}
+
+\vspace{0.15cm}
+{\color{primaryblue}\rule{\textwidth}{1.0pt}}
+\vspace{0.25cm}
+
+\begin{abstract}
+\noindent Tài liệu \texttt{IFOG-SIM-SPEC-005} nâng cấp toàn diện chuẩn \texttt{IFOG-SIM-SPEC-004} (bảo toàn 100\% toàn bộ 30 phương trình nền tảng \texttt{EQ-01}--\texttt{EQ-30} và 4 cổng nghiệm thu Gate 1--4) để đưa nền tảng \texttt{ifog-vproto} trở thành một nguyên mẫu ảo công nghiệp hoàn chỉnh cho con quay hồi chuyển sợi quang giao thoa vòng kín (Closed-Loop IFOG). Phiên bản 5.0 bổ sung chính thức 11 phương trình mới (\texttt{EQ-31}--\texttt{EQ-41}) gồm: (i) thuật toán điều chế \& giải điều chế **DSP 6 trạng thái đối xứng** có góc tối ưu triệt xuyên âm/RAM $\alpha^* = \pi/3$, ba kênh trực giao $(e_\Omega, e_{V_\pi}, e_{\text{asym}})$ và cơ chế chống bão hòa tích phân (\emph{anti-windup}); (ii) **6 kịch bản xác minh miền thời gian** (\texttt{TD-01}--\texttt{TD-06}) khai thác thanh ghi nội bộ Tầng 2 (\texttt{dsp\_trace.bin}) cho quá độ dưới chu kỳ $\tau$, đáp ứng bước \& băng thông $-3\text{ dB}$, sốc nhiệt $V_\pi$, quay tốc độ cao $300\text{--}700^\circ/\text{s}$, sốc nhiệt Shupe kèm bộ lọc bù và chu kỳ giới hạn lượng tử; (iii) **5 bài toán kỹ thuật hệ thống \& sản xuất** (\texttt{ENG-01}--\texttt{ENG-05}) gồm định cỡ phần cứng ENOB/Aperture Jitter/TIA--SLD, đồng mô phỏng SystemC-AMS **IMU 3 trục dùng chung SLD và đường nguồn**, sai số chỉnh lưu rung động VRE \& độ nhạy từ trường Faraday (tính toán chắn từ Mu-metal), tiêm lỗi \& kiểm thử **FPGA BIT/FDIR**, phân tích tỷ lệ đạt chuẩn dây chuyền **Monte Carlo Yield** ($C_{pk}$) và bộ dữ liệu hiệu chuẩn nhiệt ảo $-40^\circ\text{C}..+85^\circ\text{C}$ kiểm chứng đa thức + EKF.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.25cm}
+
+% ====================================================================
+\section{Tổng quan Nâng cấp từ SPEC-004 lên SPEC-005 \& Kiểm chứng Giải tích}
+
+Phiên bản \texttt{IFOG-SIM-SPEC-005} bảo toàn nguyên vẹn toàn bộ kết quả thẩm định toán học của \texttt{SPEC-004} (\texttt{EQ-01}--\texttt{EQ-30}, giữ nguyên khóa kiểm tra \texttt{spec/IFOG-SIM-SPEC-004.sha256} làm mốc lịch sử bất biến) và mở rộng 6 hạng mục trọng yếu theo Bảng~\ref{tab:spec005_upgrades}.
+
+\begin{table}[htbp]
+\centering
+\caption{Bảng tổng hợp nâng cấp toán học và hệ thống từ \texttt{SPEC-004} (v4.0) lên \texttt{SPEC-005} (v5.0).}
+\label{tab:spec005_upgrades}
+\footnotesize
+\renewcommand{\arraystretch}{1.22}
+\begin{tabular}{@{}L{2.8cm} L{4.2cm} L{5.4cm} L{3.1cm}@{}}
+\toprule
+\textbf{Hạng mục v5.0} & \textbf{Hạn chế của v4.0} & \textbf{Mở rộng chuẩn hóa trong SPEC-005} & \textbf{Mã công thức} \\
+\midrule
+1. DSP 6 trạng thái đối xứng & DSP 4 trạng thái có tổng điện áp lái khác không ($(V_2-V_1)+(V_4-V_3) = \frac{2\alpha}{\pi}V_\pi \ne 0$), gây rò RAM và xuyên âm bậc 1 vào $e_\Omega$. & Chuỗi 6 trạng thái đối xứng phản tuần hoàn $\psi_{k+3}=-\psi_k$; tại $\alpha^*=\pi/3$ triệt tiêu đồng thời RAM, xuyên âm $k_{\text{xtalk}}$, $C_{\text{xtalk}}$ và $\gamma_{\text{nl}}V^2$, giảm điện áp đỉnh xuống $\frac{2}{3}V_\pi$. & \texttt{EQ-31}--\texttt{EQ-34} \\
+2. 6 kịch bản miền thời gian & Chỉ có 4 cổng kiểm chứng tĩnh/tần số; chưa mở khóa ghi thanh ghi DSP nội bộ và chống bão hòa tích phân. & Bổ sung luồng \texttt{dsp\_trace.bin} (64B/$\tau$), \emph{anti-windup}, xung bước $\epsilon_{V_\pi}$ và 6 bài toán \texttt{TD-01}--\texttt{TD-06} tích hợp CLI chính thức. & \texttt{EQ-34} + \texttt{TD-01..06} \\
+3. Định cỡ phần cứng \& Jitter & Chưa mô hình hóa sai số pha/áp do jitter xung nhịp lấy mẫu ADC (\emph{aperture jitter}). & Bổ sung nhiễu jitter $\delta V_j = (dV_{\text{adc}}/dt)\,\delta t_j$ vào \texttt{ADC\_Bridge\_TDF} và bộ quét ENOB (10--16 bit), Jitter, Pareto $(R_f, C_f, P_0)$. & \texttt{EQ-35} (\texttt{ENG-01}) \\
+4. IMU 3 trục dùng chung SLD & Chỉ mô phỏng 1 trục đơn lẻ. & Khởi tạo đồng thời 3 trục X/Y/Z thực sự trong 1 phiên SystemC-AMS nối qua \texttt{SharedPowerBus\_TDF} (phản xạ SLD + sụt áp đường nguồn). & \texttt{EQ-36} (\texttt{ENG-02}) \\
+5. VRE \& Từ trường Faraday động & Faraday chỉ có trường tĩnh; chưa có điều biến rung động cơ học $20\text{ Hz}..2\text{ kHz}$. & Bổ sung điều biến suy hao/pha rung động $a(t)$ kiểm chứng chỉnh lưu bậc 2 ($G_2 V^2$) và trường từ biến thiên $B(t)$ định cỡ chắn từ Mu-metal. & \texttt{EQ-37}--\texttt{EQ-38} (\texttt{ENG-03}) \\
+6. BIT/FDIR, MC Yield \& Calib nhiệt & Chưa có tiêm lỗi sự cố, tự chẩn đoán thời gian thực hay dữ liệu hiệu chuẩn nhiệt diện rộng. & Tích hợp khối BIT/FDIR thời gian thực trong \texttt{DigitalDSP\_SC} (5 loại lỗi, đo TTA \& phục hồi), phân tích năng suất $C_{pk}$ và hiệu chuẩn $-40..+85^\circ\text{C}$ (Poly + EKF). & \texttt{EQ-39}--\texttt{EQ-41} (\texttt{ENG-04..05}) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\section{Kiến trúc Lai 3 Tầng Mở rộng \& Hợp đồng Dữ liệu (I/O Contract)}
+
+Kiến trúc Lai 3 Tầng từ \texttt{SPEC-004} được kế thừa hoàn toàn và mở rộng thêm hai luồng dữ liệu tùy chọn (tắt mặc định để không ảnh hưởng hiệu năng chạy Gate 4 $60\text{ s}$) cùng cấu hình đồng mô phỏng đa trục:
+
+\begin{itemize}
+    \item \textbf{Đầu vào cấu hình (\texttt{configs/schema\_v5.json}, tương thích ngược \texttt{schema\_v4.json}):} Bổ sung \texttt{dsp.mode = "6state"}, \texttt{dsp.max\_delta\_phi\_step\_rad}, \texttt{adc\_dac.aperture\_jitter\_s}, \texttt{mioc.eps\_vpi\_step\_*}, khối \texttt{vibration}, \texttt{magneto\_optic.B\_ac\_T}/\texttt{B\_freq\_Hz}, khối \texttt{fault\_injection}, khối \texttt{bit\_fdir}, và khối \texttt{imu\_3axis}.
+    \item \textbf{Luồng nhị phân chính (\texttt{sim\_out.bin} --- cố định 32 byte):} Giữ nguyên cấu trúc đóng gói \texttt{SimRecord} 32 byte (\texttt{static\_assert(sizeof(SimRecord) == 32)}) và mở rộng các bit cờ \texttt{flags}: bit 5 (\texttt{FLAG\_DSP\_6STATE}), bit 6 (\texttt{FLAG\_BIT\_FAULT}), bit 7 (\texttt{FLAG\_ANTI\_WINDUP}).
+    \item \textbf{Luồng dạng sóng vi mô (\texttt{micro\_waveforms.bin} --- cố định 64 byte):} Giữ nguyên kích thước 64 byte \texttt{MicroRecord}, dùng trường 4 byte dự phòng làm \texttt{int32\_t dac\_code} để đồng bộ chính xác mã DAC tại từng mẫu con $k \in [0, K-1]$.
+    \item \textbf{Luồng thanh ghi DSP nội bộ (\texttt{dsp\_trace.bin} --- 64 byte/$\tau$, tùy chọn \texttt{dump\_dsp\_trace}):} Ghi tuần tự cấu trúc đóng gói 64 byte \texttt{DspTraceRecord} gồm: \texttt{double t, phi\_ramp, delta\_phi\_step, g\_dac, e\_omega, e\_asym; int32\_t adc\_code, dac\_code, e\_vpi; int16\_t prbs\_bit; uint16\_t bit\_fault\_code;}.
+\end{itemize}
+
+% ====================================================================
+\section{Hệ Phương trình Nền tảng Bốn Miền \& DSP 6 Trạng thái Chuẩn hóa}
+
+\subsection{Tóm tắt Hệ Phương trình Bảo toàn từ SPEC-004 (\texttt{EQ-01}--\texttt{EQ-30})}
+Toàn bộ 30 phương trình gốc của \texttt{IFOG-SIM-SPEC-004} giữ nguyên định nghĩa, quy ước dấu và bộ kiểm chứng độc lập trong CI/CD:
+\begin{itemize}
+    \item \textbf{Giải điều chế 4 trạng thái (\texttt{EQ-01}--\texttt{EQ-03}):} Chuỗi pha sai phân $\phi_1 = +(\pi-\alpha)$, $\phi_2 = -(\pi-\alpha)$, $\phi_3 = -(\pi+\alpha)$, $\phi_4 = +(\pi+\alpha)$ với:
+    \begin{equation}
+    e_\Omega^{(4)} = (y_2 - y_1) + (y_4 - y_3) \approx 4 S_\alpha \Delta\phi_{\text{NR}}, \qquad
+    e_{V_\pi}^{(4)} = (y_3 + y_4) - (y_1 + y_2) \approx 4\pi S_\alpha \epsilon_{V_\pi}
+    \end{equation}
+    \item \textbf{Miền Quang học (\texttt{EQ-04}--\texttt{EQ-13}):} Ma trận Jones phân giải phổ $\mathbf{J}_{\text{CW}}(\omega_k), \mathbf{J}_{\text{CCW}} = \mathbf{J}_{\text{CW}}^T$, độ tương phản vân $V$ và $\phi_{\text{pol}}$, thời gian truyền $\tau = n_{\text{eff}}L/c$, $K_{\text{opt}} = \frac{2\pi LD}{\bar{\lambda}c}$, hiệu ứng Kerr ($\eta_{\text{coh}}$), Shupe ($\delta z_{\text{quad}}$), Faraday ($V_{\text{Verdet}}$), MIOC ($\epsilon_{V_\pi}, \gamma_{\text{nl}}$), cuộn pha $\operatorname{wrap}_{2\pi}$ và công suất photodiode $P_{\text{det}}[m]$ có RAM ($\alpha_{\text{RAM}}$).
+    \item \textbf{Miền Điện tử Tương tự (\texttt{EQ-14}--\texttt{EQ-19}):} Dòng ngõ vào TIA có xuyên âm $C_{\text{xtalk}}\frac{dV}{dt} + k_{\text{xtalk}}(1+n_{1/f})V$, phổ nhiễu 6 thành phần $S_{i,\text{tot}}(f,m)$, hàm truyền TIA bậc 2 $H_{\text{TIA}}(s)$, $C_{f,\text{opt}}$, $t_s(0.1\%)$, phi tuyến đa thức bậc 3 ($G_1, G_2, G_3$) kèm cắt ngưỡng, cửa sổ \emph{ADC Blanking} $[k_{\text{start}}, k_{\text{end}}]$ (tỉ số $\eta_b$, phạt ARW $1/\sqrt{\eta_b}$).
+    \item \textbf{Miền DSP 2/4 Trạng thái \& AVAR IEEE 952 (\texttt{EQ-20}--\texttt{EQ-30}):} Bộ tích phân Vòng 1/Vòng 2, dốc pha $\bmod\,2\pi$, chuẩn ổn định Jury $0 < K_{\text{tot}} < 1$ (giới hạn bậc 3 chính xác $K_{\text{tot}} < \frac{\sqrt{5}-1}{2} \approx 0.6180$), tách băng thông $K_{\text{tot},2} \le 0.1\,K_{\text{tot},1}$, 5 vùng nhiễu IEEE 952 $(Q, N, B, K, R)$, ma trận rò rỉ $\mathbf{K}$, chuỗi chậm $10\text{ h}/100\text{ Hz}$ và liên tục vùng giao $<5\%$ trên $T_m \in [0.1, 5]\text{ s}$.
+\end{itemize}
+
+\subsection{Đặc tả Chính thức Thuật toán DSP 6 Trạng thái Đối xứng (\texttt{EQ-31}--\texttt{EQ-34})}
+
+Trong cấu hình 4 trạng thái cổ điển, chuỗi pha thiên vị tức thời $[\pi, \alpha, -\pi, \alpha]$ có tổ hợp lái $(V_2 - V_1) + (V_4 - V_3) = +\frac{2\alpha}{\pi}V_\pi \ne 0$, khiến điều chế biên độ ký sinh (RAM) và xuyên âm điện trở $k_{\text{xtalk}}(1 + n_{1/f,\text{xtalk}})V_{\text{drv}}$ rò rỉ trực tiếp vào kênh đo tốc độ góc $e_\Omega$. Để triệt tiêu tận gốc cơ chế rò rỉ này ở tầng thuật toán điều chế đồng thời giảm 33\% điện áp đỉnh lái MIOC, \texttt{SPEC-005} chuẩn hóa **chuỗi điều chế 6 trạng thái phản tuần hoàn đối xứng** trong chu kỳ khung $6\tau$.
+
+\subsubsection*{1. Chuỗi Pha Tức thời $\psi_0..\psi_5$ và Chuỗi Pha Sai phân $\phi_1..\phi_6$ (\texttt{EQ-31})}
+Với góc thiên vị $\alpha \in (0, \pi/2]$ (giá trị tối ưu chuẩn hóa $\alpha^* = \pi/3$), 6 mức pha thiên vị tức thời tác động lên MIOC thỏa mãn tính phản tuần hoàn nửa khung $\psi_{k+3} = -\psi_k$ và có trung bình DC bằng không tuyệt đối ($\sum_{k=0}^{5}\psi_k = 0$):
+\begin{equation}
+\psi_0 = +\frac{\pi+\alpha}{2}, \quad
+\psi_1 = -\frac{\pi+\alpha}{2}, \quad
+\psi_2 = +\frac{\pi-3\alpha}{2}, \quad
+\psi_3 = -\frac{\pi+\alpha}{2}, \quad
+\psi_4 = +\frac{\pi+\alpha}{2}, \quad
+\psi_5 = -\frac{\pi-3\alpha}{2}
+\label{eq:eq31_psi}
+\end{equation}
+Hiệu pha điều chế sai phân giữa hai chùm sóng thuận và ngược chiều $\phi_k = \psi_{k-1} - \psi_{(k-2)\bmod 6}$ ($k = 1,\dots,6$) tạo thành chuỗi 6 trạng thái đối xứng chính xác:
+\begin{equation}
+\phi_1 = +(\pi-\alpha),\;\;
+\phi_2 = -(\pi+\alpha),\;\;
+\phi_3 = +(\pi-\alpha),\;\;
+\phi_4 = -(\pi-\alpha),\;\;
+\phi_5 = +(\pi+\alpha),\;\;
+\phi_6 = -(\pi-\alpha)
+\label{eq:eq31_phi}
+\end{equation}
+Đặc biệt, tại góc tối ưu **$\alpha^* = \pi/3$**, chuỗi tức thời thu gọn thành $\psi = \bigl[+\tfrac{2\pi}{3},\, -\tfrac{2\pi}{3},\, 0,\, -\tfrac{2\pi}{3},\, +\tfrac{2\pi}{3},\, 0\bigr]$ với biên độ đỉnh chỉ $\frac{2}{3}V_\pi$ (nhỏ hơn 33.3\% so với $\pm V_\pi$ của 4 trạng thái), và chuỗi sai phân trở thành $\phi = \bigl[+\tfrac{2\pi}{3},\, -\tfrac{4\pi}{3},\, +\tfrac{2\pi}{3},\, -\tfrac{2\pi}{3},\, +\tfrac{4\pi}{3},\, -\tfrac{2\pi}{3}\bigr]$.
+
+\subsubsection*{2. Khai triển Taylor Bậc nhất tại 6 Trạng thái \& Tính chất Triệt Xuyên âm (\texttt{EQ-32})}
+Với $\Delta\phi_{\text{NR}} \ll 1$ và sai số hệ số MIOC $\epsilon_{V_\pi} \ll 1$, khai triển bậc nhất đáp ứng giao thoa $\cos\!\bigl(\Delta\phi_{\text{NR}} + (1+\epsilon_{V_\pi})\phi_k\bigr)$ cho cả 6 trạng thái (tất cả đều nằm trên cùng điểm làm việc DC $-\cos\alpha$ với mọi $\alpha \in (0, \pi/2]$):
+\begin{align}
+y_1, y_3 &\approx y_0 - S_\alpha\,\Delta\phi_{\text{NR}} - S_\alpha(\pi - \alpha)\,\epsilon_{V_\pi} \\
+y_2 &\approx y_0 - S_\alpha\,\Delta\phi_{\text{NR}} + S_\alpha(\pi + \alpha)\,\epsilon_{V_\pi} \\
+y_4, y_6 &\approx y_0 + S_\alpha\,\Delta\phi_{\text{NR}} - S_\alpha(\pi - \alpha)\,\epsilon_{V_\pi} \\
+y_5 &\approx y_0 + S_\alpha\,\Delta\phi_{\text{NR}} + S_\alpha(\pi + \alpha)\,\epsilon_{V_\pi}
+\end{align}
+trong đó $y_0 = G_{\text{chain}}\frac{P_{\text{peak}}}{2}(1 - V\cos\alpha)$ và $S_\alpha = G_{\text{chain}}\frac{P_{\text{peak}}}{2}V\sin\alpha$. Kiểm tra tổ hợp điện áp lái trên kênh Sagnac:
+\begin{equation}
+(\psi_3 + \psi_4 + \psi_5) - (\psi_0 + \psi_1 + \psi_2) = -(\pi - 3\alpha) \;\xrightarrow{\;\alpha = \pi/3\;}\; \mathbf{0}
+\end{equation}
+Tại $\alpha^* = \pi/3$, ba tổng ký sinh trên kênh $e_\Omega$ đồng thời triệt tiêu tuyệt đối về $0$:
+\begin{enumerate}
+    \item \textbf{Triệt RAM \& Xuyên âm điện trở ($V_{\text{drv}}$):} $\sum_{k=3}^{5}\psi_k - \sum_{k=0}^{2}\psi_k = 0 \implies$ triệt cả thành phần DC lẫn nhiễu $1/f$ xuyên âm $k_{\text{xtalk}} n_{1/f} V_{\text{drv}}$.
+    \item \textbf{Triệt Xuyên âm điện dung ($dV_{\text{drv}}/dt$):} $\sum_{k=4}^{6}\phi_k - \sum_{k=1}^{3}\phi_k = 0$.
+    \item \textbf{Triệt Phi tuyến MIOC bậc hai ($\gamma_{\text{nl}}V_{\text{drv}}^2$):} $\sum_{k=3}^{5}\psi_k^2 - \sum_{k=0}^{2}\psi_k^2 = 0$.
+\end{enumerate}
+
+\subsubsection*{3. Giải điều chế Trực giao 3 Kênh $(e_\Omega, e_{V_\pi}, e_{\text{asym}})$ (\texttt{EQ-33})}
+Tại cuối mỗi khung 6 trạng thái (chỉ số khung $r$, chu kỳ $6\tau$), khối \texttt{DigitalDSP\_SC} tính đồng thời ba kênh hoàn toàn trực giao bậc nhất:
+\begin{align}
+e_\Omega^{(6)}[r] &= (y_4[r] + y_5[r] + y_6[r]) - (y_1[r] + y_2[r] + y_3[r]) \approx 6 S_\alpha\,\Delta\phi_{\text{NR}} \\
+e_{V_\pi}^{(6)}[r] &= 2\bigl(y_2[r] + y_5[r]\bigr) - \bigl(y_1[r] + y_3[r] + y_4[r] + y_6[r]\bigr) \approx 8\pi S_\alpha\,\epsilon_{V_\pi} \\
+e_{\text{asym}}^{(6)}[r] &= \bigl(y_1[r] - y_3[r]\bigr) + \bigl(y_6[r] - y_4[r]\bigr)
+\end{align}
+Trong đó:
+\begin{itemize}
+    \item Hệ số nhạy $e_{V_\pi}^{(6)}$ bằng đúng $8\pi S_\alpha$ (độc lập với $\alpha$, gấp đôi độ nhạy $4\pi S_\alpha$ của 4 trạng thái) và cũng có tổng điện áp lái $2(\psi_1+\psi_4) - (\psi_0+\psi_2+\psi_3+\psi_5) = 0$ (kháng RAM/xuyên âm ngay cả trên Vòng 2!).
+    \item Kênh phụ thứ ba $e_{\text{asym}}^{(6)}$ triệt tiêu hoàn toàn cả DC, Sagnac $\Delta\phi_{\text{NR}}$ lẫn sai số $V_\pi$, nhưng nhạy trực tiếp với bất đối xứng điện áp lái ($(\psi_0-\psi_2)+(\psi_5-\psi_3) = 4\alpha$), đóng vai trò tín hiệu giám sát trực tuyến RAM/xuyên âm/quá độ cho khối BIT.
+    \item Khi bật PRBS Dither bước $\delta_d$ cố định trong khung $6\tau$, phép trừ dither chính xác trước Vòng 1 là $e_\Omega = e_{\Omega,\text{raw}}^{(6)} + 6 S_\alpha \sin(\delta_d)$, trong khi dither tự triệt tiêu hoàn toàn trong $e_{V_\pi}^{(6)}$.
+\end{itemize}
+
+\subsubsection*{4. Định chuẩn Độ lợi Miền $Z$, Băng thông $-3\text{ dB}$ \& Anti-Windup (\texttt{EQ-34})}
+Với chu kỳ khung $T_f = N_{\text{st}}\tau$ ($N_{\text{st}} \in \{2, 4, 6\}$) và trễ ống lệnh $d=2$, độ lợi tích phân và hàm truyền vòng kín của chế độ 6 trạng thái được định chuẩn thống nhất:
+\begin{equation}
+K_{I,1}^{(6)} = \frac{K_{\text{tot},1}}{6 S_\alpha}, \qquad
+K_{I,2}^{(6)} = \frac{K_{\text{tot},2}}{8\pi S_\alpha}, \qquad
+T_1(z) = \frac{L_1(z)}{1 + L_1(z)} = \frac{K_{\text{tot},1}}{z^3 - z^2 + K_{\text{tot},1}}
+\end{equation}
+Băng thông động $-3\text{ dB}$ giải tích $f_{-3\text{dB}}$ thỏa mãn $\bigl|T_1(e^{j 2\pi f_{-3\text{dB}} T_f})\bigr| = 1/\sqrt{2}$ (với $K_{\text{tot},1} \in [0.15, 0.35]$ thỏa tiêu chuẩn Jury $0 < K_{\text{tot},1} < \frac{\sqrt{5}-1}{2}$ và $K_{\text{tot},2} \le 0.1\,K_{\text{tot},1}$). Để chống bão hòa tích phân khi tốc độ góc vượt dải định mức, bộ tích phân Vòng 1 áp dụng kẹp \emph{anti-windup}:
+\begin{equation}
+\Delta\phi_{\text{step}}[r] = \operatorname{clip}\!\Bigl(\Delta\phi_{\text{step}}[r-1] + K_{I,1} e_\Omega[r] + K_{P,1}\bigl(e_\Omega[r] - e_\Omega[r-1]\bigr),\; -\Delta\phi_{\max},\; +\Delta\phi_{\max}\Bigr)
+\end{equation}
+và bật cờ \texttt{FLAG\_ANTI\_WINDUP} trong \texttt{SimRecord::flags} mỗi khi chạm ngưỡng $\pm\Delta\phi_{\max}$.
+
+% ====================================================================
+\section{6 Kịch bản Xác minh Miền Thời gian (\texttt{TD-01} -- \texttt{TD-06})}
+
+Tận dụng lõi SystemC-AMS tốc độ cao và luồng ghi thanh ghi nội bộ \texttt{dsp\_trace.bin} / \texttt{micro\_waveforms.bin}, \texttt{SPEC-005} chuẩn hóa 6 kịch bản miền thời gian chạy trực tiếp bằng lệnh CLI (Bảng~\ref{tab:td_scenarios}):
+
+\begin{table}[htbp]
+\centering
+\caption{Ma trận 6 kịch bản xác minh miền thời gian chuẩn hóa trong \texttt{IFOG-SIM-SPEC-005}.}
+\label{tab:td_scenarios}
+\footnotesize
+\renewcommand{\arraystretch}{1.22}
+\begin{tabular}{@{}L{1.5cm} L{3.0cm} L{3.3cm} L{4.2cm} L{3.4cm}@{}}
+\toprule
+\textbf{Mã} & \textbf{Kịch bản \& Lệnh CLI} & \textbf{Kích thích \& Tín hiệu đo} & \textbf{Chỉ tiêu trích xuất} & \textbf{Ngưỡng nghiệm thu} \\
+\midrule
+\texttt{TD-01} & Quá độ dưới $\tau$ \& Blanking (\texttt{--mode td\_blanking}) & $P_{\text{det}}(t), V_{\text{TIA}}(t), V_{\text{drv}}(t)$, cửa sổ ADC, $K=16/32$ (4 vs 6 state). & Thời gian xác lập $t_s(0.1\%)$, vọt lố ringing, $k_{\text{start}}^*$ tối ưu, phạt ARW $1/\sqrt{\eta_b}$. & $t_s(0.1\%) < \Delta t_{\text{fast}}$; $k_{\text{start}}^* \le k_{\text{start}}$; sai số mẫu sạch $< 0.1\%$. \\
+\texttt{TD-02} & Đáp ứng bước \& Băng thông $-3\text{ dB}$ (\texttt{--mode td\_step\_sine}) & Bước $0 \to 100^\circ/\text{s}$; quét sin $10\text{ Hz}..12\text{ kHz}$ so sánh $\Omega_{\text{out}}(t)$ vs $\Omega_{\text{in}}(t)$. & $t_r(10\text{--}90\%)$, $t_s(2\%)$, overshoot, biểu đồ Bode (dB, pha), $f_{-3\text{dB}}$ đo vs $T_1(e^{j\omega T_f})$. & Sai số tĩnh $< 10^{-4}\%$; $f_{-3\text{dB}}$ khớp giải tích trong $\pm 20\%$. \\
+\texttt{TD-03} & Quá độ khóa $V_\pi$ khi sốc nhiệt (\texttt{--mode td\_vpi\_shock}) & Bơm bước nhảy $\epsilon_{V_\pi}: 0\% \to +5\%$ tại $t_{\text{shock}}$; ghi $e_{V_\pi}(t), G_{\text{DAC}}(t), \Omega_{\text{out}}(t)$. & Thời gian hội tụ 99\% $\tau_{V_\pi}$, $\epsilon_{V_\pi,\text{eff}}$ cuối, nhiễu xuyên sang Vòng 1 (4 vs 6 state). & $|\epsilon_{V_\pi,\text{eff}}| < 10^{-3}$; không kích dao động Vòng 1. \\
+\texttt{TD-04} & Quay tốc độ cao \& Reset $2\pi$ (\texttt{--mode td\_high\_rate}) & Dốc $0 \to 300 \to 500 \to 700^\circ/\text{s}$ + thử bão hòa \emph{anti-windup}. & Tần số flyback (kHz), lỗi trượt vân (fringe slip), sai số bám RMS, phục hồi anti-windup. & 0 lỗi trượt vân tới $700^\circ/\text{s}$; bám $< 0.5\%$; phục hồi anti-windup ngay lập tức. \\
+\texttt{TD-05} & Sốc nhiệt Shupe thời gian thực (\texttt{--mode td\_shupe\_shock}) & Chuỗi gia nhiệt/làm lạnh nhanh $\pm 0.5\text{ K/s}$ qua \texttt{shupe\_lut.bin}; ghi $\Omega_{\text{out}}(t)$. & Đỉnh trôi bias tức thời ($^\circ/\text{h}$) trước và sau bộ lọc bù nhiệt ngoại suy. & Khớp $\Delta\phi_{\text{Shupe}}/K_{\text{opt}}$; bộ lọc bù giảm $\ge 90\%$ trôi bias. \\
+\texttt{TD-06} & Chu kỳ giới hạn \& PRBS Dither (\texttt{--mode td\_limit\_cycles}) & $\Omega_{\text{in}} \approx 0$ ($0.005^\circ/\text{s}$), lượng tử ON; ghi \texttt{adc\_code}, \texttt{dac\_code}, \texttt{prbs\_bit}. & Phát hiện đỉnh phổ ký sinh (\emph{idle tones}), SFDR (dB) khi tắt vs bật LFSR PRBS dither. & PRBS dither cải thiện SFDR / nén đỉnh ký sinh và giữ sai số trung bình nhỏ hơn. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\section{5 Bài toán Kỹ thuật Hệ thống \& Sản xuất (\texttt{ENG-01} -- \texttt{ENG-05})}
+
+\subsection{ENG-01: Định cỡ Phần cứng, Jitter Lấy mẫu \& Pareto TIA--SLD (\texttt{EQ-35})}
+\begin{enumerate}
+    \item \textbf{Quét độ phân giải ADC/DAC (ENOB Sweep, 10--16 bit):} Chạy song song Tầng 2 với $N_{\text{ADC}} = N_{\text{DAC}} \in \{10,11,12,13,14,15,16\}$ để xác định ngưỡng bit tối thiểu $N_{\min}$ mà nhiễu lượng tử $Q$ và sai số vùng chết bắt đầu vi phạm chỉ tiêu datasheet.
+    \item \textbf{Mô hình Jitter xung nhịp lấy mẫu (\emph{Aperture Jitter}, \texttt{EQ-35}):} Độ bất ổn thời điểm chốt mẫu $\delta t_j \sim \mathcal{N}(0, \sigma_{t_j}^2)$ trong \texttt{ADC\_Bridge\_TDF} chuyển đổi độ dốc điện áp thành nhiễu điện áp cộng thêm và tăng sàn ARW theo công thức:
+    \begin{equation}
+    \delta V_j[m] = \left.\frac{dV_{\text{adc}}}{dt}\right|_{t_m}\delta t_j[m], \qquad
+    \sigma_{V,j}^2 = \overline{\left(\frac{dV_{\text{adc}}}{dt}\right)^2}\,\sigma_{t_j}^2, \qquad
+    \text{ARW}_{\text{tot}} = \sqrt{\text{ARW}_0^2 + \text{ARW}_{\text{jitter}}^2(\sigma_{t_j})}
+    \label{eq:eq35_jitter}
+    \end{equation}
+    Quét $\sigma_{t_j} \in [0, 5\text{ ns}]$ định lượng chính xác giới hạn jitter thạch anh (ps / ppm) trước khi nâng sàn ARW vượt $+10\%$.
+    \item \textbf{Cân bằng Pareto TIA $(R_f, C_f)$ và Công suất SLD $P_0$:} Quét lưới $(R_f, P_{\text{peak}})$ với $C_{f,\text{opt}}$ Butterworth, cân đối giữa nhiễu nhiệt $4k_B T / R_f$, nhiễu RIN $\propto P_{\text{det}}^2 / \Delta\nu_{\text{eff}}$, nhiễu shot và thời gian xác lập $t_s(0.1\%)$ để chọn điểm làm việc tối ưu chi phí/hiệu năng.
+\end{enumerate}
+
+\subsection{ENG-02: Đồng mô phỏng Xuyên âm IMU 3 Trục Dùng chung Nguồn SLD (\texttt{EQ-36})}
+Khởi tạo đồng thời **3 thực thể độc lập hoàn chỉnh** (\texttt{Axis\_X}, \texttt{Axis\_Y}, \texttt{Axis\_Z}) gồm đầy đủ \texttt{OpticalEnvelope\_TDF} + \texttt{AnalogFrontEnd\_TDF} + \texttt{PinkNoise\_TDF} + \texttt{ADC\_Bridge\_TDF} + \texttt{DAC\_Driver\_TDF} + \texttt{DigitalDSP\_SC} trong **cùng một phiên thực thi SystemC-AMS** (\texttt{ifog\_sim --imu3axis}), kết nối qua mô-đun dùng chung \texttt{SharedPowerBus\_TDF} (Hình~\ref{fig:imu3axis}).
+
+\begin{equation}
+\begin{aligned}
+P_{\text{axis},i}[m] &= P_{\text{peak},i}\left(1 + \sum_{j \ne i} \rho_{\text{opt},ij}\,\frac{V_{\text{drv},j}[m]}{V_{\pi,0}}\right), \\
+I_{\text{bus}}[m] &= \sum_{j \in \{X,Y,Z\}} \left(\frac{|V_{\text{drv},j}[m]|}{R_{\text{load}}} + C_{\text{load}}\left|\frac{dV_{\text{drv},j}[m]}{dt}\right|\right), \\
+\Delta V_{\text{rail}}[m] &= -Z_{\text{rail}}\,I_{\text{bus}}[m], \qquad
+V_{\text{ref},i}^{\text{eff}}[m] = V_{\text{ref,nom}} + \Delta V_{\text{rail}}[m]
+\end{aligned}
+\label{eq:eq36_imu3axis}
+\end{equation}
+trong đó $\rho_{\text{opt},ij}$ là hệ số ghép phản xạ quang ngược qua bộ chia SLD 1-ra-3, còn $Z_{\text{rail}}$ là trở kháng đường nguồn chung FPGA/DAC gây sụt áp tức thời khi trục X quay $500^\circ/\text{s}$ và thực hiện các cú nhảy reset $2\pi$ liên tục. Sai số xuyên trục được đo bằng độ trôi bias trên trục Y và Z đang đứng yên ($\Omega_Y = \Omega_Z = 0$).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    font=\footnotesize,
+    >=Stealth,
+    busbox/.style={draw=alertred, thick, rounded corners=4pt, fill=softred, align=center, text width=14.8cm, minimum height=1.3cm, inner sep=4pt},
+    axisbox/.style={draw=primaryblue, thick, rounded corners=3pt, fill=softblue, align=center, text width=4.4cm, minimum height=2.2cm, inner sep=4pt},
+    arr/.style={<->, thick, draw=primaryblue},
+    xarr/.style={->, thick, dashed, draw=alertred}
+]
+\node[busbox] (bus) at (7.6, 3.6) {
+    \textbf{\texttt{SharedPowerBus\_TDF}} (Nút nguồn chung 1 SLD chia 3 trục + Đường nguồn chung FPGA/DAC)\\[2pt]
+    \scriptsize Phản xạ quang ngược $P_{\text{axis},i} = P_{\text{peak},i}(1 + \sum_{j\ne i}\rho_{\text{opt},ij} V_{\text{drv},j}/V_\pi)$ \quad|\quad Sụt áp nguồn $\Delta V_{\text{rail}} = -Z_{\text{rail}}\sum_j I_{\text{drv},j}$
+};
+
+\node[axisbox] (ax) at (2.4, 0.8) {
+    \textbf{\texttt{Axis\_X} (Chủ động)}\\
+    \scriptsize $\Omega_X = 500^\circ/\text{s}$ (Reset $2\pi$ liên tục)\\[2pt]
+    \scriptsize \texttt{Opt} $\to$ \texttt{AFE} $\to$ \texttt{ADC} $\to$ \texttt{DSP} $\to$ \texttt{DAC}
+};
+\node[axisbox, fill=softteal, draw=accentteal] (ay) at (7.6, 0.8) {
+    \textbf{\texttt{Axis\_Y} (Đứng yên)}\\
+    \scriptsize $\Omega_Y = 0^\circ/\text{s}$ (Đo trôi xuyên trục)\\[2pt]
+    \scriptsize \texttt{Opt} $\to$ \texttt{AFE} $\to$ \texttt{ADC} $\to$ \texttt{DSP} $\to$ \texttt{DAC}
+};
+\node[axisbox, fill=softteal, draw=accentteal] (az) at (12.8, 0.8) {
+    \textbf{\texttt{Axis\_Z} (Đứng yên)}\\
+    \scriptsize $\Omega_Z = 0^\circ/\text{s}$ (Đo trôi xuyên trục)\\[2pt]
+    \scriptsize \texttt{Opt} $\to$ \texttt{AFE} $\to$ \texttt{ADC} $\to$ \texttt{DSP} $\to$ \texttt{DAC}
+};
+
+\draw[xarr] (ax.north) -- node[left, font=\scriptsize\color{alertred}] {$V_{\text{drv},X}, \frac{dV_X}{dt}$} (2.4, 2.95);
+\draw[arr, draw=accentteal] (7.6, 2.95) -- node[right, font=\scriptsize\color{accentteal}] {$P_{\text{axis},Y}, \Delta V_{\text{rail}}$} (ay.north);
+\draw[arr, draw=accentteal] (12.8, 2.95) -- node[right, font=\scriptsize\color{accentteal}] {$P_{\text{axis},Z}, \Delta V_{\text{rail}}$} (az.north);
+\end{tikzpicture}
+\caption{Kiến trúc đồng mô phỏng IMU 3 trục dùng chung nguồn SLD và đường nguồn chung trong một cụm SystemC-AMS (\texttt{ENG-02}).}
+\label{fig:imu3axis}
+\end{figure}
+
+\subsection{ENG-03: Sai số Chỉnh lưu Rung động (VRE) \& Độ nhạy Từ trường Faraday (\texttt{EQ-37}--\texttt{EQ-38})}
+\begin{enumerate}
+    \item \textbf{Vibration Rectification Error (VRE, \texttt{EQ-37}):} Dưới gia tốc rung động cơ học $a(t)$ trong dải $20\text{ Hz}..2\text{ kHz}$ (cường độ $g_{\text{rms}}$), suy hao quang và pha vi âm bị điều biến theo $P_{\text{vib}}[m] = P_{\text{det}}[m]\bigl(1 + \alpha_{\text{vib}} a[m]\bigr)$ và $\Delta\phi_{\text{vib}}[m] = \beta_{\text{vib}} a[m]$. Khi mạch TIA có phi tuyến bậc hai $G_2 V^2$, thành phần AC bị chỉnh lưu thành độ lệch DC tỷ lệ bình phương cường độ rung:
+    \begin{equation}
+    \Delta V_{\text{DC,VRE}} = G_2\,\overline{\delta V_{\text{vib}}^2} \propto G_2\,g_{\text{rms}}^2, \qquad
+    \mathrm{VRE} = \frac{\Delta\Omega_{\text{bias,VRE}}}{g_{\text{rms}}^2} \;\; \bigl[^\circ/\text{h}/g^2\bigr]
+    \label{eq:eq37_vre}
+    \end{equation}
+    \item \textbf{Độ nhạy Từ trường Faraday \& Định cỡ Chắn từ Mu-metal (\texttt{EQ-38}):} Với từ trường ngoài biến thiên $B_{\text{ext}}(t) = B_0 + B_{\text{ac}}\sin(2\pi f_B t)$ (1 Tesla $= 10^4$ Gauss), pha Faraday $\Delta\phi_{\text{Faraday}}(t) = V_{\text{Verdet}} L_{\text{eff,mag}} B_{\text{ext}}(t)$ tạo độ nhạy từ trường $S_B$ và yêu cầu độ suy giảm chắn từ tối thiểu $A_{\text{shield,dB}}$ để giữ trôi bias dưới ngân sách $\Omega_{\text{budget}}$:
+    \begin{equation}
+    S_B = \frac{\partial\Omega_{\text{out}}}{\partial B_{\text{ext}}}\cdot 10^{-4}\cdot \frac{180\times 3600}{\pi} \;\bigl[^\circ/\text{h}/\text{Gauss}\bigr], \qquad
+    A_{\text{shield,dB}} = \max\!\left(0,\; 20\log_{10}\!\frac{|S_B|\,B_{\max,\text{G}}}{\Omega_{\text{budget}}}\right)
+    \label{eq:eq38_faraday}
+    \end{equation}
+\end{enumerate}
+
+\subsection{ENG-04: Tiêm lỗi Sự cố \& Cơ chế Tự chẩn đoán FPGA BIT/FDIR (\texttt{EQ-39})}
+Khối giám sát \textbf{BIT/FDIR} (\emph{Built-In Test / Fault Detection, Isolation and Recovery}) được tích hợp trực tiếp trong \texttt{DigitalDSP\_SC} kiểm tra đồng thời 5 điều kiện lỗi ở mỗi chu kỳ khung (kích hoạt \texttt{FLAG\_BIT\_FAULT} và ghi nhận thời gian phát hiện $\mathrm{TTA} = t_{\text{alert}} - t_{\text{inject}}$):
+\begin{equation}
+\text{BIT\_CODE} = \begin{cases}
+1\;\text{(\texttt{SLD\_DROP\_50PCT})} & \text{khi } 0.15\,\bar{y}_{\text{nom}} \le \bar{y}[r] < 0.65\,\bar{y}_{\text{nom}} \\
+2\;\text{(\texttt{FIBER\_BREAK})} & \text{khi } \bar{y}[r] < 0.15\,\bar{y}_{\text{nom}} \\
+3\;\text{(\texttt{MIOC\_OPEN\_ELECTRODE})} & \text{khi } |e_{V_\pi}[r]| > \theta_{V_\pi} \text{ hoặc } G_{\text{DAC}} \text{ chạm biên} \\
+4\;\text{(\texttt{ADC\_SATURATION})} & \text{khi } |y[n]| \ge 0.98\,(2^{N_{\text{ADC}}-1}-1) \\
+5\;\text{(\texttt{DSP\_SEU\_BITFLIP})} & \text{khi } |e_\Omega[r]| > \theta_{\text{SEU}} \;\Rightarrow\; \text{FDIR khôi phục mềm } \Delta\phi_{\text{step}}
+\end{cases}
+\label{eq:eq39_bit}
+\end{equation}
+
+\subsection{ENG-05: Phân tích Năng suất Monte Carlo ($C_{pk}$) \& Hiệu chuẩn Nhiệt Ảo (\texttt{EQ-40}--\texttt{EQ-41})}
+\begin{enumerate}
+    \item \textbf{Monte Carlo Production Yield \& Chỉ số Năng lực Quy trình $C_{pk}$ (\texttt{EQ-40}):} Chạy song song $N_{\text{MC}}$ mẫu linh kiện với dung sai ngẫu nhiên ($\pm 5\%$ $V_\pi$, $\pm 10\%$ băng thông TIA, biến thiên $h$-parameter sợi PM và xuyên âm PCB). Tỷ lệ đạt chuẩn $\hat{Y} = k/N_{\text{MC}}$, khoảng tin cậy 95\% Wilson và chỉ số năng lực quy trình $C_{pk}$ cho từng chỉ tiêu $X \in [\mathrm{LSL}, \mathrm{USL}]$ là:
+    \begin{equation}
+    \hat{Y} = \frac{k}{N_{\text{MC}}}, \qquad
+    \mathrm{CI}_{95\%} = \frac{\hat{Y} + \frac{z^2}{2N} \pm z\sqrt{\frac{\hat{Y}(1-\hat{Y})}{N} + \frac{z^2}{4N^2}}}{1 + \frac{z^2}{N}}, \qquad
+    C_{pk} = \min\!\left(\frac{\mathrm{USL} - \mu_X}{3\sigma_X},\; \frac{\mu_X - \mathrm{LSL}}{3\sigma_X}\right)
+    \label{eq:eq40_yield}
+    \end{equation}
+    \item \textbf{Bộ dữ liệu Hiệu chuẩn Nhiệt Ảo ($-40^\circ\text{C}..+85^\circ\text{C}$) \& Bù Đa thức / EKF (\texttt{EQ-41}):}
+    Tại mỗi điểm nhiệt độ $T$ và tốc độ biến thiên $\dot{T} = dT/dt$, hệ mô phỏng cập nhật bước sóng nguồn và điện áp $V_\pi$ theo hệ số nhiệt vật lý rồi huấn luyện/thẩm định hai bộ bù ngoại tuyến trên bộ dữ liệu $(T, \dot{T}, \Omega_{\text{out}})$:
+    \begin{equation}
+    \begin{aligned}
+    \bar{\lambda}(T) &= \bar{\lambda}_0\bigl[1 + \alpha_\lambda(T - T_0)\bigr], \qquad
+    V_\pi(T) = V_{\pi,0}\bigl[1 + \alpha_{V_\pi}(T - T_0)\bigr], \\
+    \hat{b}_{\text{poly}}(T, \dot{T}) &= c_0 + c_1\Delta T + c_2\Delta T^2 + c_3\dot{T} + c_4\Delta T\dot{T}, \\
+    \hat{\mathbf{x}}_{k|k} &= \hat{\mathbf{x}}_{k|k-1} + \mathbf{K}_k\bigl(\Omega_{\text{meas},k} - \mathbf{H}_k\hat{\mathbf{x}}_{k|k-1}\bigr) \quad (\text{EKF})
+    \end{aligned}
+    \label{eq:eq41_thermal_cal}
+    \end{equation}
+\end{enumerate}
+
+% ====================================================================
+\section{Quy trình Vận hành CLI Chính thức \& Ma trận 41 Công thức Kiểm chứng}
+
+Toàn bộ 4 cổng nền tảng (\texttt{Gate 1..4}), kiểm chứng đối chiếu 6 trạng thái (\texttt{dsp6\_compare}), 6 kịch bản miền thời gian (\texttt{TD-01..06}) và 5 kịch bản kỹ thuật hệ thống (\texttt{ENG-01..05}) được vận hành thống nhất qua \texttt{scripts/run\_sim.sh} (chạy lẻ từng kịch bản) hoặc \texttt{scripts/run\_all\_scenarios.sh} (chạy toàn bộ prototype), tự động sinh báo cáo \texttt{report/<run\_id>/\{report.md, report.html\}} và biểu đồ 300-DPI:
+
+\begin{footnotesize}
+\begin{verbatim}
+# 1. Chay rieng tung kich ban qua CLI chinh thuc
+./scripts/run_sim.sh --mode dsp6_compare --run-id demo_dsp6
+./scripts/run_sim.sh --mode td_blanking  --dsp-mode 6state --run-id demo_td01
+./scripts/run_sim.sh --mode td_step_sine --run-id demo_td02
+./scripts/run_sim.sh --mode td_vpi_shock --run-id demo_td03
+./scripts/run_sim.sh --mode td_high_rate --run-id demo_td04
+./scripts/run_sim.sh --mode td_shupe_shock --run-id demo_td05
+./scripts/run_sim.sh --mode td_limit_cycles --run-id demo_td06
+./scripts/run_sim.sh --mode eng_hw_sizing --run-id demo_eng01
+./scripts/run_sim.sh --mode eng_imu_3axis --run-id demo_eng02
+./scripts/run_sim.sh --mode eng_vre_faraday --run-id demo_eng03
+./scripts/run_sim.sh --mode eng_fault_bit --run-id demo_eng04
+./scripts/run_sim.sh --mode eng_mc_yield_cal --mc-runs 500 --run-id demo_eng05
+
+# 2. Chay theo nhom hoac toan bo prototype (4-Gate + 6-State + 6 TD + 5 ENG)
+./scripts/run_sim.sh --mode td_all  --run-id suite_td
+./scripts/run_sim.sh --mode eng_all --run-id suite_eng
+./scripts/run_all_scenarios.sh --run-id full_v2_prototype
+\end{verbatim}
+\end{footnotesize}
+
+Mọi công thức từ \texttt{EQ-01} đến \texttt{EQ-41} đều có bài kiểm thử xác minh độc lập trong \texttt{tests/formula\_verification/} và được ép chạy bắt buộc bởi \texttt{scripts/verify\_formulas\_ci.py} trong CI/CD cùng yêu cầu **100.0\% line coverage** cho cả C++ (\texttt{gcovr}) lẫn Python (\texttt{pytest-cov}).
+
+\begin{table}[htbp]
+\centering
+\caption{Danh mục 11 công thức bổ sung trong \texttt{IFOG-SIM-SPEC-005} (\texttt{EQ-31}--\texttt{EQ-41}, kế tiếp \texttt{EQ-01}--\texttt{EQ-30}).}
+\label{tab:eq31_41}
+\footnotesize
+\renewcommand{\arraystretch}{1.18}
+\begin{tabular}{@{}L{1.5cm} L{2.0cm} L{7.4cm} L{4.6cm}@{}}
+\toprule
+\textbf{Mã EQ} & \textbf{Mục Spec} & \textbf{Nội dung phương trình chuẩn hóa} & \textbf{Tệp cài đặt \& Kiểm chứng} \\
+\midrule
+\texttt{EQ-31} & §3.2.1 & Chuỗi pha tức thời $\psi_0..\psi_5$ \& sai phân $\phi_1..\phi_6$ của DSP 6 trạng thái & \texttt{digital\_dsp\_sc.cpp}, \texttt{test\_formulas\_spec005.py} \\
+\texttt{EQ-32} & §3.2.2 & Khai triển Taylor 6 trạng thái \& góc tối ưu triệt xuyên âm/RAM $\alpha^*=\pi/3$ & \texttt{test\_formulas\_spec005.py} \\
+\texttt{EQ-33} & §3.2.3 & Giải điều chế trực giao 3 kênh $(e_\Omega^{(6)}, e_{V_\pi}^{(6)}, e_{\text{asym}}^{(6)})$ \& khử dither & \texttt{digital\_dsp\_sc.cpp}, \texttt{test\_formulas\_spec005.py} \\
+\texttt{EQ-34} & §3.2.4 & Độ lợi 6 trạng thái $K_{I,1}^{(6)}, K_{I,2}^{(6)}$, băng thông $f_{-3\text{dB}}$ \& \emph{anti-windup} & \texttt{digital\_dsp\_sc.cpp}, \texttt{ifog\_math.hpp} \\
+\texttt{EQ-35} & §5.1 & Sai số điện áp do \emph{aperture jitter} $\delta V_j = (dV_{\text{adc}}/dt)\,\delta t_j$ \& ARW jitter & \texttt{adc\_dac\_bridge.cpp}, \texttt{scenarios\_engineering.py} \\
+\texttt{EQ-36} & §5.2 & Ghép phản xạ SLD $P_{\text{axis},i}$ \& sụt áp đường nguồn $\Delta V_{\text{rail}}$ trên IMU 3 trục & \texttt{imu\_3axis.cpp}, \texttt{scenarios\_engineering.py} \\
+\texttt{EQ-37} & §5.3 & Sai số chỉnh lưu rung động bậc 2 VRE ($\Delta\Omega_{\text{VRE}} \propto G_2 g_{\text{rms}}^2$) & \texttt{optical\_envelope\_tdf.cpp}, \texttt{scenarios\_engineering.py} \\
+\texttt{EQ-38} & §5.3 & Độ nhạy từ trường Faraday $S_B$ ($^\circ/\text{h}/\text{Gauss}$) \& độ chắn từ Mu-metal & \texttt{optical\_envelope\_tdf.cpp}, \texttt{scenarios\_engineering.py} \\
+\texttt{EQ-39} & §5.4 & Ngưỡng phát hiện lỗi thời gian thực FPGA BIT/FDIR (5 sự cố) \& Time-to-Alert & \texttt{digital\_dsp\_sc.cpp}, \texttt{scenarios\_engineering.py} \\
+\texttt{EQ-40} & §5.5 & Năng suất Monte Carlo $\hat{Y}$, khoảng tin cậy Wilson 95\% \& chỉ số $C_{pk}$ & \texttt{scenarios\_engineering.py} \\
+\texttt{EQ-41} & §5.5 & Mô hình trôi nhiệt $(\bar{\lambda}(T), V_\pi(T))$, bù đa thức \& bộ lọc EKF hiệu chuẩn ảo & \texttt{scenarios\_engineering.py} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\begin{thebibliography}{11}
+
+\bibitem{ieee952}
+IEEE Std 952-2020, \emph{IEEE Standard Specification Format Guide and Test Procedure for Single-Axis Interferometric Fiber Optic Gyros}, IEEE Aerospace and Electronic Systems Society, 2020.
+
+\bibitem{ieee16661}
+IEEE Std 1666.1-2016, \emph{IEEE Standard for Standard SystemC\textregistered\ Analog/Mixed-Signal Extensions Language Reference Manual}, IEEE Computer Society, 2016.
+
+\bibitem{lefevre2022}
+H.~C. Lefèvre, \emph{The Fiber-Optic Gyroscope}, 3rd ed. Norwood, MA, USA: Artech House, 2022.
+
+\bibitem{burns1983}
+W.~K. Burns, C.-L. Chen, and R.~P. Moeller, ``Fiber-optic gyroscopes with broad-band sources,'' \emph{Journal of Lightwave Technology}, vol.~1, no.~1, pp.~98--105, Mar. 1983.
+
+\bibitem{shupe1980}
+D.~M. Shupe, ``Thermally induced nonreciprocity in the fiber-optic interferometer,'' \emph{Applied Optics}, vol.~19, no.~5, pp.~654--655, Mar. 1980.
+
+\bibitem{bergh1982}
+R.~A. Bergh, H.~C. Lefèvre, and H.~J. Shaw, ``Compensation of the optical Kerr effect in fiber-optic gyroscopes,'' \emph{Optics Letters}, vol.~7, no.~6, pp.~282--284, Jun. 1982.
+
+\bibitem{graeme1996}
+J.~G. Graeme, \emph{Photodiode Amplifiers: Op Amp Solutions}. New York, NY, USA: McGraw-Hill, 1996.
+
+\bibitem{waydhas2011}
+O.~Waydhas, S.~Rieke, et al., ``Modelling and simulation of a fibre optical gyro system with SystemC AMS,'' in \emph{Proc. SystemC AMS Day / edaWorkshop}, Dresden, Germany, 2011.
+
+\bibitem{elsheimy2008}
+N.~El-Sheimy, H.~Hou, and X.~Niu, ``Analysis and modeling of inertial sensors using Allan variance,'' \emph{IEEE Transactions on Instrumentation and Measurement}, vol.~57, no.~1, pp.~140--149, Jan. 2008.
+
+\bibitem{zhang_6state}
+C.~Zhang, J.~Jin, and X.~Song, ``Six-state modulation and demodulation scheme for closed-loop interferometric fiber-optic gyroscopes with suppressed modulation nonlinearity and crosstalk,'' \emph{Applied Optics / Optics Express Reference Model}, 2020--2024.
+
+\bibitem{wilson1927}
+E.~B. Wilson, ``Probable inference, the law of succession, and statistical inference,'' \emph{Journal of the American Statistical Association}, vol.~22, no.~158, pp.~209--212, 1927.
+
+\end{thebibliography}
+
+\end{document}

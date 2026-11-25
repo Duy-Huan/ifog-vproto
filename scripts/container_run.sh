@@ -16,7 +16,7 @@ set -euo pipefail
 #   verify             Run full verification including real 4-Gate system tests inside the container
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:1.2.0}"
+IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:2.0.0}"
 ENGINE="${CONTAINER_ENGINE:-}"
 
 while [ "$#" -gt 0 ]; do
@@ -81,11 +81,11 @@ case "${CMD}" in
         ;;
     test)
         "${ENGINE}" run --rm "${EXTRA_RUN_ARGS[@]}" "${IMAGE_TAG}" bash -lc \
-            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing"
+            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing"
         ;;
     verify)
         "${ENGINE}" run --rm "${EXTRA_RUN_ARGS[@]}" "${IMAGE_TAG}" bash -lc \
-            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing && pytest tests/system -v"
+            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing && pytest tests/system -v"
         ;;
     *)
         sed -n '4,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'

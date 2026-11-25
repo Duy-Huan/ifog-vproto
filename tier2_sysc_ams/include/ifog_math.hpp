@@ -126,6 +126,36 @@ inline bool check_dual_loop_separation(double K_tot_1, double K_tot_2) {
     return (K_tot_2 >= 0.0) && (K_tot_2 <= 0.1 * K_tot_1 + 1e-15);
 }
 
+// EQ-31: Official 6-state anti-periodic instantaneous bias phases psi_0..psi_5
+// Yielding exact differential phases [+(pi-a), -(pi+a), +(pi-a), -(pi-a), +(pi+a), -(pi-a)]
+// with zero DC drive mean and exact RAM/crosstalk/MIOC-V^2 cancellation at alpha = pi/3.
+inline double compute_6state_bias_phase(int state_idx, double alpha_rad) {
+    const double a_hi = 0.5 * (PI + alpha_rad);
+    const double a_lo = 0.5 * (PI - 3.0 * alpha_rad);
+    switch (state_idx) {
+        case 0:
+            return a_hi;
+        case 1:
+            return -a_hi;
+        case 2:
+            return a_lo;
+        case 3:
+            return -a_hi;
+        case 4:
+            return a_hi;
+        default:
+            return -a_lo;
+    }
+}
+
+// EQ-39: Determine whether a fault injection window is active at simulation time t_s
+inline bool is_fault_active(double t_s, double inject_time_s, double duration_s) {
+    if (t_s < inject_time_s) {
+        return false;
+    }
+    return (duration_s <= 0.0) || (t_s < (inject_time_s + duration_s));
+}
+
 // Evaluate stimulus angular rate Omega_in(t) [rad/s]
 inline double eval_stimulus(const IfogConfig& cfg, double t_s) {
     switch (cfg.stimulus_type) {
@@ -134,7 +164,8 @@ inline double eval_stimulus(const IfogConfig& cfg, double t_s) {
         case StimulusType::Step:
             return (t_s >= cfg.step_time_s) ? cfg.omega_end_rad_per_s : cfg.omega_start_rad_per_s;
         case StimulusType::Ramp: {
-            const double frac = std::clamp(t_s / cfg.duration_s, 0.0, 1.0);
+            const double ramp_t = (cfg.step_time_s > 0.0) ? cfg.step_time_s : cfg.duration_s;
+            const double frac = std::clamp(t_s / ramp_t, 0.0, 1.0);
             return cfg.omega_start_rad_per_s
                 + frac * (cfg.omega_end_rad_per_s - cfg.omega_start_rad_per_s);
         }

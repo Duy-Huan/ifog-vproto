@@ -405,6 +405,9 @@ def test_doc_sync_rule16_pass_and_all_failure_branches(tmp_path: Path) -> None:
         "docs/RELEASE_NOTES.md",
         "docs/RELEASE_NOTES.tex",
         "docs/RELEASE_NOTES.pdf",
+        "docs/IFOG_SIMULATION_SCENARIOS.md",
+        "docs/IFOG_SIMULATION_SCENARIOS.tex",
+        "docs/IFOG_SIMULATION_SCENARIOS.pdf",
         "docs/CHANGELOG.md",
     ):
         shutil.copy2(REPO_ROOT / rel, sandbox / rel)
@@ -448,6 +451,9 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "scripts/setup_env.sh",
         "scripts/env.sh",
         "scripts/container_run.sh",
+        "scripts/run_all_scenarios.sh",
+        "configs/schema_v5.json",
+        "configs/baseline_1km_6state.json",
         "examples/run_example.sh",
     ):
         p = REPO_ROOT / rel

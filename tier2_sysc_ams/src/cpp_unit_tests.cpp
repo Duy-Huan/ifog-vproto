@@ -8,6 +8,7 @@
 #include <systemc.h>
 #include "ifog_config.hpp"
 #include "ifog_math.hpp"
+#include "imu_3axis.hpp"
 #include "micro_trace.hpp"
 #include "pink_noise_tdf.hpp"
 #include "sim_runner.hpp"
@@ -72,7 +73,33 @@ static void test_math_formulas() {
     CHECK(check_dual_loop_separation(0.25, 0.02));
     CHECK(!check_dual_loop_separation(0.25, 0.05));
 
-    // Stimuli (all 4 types)
+    // EQ-31: 6-state anti-periodic bias sequence & zero-crosstalk optimal angle alpha = pi/3
+    {
+        const double alpha6 = PI / 3.0;
+        double psi[6];
+        double sum_psi = 0.0;
+        for (int s = 0; s < 6; ++s) {
+            psi[s] = compute_6state_bias_phase(s, alpha6);
+            sum_psi += psi[s];
+        }
+        expect_near(sum_psi, 0.0, 1e-15, "6state_zero_dc_mean");
+        expect_near(psi[0] - psi[5], PI - alpha6, 1e-15, "6state_phi1");
+        expect_near(psi[1] - psi[0], -(PI + alpha6), 1e-15, "6state_phi2");
+        expect_near(psi[2] - psi[1], PI - alpha6, 1e-15, "6state_phi3");
+        expect_near(psi[3] - psi[2], -(PI - alpha6), 1e-15, "6state_phi4");
+        expect_near(psi[4] - psi[3], PI + alpha6, 1e-15, "6state_phi5");
+        expect_near(psi[5] - psi[4], -(PI - alpha6), 1e-15, "6state_phi6");
+        // Zero RAM/crosstalk drive sum at alpha = pi/3
+        expect_near((psi[3] + psi[4] + psi[5]) - (psi[0] + psi[1] + psi[2]), 0.0, 1e-15, "6state_zero_ram");
+    }
+
+    // EQ-39: Fault window helper
+    CHECK(!is_fault_active(0.001, 0.005, 0.0));
+    CHECK(is_fault_active(0.005, 0.005, 0.0));
+    CHECK(is_fault_active(0.006, 0.005, 0.002));
+    CHECK(!is_fault_active(0.008, 0.005, 0.002));
+
+    // Stimuli (all 4 types + Ramp-Hold)
     IfogConfig cfg;
     cfg.duration_s = 1.0;
     cfg.stimulus_type = StimulusType::Constant;
@@ -87,7 +114,11 @@ static void test_math_formulas() {
     expect_near(eval_stimulus(cfg, 0.5), 1.0, 1e-15, "stim_step_hi");
 
     cfg.stimulus_type = StimulusType::Ramp;
+    cfg.step_time_s = 0.0;
     expect_near(eval_stimulus(cfg, 0.5), 0.5, 1e-15, "stim_ramp_mid");
+    cfg.step_time_s = 0.2;
+    expect_near(eval_stimulus(cfg, 0.1), 0.5, 1e-15, "stim_ramphold_mid");
+    expect_near(eval_stimulus(cfg, 0.5), 1.0, 1e-15, "stim_ramphold_hold");
 
     cfg.stimulus_type = StimulusType::Sine;
     cfg.omega_const_rad_per_s = 0.1;
@@ -209,12 +240,14 @@ static void test_config_and_cli_validation() {
         char arg10[] = "0.5";
         char arg11[] = "--dump-micro-ms";
         char arg12[] = "1.0";
-        char* argv[] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12};
-        CliArgs a = parse_cli_args(13, argv);
+        char arg13[] = "--imu3axis";
+        char* argv[] = {arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13};
+        CliArgs a = parse_cli_args(14, argv);
         CHECK(a.phys_path == "p.json");
         CHECK(a.cfg_path == "c.json");
         CHECK(a.out_dir == "out_dir");
         CHECK(a.shupe_path == "s.bin");
+        CHECK(a.imu_3axis);
         expect_near(a.override_duration_s, 0.5, 1e-12, "cli_dur");
         expect_near(a.override_dump_micro_ms, 1.0, 1e-12, "cli_micro");
     }
@@ -278,11 +311,22 @@ static void test_config_and_cli_validation() {
     CHECK(loaded.size() == 2u);
     expect_near(loaded[1].delta_phi_rad, 2e-7, 1e-16, "shupe_lut_read");
 
-    // MicroTraceCollector error path & summary error path & config missing file paths
+    // MicroTraceCollector, DspTraceCollector & summary error paths
     expect_throws([&]() { MicroTraceCollector("/nonexistent_dir_xyz/micro.bin", 1e-3, 16); });
+    expect_throws([&]() { DspTraceCollector("/nonexistent_dir_xyz/dsp_trace.bin", true); });
+    {
+        DspTraceCollector disabled_tr("", false);
+        DspTraceRecord dummy{};
+        disabled_tr.push(dummy);
+        CHECK(disabled_tr.records_written() == 0u);
+    }
     expect_throws([&]() {
         SimSummary s{};
         write_sim_summary_json("/nonexistent_dir_xyz/sum.json", s);
+    });
+    expect_throws([&]() {
+        Imu3AxisSummary im{};
+        write_imu_3axis_summary_json("/nonexistent_dir_xyz/imu.json", im);
     });
     expect_throws([&]() { load_ifog_config("/nonexistent_cfg.json", "/nonexistent_phys.json"); });
 

@@ -20,6 +20,7 @@ SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 TEX_DOC_PATHS = (
     "docs/IFOG_VPROTO_ARCHITECTURE.tex",
     "docs/RELEASE_NOTES.tex",
+    "docs/IFOG_SIMULATION_SCENARIOS.tex",
 )
 
 
@@ -147,6 +148,26 @@ def verify_doc_version_sync(
     )
     _check_file_patterns(
         root,
+        "docs/IFOG_SIMULATION_SCENARIOS.md",
+        [
+            ("scenarios_header_version", rf"Current Version.*`{esc_vtag}`"),
+            ("scenarios_revision_row", rf"^\|\s*`{esc_vtag}`\s*\|"),
+        ],
+        checks,
+        errors,
+    )
+    _check_file_patterns(
+        root,
+        "docs/IFOG_SIMULATION_SCENARIOS.tex",
+        [
+            ("tex_scenarios_version_macro", rf"\\newcommand\{{\\DocVersion\}}\{{{esc_vtag}\}}"),
+            ("tex_scenarios_revision_row", rf"\\texttt\{{{esc_vtag}\}}\s*&"),
+        ],
+        checks,
+        errors,
+    )
+    _check_file_patterns(
+        root,
         "docs/CHANGELOG.md",
         [("changelog_heading", rf"^##\s+\[{esc_ver}\]")],
         checks,
@@ -168,7 +189,11 @@ def verify_doc_version_sync(
     )
 
     # Verify compiled PDFs exist and are non-trivial (> 10 KB)
-    for pdf_rel in ("docs/IFOG_VPROTO_ARCHITECTURE.pdf", "docs/RELEASE_NOTES.pdf"):
+    for pdf_rel in (
+        "docs/IFOG_VPROTO_ARCHITECTURE.pdf",
+        "docs/RELEASE_NOTES.pdf",
+        "docs/IFOG_SIMULATION_SCENARIOS.pdf",
+    ):
         pdf_path = root / pdf_rel
         ok = pdf_path.exists() and pdf_path.stat().st_size > 10_000
         checks.append(

@@ -8,11 +8,12 @@
 
 namespace ifog {
 
-// OpticalEnvelope_TDF: 64-bit optical interferometer envelope model (EQ-06..EQ-13)
+// OpticalEnvelope_TDF: 64-bit optical interferometer envelope model (EQ-06..EQ-13, EQ-36..EQ-39)
 // Rate = K micro-samples per transit time tau; internal K-sample ring buffer models coil delay tau.
 SCA_TDF_MODULE(OpticalEnvelope_TDF) {
 public:
     sca_tdf::sca_in<double> v_drv_in;
+    sca_tdf::sca_in<double> p_scale_in;
     sca_tdf::sca_out<double> p_det_out;
 
     OpticalEnvelope_TDF(
@@ -34,7 +35,7 @@ private:
     double gamma_nl_eff_;
     double alpha_ram_eff_;
     double phi_kerr_eff_;
-    double phi_faraday_eff_;
+    double phi_faraday_dc_;
     uint64_t sample_idx_;
     int ring_pos_;
     std::vector<double> phi_mioc_ring_;

@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v1.2.0}
+\newcommand{\DocVersion}{v2.0.0}
 \newcommand{\DocDate}{2026-11-25}
 
 \usepackage{fontspec}
@@ -36,7 +36,7 @@
 \fancyhead[R]{\small\color{TealDark}\textbf{\DocVersion} (\DocDate)}
 \fancyfoot[C]{\small\thepage}
 
-\setlength{\parskip}{0.32em}
+\setlength{\parskip}{0.30em}
 \setlength{\parindent}{0pt}
 \sloppy
 \emergencystretch=3em
@@ -46,21 +46,23 @@
 
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=9pt,bottom=9pt]
 {\color{white}\Large\bfseries \texttt{ifog-vproto} --- Official Release Notes}\\[3pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-004} v4.0 \quad|\quad Date: \DocDate}
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-005} v5.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
-\section{Release v1.2.0 (2026-11-25)}
+\section{Release v2.0.0 (2026-11-25)}
 
 \subsection{Key New Features}
 \begin{enumerate}
-    \item \textbf{Portable Docker \& Podman Container Suite:}
-    Added byte-identical \texttt{Containerfile} and \texttt{Dockerfile}, \texttt{.dockerignore}, OCI \texttt{compose.yaml}, and auto-detecting \texttt{scripts/container\_run.sh} (supporting rootless SELinux Podman \texttt{:Z}/\texttt{--userns=keep-id} and Docker). Pre-builds SystemC 2.3.4, SystemC-AMS 2.3.4, \texttt{nlohmann/json} v3.11.3, isolated Python 3.12 venv, and Release \texttt{-O3} \texttt{build/ifog\_sim} ready out of the box, continuously verified via a dedicated CI container job.
-    \item \textbf{Distro-Independent Linux Git-Source Setup Toolchain:}
-    Added \texttt{scripts/install\_systemc.sh}, upgraded \texttt{scripts/install\_systemc\_ams.sh}, universal bootstrapper \texttt{scripts/setup\_env.sh}, and sourceable \texttt{scripts/env.sh} to build SystemC 2.3.4, SystemC-AMS PoC 2.3.4, \texttt{nlohmann/json}, and Python venv from Git on any Linux distro (Ubuntu/Debian, Fedora/RHEL/Rocky, Arch, rootless HPC) with multi-distro \texttt{CMakeLists.txt} library discovery.
-    \item \textbf{Committed Full Real 4-Gate Feasibility Example (\texttt{examples/full\_4gate\_baseline/}):}
-    Executed and committed a genuine full-scale 4-Gate baseline run (\texttt{README.md}, \texttt{report.md}, interactive \texttt{report.html}, all Tier 1--3 JSONs, and four 300-DPI PNG figures) plus \texttt{examples/run\_example.sh}: Gate 1 static error $3.10\times 10^{-16}\text{ rad}$ ($1{,}666$ wraps), Gate 2 $98.85\%$ Deadband \& Bunny Ears reduction, Gate 3 linear $-0.062$ vs nonlinear $-0.893$ $1/f$ PSD ($\mathbf{K}$ repeatability $0.000\%$), Gate 4 $4\times 60\text{ s}$ Fast + $12\times 10\text{ h}$ ($3.6\times 10^6$ pts @ $100\text{ Hz}$) Slow AVAR overlap $2.42\% < 5\%$ and all 5 WLS parameters within $\pm 10\%$.
-    \item \textbf{Governance \& Skills Sync (Rules 6 \& 16):}
-    Added \texttt{skills/ifog-portable-container-env/SKILL.md} and synchronized all \texttt{docs/*.\{md,tex,pdf\}}, \texttt{DOCS\_BUILD.sha256}, \texttt{CHANGELOG.md}, and \texttt{README.md} to \texttt{\DocVersion}.
+    \item \textbf{Normative Spec Upgrade --- \texttt{IFOG-SIM-SPEC-005} (v5.0) \& 41-Formula Verification:}
+    Added checksum-locked \texttt{spec/IFOG-SIM-SPEC-005.\{tex,pdf,sha256\}} (retaining \texttt{IFOG-SIM-SPEC-004} byte-identical), backward-compatible \texttt{configs/schema\_v5.json}, and \texttt{configs/baseline\_1km\_6state.json}. Expanded per-formula CI traceability to \textbf{41 / 41 independent tests} (\texttt{EQ-01}--\texttt{EQ-41}).
+    \item \textbf{Official 6-State Symmetric DSP (\texttt{EQ-31}--\texttt{EQ-34}, Gate 5):}
+    Implemented anti-periodic 6-state symmetric modulation ($\alpha^* = \pi/3$) in \texttt{DigitalDSP\_SC} with 3-channel orthogonal demodulation ($e_\Omega^{(6)}, e_{V_\pi}^{(6)}, e_{\text{asym}}^{(6)}$) and Loop-1 anti-windup clamping. Verified $-33.3\%$ peak MIOC voltage ($0.667\,V_\pi$), static error $1.28\times 10^{-16}\text{ rad}$, $\epsilon_{V_\pi,\text{eff}}=1.31\times 10^{-11}$, and \textbf{$+136.94\text{ dB}$ ($7.03\times 10^6\times$) RAM/crosstalk/$\gamma_{\text{nl}}$ rejection} ($354.56 \to 5.04\times 10^{-5}\,^\circ/\text{h}$).
+    \item \textbf{Group A --- 6 Official Time-Domain Scenarios (\texttt{TD-01}--\texttt{TD-06}, \texttt{--mode td\_all}):}
+    Unlocked 64 B \texttt{dsp\_trace.bin} and \texttt{micro\_waveforms.bin} across \texttt{td\_blanking} ($t_s=174.1\text{ ns}$, $k^*_{\text{start}}=5$), \texttt{td\_step\_sine} ($t_r=0.22\text{ ms}$, $-3\text{ dB}$ BW $=2{,}540\text{ Hz}$ vs theory $2{,}354\text{ Hz}$), \texttt{td\_vpi\_shock} ($+5\%$ $V_\pi$ shock, $2\times$ lower Loop-1 transient in 6-state), \texttt{td\_high\_rate} ($700^\circ/\text{s}$ RMS err $0.00028\%$, $7{,}184$ wraps @ $179.6\text{ kHz}$ + anti-windup), \texttt{td\_shupe\_shock} ($1{,}483.6\,^\circ/\text{h}$ shock, $99.74\%$ filter suppression), and \texttt{td\_limit\_cycles} (12-bit PRBS dither unlocking $3\to 1{,}595$ unique DAC codes).
+    \item \textbf{Group B --- 5 Official System Engineering \& Production Scenarios (\texttt{ENG-01}--\texttt{ENG-05}, \texttt{--mode eng\_all}):}
+    Added \texttt{eng\_hw\_sizing} (min ENOB $=12$-bit, aperture jitter \texttt{EQ-35}, TIA/SLD Pareto ARW $1.412\times 10^{-4}\,^\circ/\sqrt{\text{h}}$), \texttt{eng\_imu\_3axis} (real concurrent 3-axis SystemC-AMS IMU \texttt{--imu3axis}, rail droop $92.4\text{ mV}$, Axis-Y crosstalk $40.63 \to 0.106\,^\circ/\text{h} = +51.6\text{ dB}$ rejection), \texttt{eng\_vre\_faraday} (pure $G_2$ VRE $R^2=0.9998$, Faraday $0.183\,^\circ/\text{h/G}$, Mu-metal $25.25\text{ dB}$), \texttt{eng\_fault\_bit} ($5/5$ faults detected $\le 30.0\ \mu\text{s}$ + SEU FDIR soft-recovery), and \texttt{eng\_mc\_yield\_cal} ($N=500$ MC Yield $=97.2\%$, $C_{pk}=0.604$; $-40..+85^\circ\text{C}$ CSV + Poly $99.98\%$ / 4-state EKF $99.95\%$).
+    \item \textbf{Unified Batch/CLI Flow, Official Scenarios Manual \& Governance Sync (Rules 6 \& 16):}
+    Added \texttt{scripts/run\_all\_scenarios.sh}, 22 CLI modes in \texttt{sim\_runner\_cli.py}, 300-DPI plotters (\texttt{viz/plot\_scenarios.py}), \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, and skill \texttt{skills/ifog-6state-and-scenarios/SKILL.md} (8 skills total).
 \end{enumerate}
 
 \subsection{Verified Quality Gates \& Attached Release Assets}
@@ -68,9 +70,9 @@
 \toprule
 \textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
 \midrule
-Spec Lock, Branch Policy \& Rule 16 & \texttt{IFOG-SIM-SPEC-004.sha256} OK; strictly \texttt{\{main, dev\}}; \texttt{verify\_doc\_sync.py --expected-tag \DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
-Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% line/fn \& Python \texttt{pytest-cov} 100.0\% line & \textcolor{TealDark}{\textbf{PASS}} \\
-Formula Traceability \& 4-Gate Sim & 30 / 30 formulas (\texttt{EQ-01}..\texttt{EQ-30}) + Full Real Gate 1--4 \& bit-exact regression & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004} \& \texttt{SPEC-005} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% ($1{,}546/1{,}546$ lines, $109/109$ fn) \& Python \texttt{pytest-cov} 100.0\% & \textcolor{TealDark}{\textbf{PASS}} \\
+41-Formula \& Full Scenario Suite & 41 / 41 formulas (\texttt{EQ-01}..\texttt{EQ-41}) + Gates 1--5 + 6 TD + 5 ENG real SystemC-AMS runs & \textcolor{TealDark}{\textbf{PASS}} \\
 Container Build \& In-Container Sim & Live \texttt{Containerfile} build from Git + in-container \texttt{ifog\_cpp\_tests} \& Gate 1 report & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
@@ -78,7 +80,8 @@ Container Build \& In-Container Sim & Live \texttt{Containerfile} build from Git
 \section{Previous Releases}
 
 \begin{itemize}
-    \item \textbf{Release v1.1.0 (2026-11-25):} Automated Markdown (\texttt{.md}) \& interactive HTML (\texttt{.html}) simulation reporting + dashboard index under \texttt{report/}, unified simulation runner (\texttt{scripts/run\_sim.\{sh,py\}}), synchronized architecture/release docs under \texttt{docs/}, and mandatory \texttt{AGENT.md} Rule 16 version--document sync CI gate.
+    \item \textbf{Release v1.2.0 (2026-11-25):} Portable Docker/Podman container suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}), distro-independent Git-source installers for SystemC 2.3.4 / SystemC-AMS 2.3.4 / \texttt{nlohmann/json} / Python venv (\texttt{scripts/setup\_env.sh}, \texttt{scripts/env.sh}), and committed full real 4-Gate feasibility example (\texttt{examples/full\_4gate\_baseline/}).
+    \item \textbf{Release v1.1.0 (2026-11-25):} Automated Markdown (\texttt{.md}) \& interactive HTML (\texttt{.html}) reporting + dashboard index under \texttt{report/}, unified simulation runner (\texttt{scripts/run\_sim.\{sh,py\}}), synchronized architecture/release docs under \texttt{docs/}, and mandatory \texttt{AGENT.md} Rule 16 version--document sync CI gate.
     \item \textbf{Release v1.0.0 (2026-11-25):} Initial complete 3-Tier Closed-Loop IFOG Virtual Prototype (\texttt{IFOG-SIM-SPEC-004} v4.0): locked spec \& PDF, Tier 1 Jones/Shupe solvers, Tier 2 C++17 IEEE 1666.1 SystemC/SystemC-AMS 2.3.4 closed-loop core, Tier 3 sweeps, $\mathbf{K}$-matrix, 10 h Dual-Regime AVAR + 5-region WLS, 30/30 formulas, 100\% coverage, and 2-branch CI/CD.
 \end{itemize}
 

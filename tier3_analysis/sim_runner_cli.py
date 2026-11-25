@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import json
+import math
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -25,12 +26,55 @@ from tier3_analysis.binary_io import compute_welch_psd, fit_loglog_slope, read_s
 from tier3_analysis.dual_regime_avar import run_dual_regime_avar
 from tier3_analysis.extract_k_matrix import extract_k_matrix
 from tier3_analysis.run_sweep_parallel import run_slow_rate_ramp_sweep, run_sweep_path
+from tier3_analysis.scenarios_engineering import (
+    run_all_engineering_scenarios,
+    run_eng_fault_bit,
+    run_eng_hw_sizing,
+    run_eng_imu_3axis,
+    run_eng_mc_yield_cal,
+    run_eng_vre_faraday,
+)
+from tier3_analysis.scenarios_time_domain import (
+    run_all_time_domain_scenarios,
+    run_dsp6_comparison,
+    run_td_blanking,
+    run_td_high_rate,
+    run_td_limit_cycles,
+    run_td_shupe_shock,
+    run_td_step_sine,
+    run_td_vpi_shock,
+)
 from viz.export_report import export_run_report
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CFG = REPO_ROOT / "configs" / "baseline_1km.json"
 DEFAULT_SWEEP = REPO_ROOT / "configs" / "ablation_sweeps" / "slow_rate_ramp.json"
 DEFAULT_BIN = REPO_ROOT / "build" / "ifog_sim"
+
+ALL_MODES = (
+    "single",
+    "gate1",
+    "gate2",
+    "gate3",
+    "gate4",
+    "full",
+    "sweep",
+    "dsp6_compare",
+    "td_blanking",
+    "td_step_sine",
+    "td_vpi_shock",
+    "td_high_rate",
+    "td_shupe_shock",
+    "td_limit_cycles",
+    "td_all",
+    "eng_hw_sizing",
+    "eng_imu_3axis",
+    "eng_vre_faraday",
+    "eng_fault_bit",
+    "eng_mc_yield_cal",
+    "eng_all",
+    "all_scenarios",
+)
 
 
 def ensure_sim_binary(
@@ -399,17 +443,21 @@ def run_simulation_workflow(
     slow_duration_hours: float | None = None,
     gate3_duration_s: float = 2.0,
     k_duration_s: float = 0.1,
+    mc_runs: int = 64,
+    dsp_mode: str | None = None,
     workers: int | None = None,
     auto_build: bool = False,
 ) -> dict[str, Any]:
     """Execute the requested IFOG simulation mode and auto-export .md and .html reports into report/."""
-    valid_modes = {"single", "gate1", "gate2", "gate3", "gate4", "full", "sweep"}
-    if mode not in valid_modes:
-        raise ValueError(f"Unsupported simulation mode '{mode}'. Choose from {sorted(valid_modes)}.")
+    if mode not in ALL_MODES:
+        raise ValueError(f"Unsupported simulation mode '{mode}'. Choose from {list(ALL_MODES)}.")
 
     resolved_bin = ensure_sim_binary(bin_path, auto_build=auto_build)
     cfg_p = Path(cfg_path)
     cfg = load_config(cfg_p)
+    if dsp_mode is not None:
+        alpha_default = math.pi / 3.0 if dsp_mode == "6state" else math.pi / 4.0
+        cfg = deep_merge(cfg, {"dsp": {"mode": dsp_mode, "alpha_rad": alpha_default}})
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     rid = run_id if run_id else f"{mode}_{stamp}"
@@ -443,7 +491,35 @@ def run_simulation_workflow(
         if sw_json.exists():
             nl = analyze_sweep_nonlinearity(json.loads(sw_json.read_text(encoding="utf-8")))
             (run_dir / "nonlinearity_summary.json").write_text(json.dumps(nl, indent=2), encoding="utf-8")
-    else:  # full
+    elif mode == "dsp6_compare":
+        run_dsp6_comparison(resolved_bin, cfg, run_dir)
+    elif mode == "td_blanking":
+        run_td_blanking(resolved_bin, cfg, run_dir)
+    elif mode == "td_step_sine":
+        run_td_step_sine(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "td_vpi_shock":
+        run_td_vpi_shock(resolved_bin, cfg, run_dir)
+    elif mode == "td_high_rate":
+        run_td_high_rate(resolved_bin, cfg, run_dir)
+    elif mode == "td_shupe_shock":
+        run_td_shupe_shock(resolved_bin, cfg, run_dir)
+    elif mode == "td_limit_cycles":
+        run_td_limit_cycles(resolved_bin, cfg, run_dir)
+    elif mode == "td_all":
+        run_all_time_domain_scenarios(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "eng_hw_sizing":
+        run_eng_hw_sizing(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "eng_imu_3axis":
+        run_eng_imu_3axis(resolved_bin, cfg, run_dir)
+    elif mode == "eng_vre_faraday":
+        run_eng_vre_faraday(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "eng_fault_bit":
+        run_eng_fault_bit(resolved_bin, cfg, run_dir)
+    elif mode == "eng_mc_yield_cal":
+        run_eng_mc_yield_cal(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
+    elif mode == "eng_all":
+        run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
+    elif mode == "full":
         run_gate1_stage(resolved_bin, cfg, run_dir)
         run_gate2_stage(resolved_bin, cfg_p, Path(sweep_path), run_dir, workers=workers)
         run_gate3_stage(resolved_bin, cfg, run_dir, duration_s=gate3_duration_s, k_duration_s=k_duration_s)
@@ -458,6 +534,24 @@ def run_simulation_workflow(
             k_duration_s=k_duration_s,
             workers=workers,
         )
+    else:  # all_scenarios
+        run_gate1_stage(resolved_bin, cfg, run_dir)
+        run_gate2_stage(resolved_bin, cfg_p, Path(sweep_path), run_dir, workers=workers)
+        run_gate3_stage(resolved_bin, cfg, run_dir, duration_s=gate3_duration_s, k_duration_s=k_duration_s)
+        run_gate4_stage(
+            resolved_bin,
+            cfg,
+            run_dir,
+            fast_duration_s=fast_duration_s,
+            fast_ensemble=fast_ensemble,
+            slow_ensemble=slow_ensemble,
+            slow_duration_hours=slow_duration_hours,
+            k_duration_s=k_duration_s,
+            workers=workers,
+        )
+        run_dsp6_comparison(resolved_bin, cfg, run_dir)
+        run_all_time_domain_scenarios(resolved_bin, cfg, run_dir, workers=workers)
+        run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
 
     summary = export_run_report(
         run_dir,
@@ -472,13 +566,13 @@ def run_simulation_workflow(
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for unified IFOG simulation & automatic report generation."""
     parser = argparse.ArgumentParser(
-        description="IFOG-SIM-SPEC-004 Unified Simulation Runner (auto-generates report/<run_id>/{report.md, report.html})"
+        description="IFOG-SIM-SPEC-005 Unified Simulation Runner (auto-generates report/<run_id>/{report.md, report.html})"
     )
     parser.add_argument(
         "--mode",
         default="single",
-        choices=["single", "gate1", "gate2", "gate3", "gate4", "full", "sweep"],
-        help="Simulation workflow mode",
+        choices=list(ALL_MODES),
+        help="Simulation workflow mode (4-Gate, 6-State DSP, TD-01..06, ENG-01..05, or all_scenarios)",
     )
     parser.add_argument("--cfg", default=str(DEFAULT_CFG), help="Baseline config JSON")
     parser.add_argument("--sweep", default=str(DEFAULT_SWEEP), help="Sweep JSON or directory (for gate2/sweep/full)")
@@ -493,6 +587,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--slow-duration-hours", type=float, default=None, help="Optional Slow-Scale duration override [h]")
     parser.add_argument("--gate3-duration-s", type=float, default=2.0, help="Gate 3 PSD simulation duration [s]")
     parser.add_argument("--k-duration-s", type=float, default=0.1, help="K-matrix tone injection duration [s]")
+    parser.add_argument("--mc-runs", type=int, default=64, help="Monte Carlo unit count for ENG-05 Yield (e.g., 64, 500, 1000)")
+    parser.add_argument("--dsp-mode", choices=["2state", "4state", "6state"], default=None, help="Optional DSP mode override")
     parser.add_argument("--workers", type=int, default=None, help="Parallel worker count")
     parser.add_argument("--auto-build", action="store_true", help="Automatically build Tier 2 binary if missing")
     args = parser.parse_args(argv)
@@ -512,6 +608,8 @@ def main(argv: list[str] | None = None) -> int:
         slow_duration_hours=args.slow_duration_hours,
         gate3_duration_s=args.gate3_duration_s,
         k_duration_s=args.k_duration_s,
+        mc_runs=args.mc_runs,
+        dsp_mode=args.dsp_mode,
         workers=args.workers,
         auto_build=args.auto_build,
     )

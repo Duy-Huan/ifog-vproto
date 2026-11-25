@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [2.0.0] - 2026-11-25
+
+### Added
+- **Owner-Authorized Spec Upgrade (`IFOG-SIM-SPEC-005` v5.0):** Added checksum-locked `spec/IFOG-SIM-SPEC-005.{tex,pdf,sha256}` (while keeping `spec/IFOG-SIM-SPEC-004.*` untouched and locked), `configs/schema_v5.json`, and `configs/baseline_1km_6state.json`.
+- **Official 6-State Symmetric DSP (`EQ-31`–`EQ-34`, Gate 5):** Implemented anti-periodic 6-state modulation (`dsp.mode = "6state"`, $\alpha^* = \pi/3$, $-33.3\%$ peak MIOC voltage) with 3-channel orthogonal demodulation ($e_\Omega^{(6)}, e_{V_\pi}^{(6)}, e_{\text{asym}}^{(6)}$) and Loop-1 anti-windup clamping (`FLAG_ANTI_WINDUP`) in `DigitalDSP_SC`, achieving `+136.94 dB` (`7.03e6x`) RAM/crosstalk/$\gamma_{\text{nl}}$ rejection.
+- **6 Official Time-Domain Scenarios (`TD-01`..`TD-06`):** Added 64-byte `DspTraceRecord` (`dsp_trace.bin`) and `tier3_analysis/scenarios_time_domain.py` (`td_blanking`, `td_step_sine`, `td_vpi_shock`, `td_high_rate`, `td_shupe_shock`, `td_limit_cycles`, `td_all`, `dsp6_compare`).
+- **5 Official System Engineering & Production Scenarios (`ENG-01`..`ENG-05`, `EQ-35`–`EQ-41`):** Added concurrent 3-axis SystemC-AMS IMU (`tier2_sysc_ams/src/imu_3axis.cpp`, `--imu3axis`), ADC aperture jitter, VRE + dynamic Faraday physics, 5-mode fault injection + real-time FPGA BIT/FDIR (`DigitalDSP_SC::evaluate_frame_bit`), and `tier3_analysis/scenarios_engineering.py` (`eng_hw_sizing`, `eng_imu_3axis`, `eng_vre_faraday`, `eng_fault_bit`, `eng_mc_yield_cal`, `eng_all`).
+- **Unified Official Flow, Reporting & Scenarios Documentation:** Added `scripts/run_all_scenarios.sh`, expanded `sim_runner_cli.py` to 22 CLI modes, added 300-DPI scenario plotters (`viz/plot_scenarios.py`), integrated SPEC-005 metrics/figures/CSV into `viz/export_report.py`, authored `docs/IFOG_SIMULATION_SCENARIOS.{md,tex,pdf}`, and added skill `skills/ifog-6state-and-scenarios/SKILL.md`.
+- **41-Formula CI Verification (`EQ-01`..`EQ-41`):** Added `tests/formula_verification/test_formulas_spec005.py`, `tests/unit/test_spec005_scenarios_unit.py`, and `tests/system/test_spec005_scenarios_system.py`.
+
+### Changed
+- Bumped `pyproject.toml`, `Containerfile`, `Dockerfile`, `compose.yaml`, `scripts/container_run.sh`, `AGENT.md`, `README.md`, and all `docs/*.{md,tex,pdf}` to `v2.0.0`, expanding Rule 16 (`tier3_analysis/doc_sync.py`, `scripts/build_docs.sh`) to track all 3 compiled PDFs and Rule 7 to lock both `SPEC-004` and `SPEC-005`.
+- Updated `.github/workflows/ci.yml` and `.github/workflows/release.yml` for dual spec locks, 8 project skills, 41-formula verification, and 14 release bundle assets.
+
 ## [1.2.0] - 2026-11-25
 
 ### Added

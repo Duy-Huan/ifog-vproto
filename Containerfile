@@ -4,18 +4,18 @@
 # from Git + isolated Python 3.12 virtual environment + Tier 2 Release (-O3) core.
 #
 # Build:
-#   docker build -t ifog-vproto:1.2.0 .
-#   podman build -f Containerfile -t ifog-vproto:1.2.0 .
+#   docker build -t ifog-vproto:2.0.0 .
+#   podman build -f Containerfile -t ifog-vproto:2.0.0 .
 #
 # Run:
-#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:1.2.0 \
-#     ./scripts/run_sim.sh --mode single --run-id docker_demo --duration-s 0.5
+#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:2.0.0 \
+#     ./scripts/run_sim.sh --mode dsp6_compare --run-id docker_dsp6
 
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="ifog-vproto" \
-      org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-004)" \
-      org.opencontainers.image.version="1.2.0" \
+      org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-005 / SPEC-004)" \
+      org.opencontainers.image.version="2.0.0" \
       org.opencontainers.image.source="https://github.com/Duy-Huan/ifog-vproto"
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -56,6 +56,6 @@ RUN chmod +x scripts/*.sh scripts/*.py examples/*.sh 2>/dev/null || true \
     && cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j"$(nproc)" \
     && ./build/ifog_cpp_tests \
-    && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256
+    && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256
 
 CMD ["bash"]

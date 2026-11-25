@@ -23,7 +23,7 @@ DEG_H_TO_RAD_S: float = 1.0 / RAD_S_TO_DEG_H
 DEG_S_TO_RAD_S: float = math.pi / 180.0
 RAD_S_TO_DEG_S: float = 180.0 / math.pi
 
-DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "configs" / "schema_v4.json"
+DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "configs" / "schema_v5.json"
 
 
 def deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
@@ -38,7 +38,7 @@ def deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any
 
 
 def load_schema(schema_path: Path | str = DEFAULT_SCHEMA_PATH) -> dict[str, Any]:
-    """Load the normative JSON Schema v4.0."""
+    """Load the normative JSON Schema (v5.0, backward-compatible with v4.0)."""
     with Path(schema_path).open("r", encoding="utf-8") as fh:
         return json.load(fh)
 
@@ -46,7 +46,7 @@ def load_schema(schema_path: Path | str = DEFAULT_SCHEMA_PATH) -> dict[str, Any]
 def validate_config(
     cfg: dict[str, Any], schema_path: Path | str = DEFAULT_SCHEMA_PATH
 ) -> dict[str, Any]:
-    """Validate configuration dict against schema_v4.json plus physical bounds.
+    """Validate configuration dict against schema_v5.json (or v4.0) plus physical bounds.
 
     Enforces Rule 11 (fail-closed validation):
       - JSON Schema draft 2020-12 compliance
@@ -54,7 +54,7 @@ def validate_config(
       - Pink noise frequency band: pink_f_min_Hz < pink_f_max_Hz
       - ADC voltage rails: V_min_V < V_max_V
       - Jury stability: 0 < K_tot_1 < 1
-      - 4-state dual-loop separation: K_tot_2 <= 0.1 * K_tot_1 when en_vpi_loop is True
+      - 4-state / 6-state dual-loop separation: K_tot_2 <= 0.1 * K_tot_1 when en_vpi_loop is True
     """
     schema = load_schema(schema_path)
     jsonschema.validate(instance=cfg, schema=schema)
@@ -79,10 +79,10 @@ def validate_config(
         )
 
     dsp = cfg["dsp"]
-    if dsp["mode"] == "4state" and dsp["en_vpi_loop"]:
+    if dsp["mode"] in ("4state", "6state") and dsp["en_vpi_loop"]:
         if dsp["K_tot_2"] > 0.1 * dsp["K_tot_1"] + 1e-15:
             raise ValueError(
-                f"Loop-2 bandwidth separation violated (EQ-22): "
+                f"Loop-2 bandwidth separation violated (EQ-22/EQ-34): "
                 f"K_tot_2 ({dsp['K_tot_2']}) > 0.1 * K_tot_1 ({0.1 * dsp['K_tot_1']})"
             )
 

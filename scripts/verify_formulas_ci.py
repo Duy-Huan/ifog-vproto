@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-EXPECTED_FORMULAS = [f"EQ-{i:02d}" for i in range(1, 31)]
+EXPECTED_FORMULAS = [f"EQ-{i:02d}" for i in range(1, 42)]
 
 FORMULA_DESCRIPTIONS = {
     "EQ-01": "Sec 1 Eq. (1): 4-state bias phase sequence [+(pi-a), -(pi-a), -(pi+a), +(pi+a)]",
@@ -49,11 +49,22 @@ FORMULA_DESCRIPTIONS = {
     "EQ-28": "Sec 4.3 Eq. (37): Slow-scale 10h / 100 Hz rate synthesis Omega_slow[i]",
     "EQ-29": "Sec 4.3 Eq. (38): IEEE Std 952 Overlapping Allan Variance sigma^2(T_m)",
     "EQ-30": "Sec 4.3 Eq. (39): Dual-regime overlap continuity < 5% on T_m in [0.1, 5] s",
+    "EQ-31": "SPEC-005 Sec 3.2.1: Official 6-state anti-periodic psi_0..psi_5 & differential phi_1..phi_6",
+    "EQ-32": "SPEC-005 Sec 3.2.2: 6-state 1st-order Taylor expansion & zero-crosstalk angle alpha*=pi/3",
+    "EQ-33": "SPEC-005 Sec 3.2.3: Orthogonal 6-state 3-channel demodulation (e_Omega, e_Vpi, e_asym)",
+    "EQ-34": "SPEC-005 Sec 3.2.4: 6-state Loop-1/Loop-2 gains, closed-loop -3 dB BW & anti-windup",
+    "EQ-35": "SPEC-005 Sec 5.1: ADC sampling aperture jitter dV_j = (dV/dt)*dt_j & jitter ARW RSS",
+    "EQ-36": "SPEC-005 Sec 5.2: 3-axis IMU shared-SLD back-reflection P_axis,i & shared rail droop",
+    "EQ-37": "SPEC-005 Sec 5.3: Vibration Rectification Error (VRE) quadratic G2*V^2 law [deg/h/g^2]",
+    "EQ-38": "SPEC-005 Sec 5.3: Dynamic Faraday magnetic sensitivity S_B & Mu-metal shielding [dB]",
+    "EQ-39": "SPEC-005 Sec 5.4: Real-time FPGA BIT/FDIR 5-fault classification thresholds & TTA",
+    "EQ-40": "SPEC-005 Sec 5.5: Monte Carlo Production Yield, Wilson 95% CI & process capability C_pk",
+    "EQ-41": "SPEC-005 Sec 5.5: Thermal drift model (lambda(T), V_pi(T)), 2D poly & EKF bias compensation",
 }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify all 30 IFOG-SIM-SPEC-004 formulas in CI")
+    parser = argparse.ArgumentParser(description="Verify all 41 IFOG-SIM-SPEC-005 formulas in CI")
     parser.add_argument("--out-dir", default="data/ci_formula_report", help="Report output directory")
     args = parser.parse_args()
 
@@ -105,7 +116,7 @@ def main() -> int:
     failed = [eq for eq in EXPECTED_FORMULAS if results.get(eq, {}).get("status") != "PASS"]
 
     report_json = {
-        "spec_id": "IFOG-SIM-SPEC-004",
+        "spec_id": "IFOG-SIM-SPEC-005",
         "total_expected": len(EXPECTED_FORMULAS),
         "total_verified": len(results),
         "missing": missing,
@@ -118,9 +129,9 @@ def main() -> int:
     )
 
     lines = [
-        "# IFOG-SIM-SPEC-004 Formula Verification Traceability Matrix (CI/CD)",
+        "# IFOG-SIM-SPEC-005 Formula Verification Traceability Matrix (CI/CD)",
         "",
-        f"- **Expected Formulas:** {len(EXPECTED_FORMULAS)} (`EQ-01` .. `EQ-30`)",
+        f"- **Expected Formulas:** {len(EXPECTED_FORMULAS)} (`EQ-01` .. `EQ-41`)",
         f"- **Verified & Passed:** {len(EXPECTED_FORMULAS) - len(failed)} / {len(EXPECTED_FORMULAS)}",
         f"- **Overall Status:** {'PASS' if report_json['all_passed'] else 'FAIL'}",
         "",
@@ -141,7 +152,7 @@ def main() -> int:
         print(f"ERROR: Formula verification failed! missing={missing}, failed={failed}", file=sys.stderr)
         return 1
 
-    print(f"SUCCESS: All {len(EXPECTED_FORMULAS)} formulas (EQ-01 .. EQ-30) individually verified and PASSED!")
+    print(f"SUCCESS: All {len(EXPECTED_FORMULAS)} formulas (EQ-01 .. EQ-41) individually verified and PASSED!")
     return 0
 
 

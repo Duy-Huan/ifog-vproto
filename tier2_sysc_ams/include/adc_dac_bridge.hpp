@@ -8,7 +8,8 @@
 
 namespace ifog {
 
-// ADC_Bridge_TDF: rate=K -> rate=1 DE, ADC blanking window [k_start, k_end] & N_ADC-bit quantizer (EQ-19)
+// ADC_Bridge_TDF: rate=K -> rate=1 DE, ADC blanking window [k_start, k_end],
+// sampling aperture jitter (EQ-35), and N_ADC-bit quantizer (EQ-19).
 SCA_TDF_MODULE(ADC_Bridge_TDF) {
 public:
     sca_tdf::sca_in<double> v_adc_in;
@@ -32,18 +33,22 @@ private:
     int win_len_;
     double eta_blanking_;
     double delta_adc_;
+    double inv_dt_fast_;
+    double prev_v_adc_;
     int64_t code_min_;
     int64_t code_max_;
+    FastRng rng_;
     uint64_t cluster_idx_;
     MicroTraceCollector* micro_trace_;
 };
 
 // DAC_Driver_TDF: rate=1 DE (with set_delay(1) breaking algebraic loop) -> rate=K TDF
-// Models DAC reference 1/f drift, 2nd-order driver LTF, and dV_drv/dt crosstalk source.
+// Models DAC reference 1/f drift, shared-rail droop (EQ-36), 2nd-order driver LTF, and dV_drv/dt crosstalk source.
 SCA_TDF_MODULE(DAC_Driver_TDF) {
 public:
     sca_tdf::sca_de::sca_in<double> dac_code_in;
     sca_tdf::sca_in<double> pink_dac_in;
+    sca_tdf::sca_in<double> rail_droop_in;
     sca_tdf::sca_out<double> v_drv_out;
     sca_tdf::sca_out<double> dv_drv_dt_out;
 

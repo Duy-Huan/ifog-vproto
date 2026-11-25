@@ -1,0 +1,144 @@
+{
+  "schema_version": "5.0",
+  "meta": {
+    "name": "baseline_1km_6state",
+    "spec_id": "IFOG-SIM-SPEC-005",
+    "description": "Reference 1 km navigation-grade closed-loop 6-state symmetric IFOG configuration (optimal zero-crosstalk angle alpha = pi/3) per IFOG-SIM-SPEC-005.",
+    "seed": 42005
+  },
+  "optics": {
+    "L_m": 1000.0,
+    "D_m": 0.10,
+    "lambda_bar_m": 1.55e-6,
+    "n_eff": 1.468,
+    "P_sld_W": 1.0e-2,
+    "P_peak_W": 1.0e-4,
+    "P_coil_W": 1.0e-3,
+    "delta_lambda_fwhm_m": 40.0e-9,
+    "beat_length_m": 2.0e-3,
+    "h_param_inv_m": 1.0e-5,
+    "er_dB": 60.0,
+    "n_spec": 64,
+    "m_segments": 200,
+    "n2_m2_per_W": 2.6e-20,
+    "A_eff_m2": 5.0e-11,
+    "L_eff_m": 1000.0,
+    "kappa_split": 0.5005,
+    "eta_coh": 1.0,
+    "phi_pol_drift_rad_per_s": 0.0
+  },
+  "thermal": {
+    "dn_dT_per_K": 1.0e-5,
+    "alpha_T_per_K": 5.5e-7,
+    "diffusivity_m2_per_s": 8.4e-7,
+    "coil_thickness_m": 0.015,
+    "n_z": 64,
+    "delta_z_quad_m": 0.002,
+    "boundary_ramp_K_per_s": 1.0e-4,
+    "boundary_asymmetry_K_per_s": 1.0e-5,
+    "duration_s": 36000.0,
+    "dt_s": 10.0,
+    "fem_csv_path": null
+  },
+  "magneto_optic": {
+    "verdet_rad_per_Tm": 0.6,
+    "B_ext_T": 0.0,
+    "effective_loop_m": 0.0,
+    "B_ac_T": 0.0,
+    "B_freq_Hz": 0.0
+  },
+  "mioc": {
+    "V_pi_0_V": 3.0,
+    "eps_vpi": 0.02,
+    "gamma_nl_rad_per_V2": 2.0e-4,
+    "alpha_ram_per_V": 2.0e-5,
+    "eps_vpi_step_time_s": -1.0,
+    "eps_vpi_step_delta": 0.0
+  },
+  "analog_frontend": {
+    "responsivity_A_per_W": 0.95,
+    "I_dark_A": 5.0e-9,
+    "R_f_ohm": 50000.0,
+    "C_tot_F": 3.0e-12,
+    "C_f_F": 2.52313252202016e-13,
+    "f_gbw_Hz": 150.0e6,
+    "T_tia_K": 300.0,
+    "e_n_op_V_per_rtHz": 4.0e-9,
+    "i_n_op_A_per_rtHz": 2.0e-12,
+    "V_off_0_V": 0.0,
+    "G1": 1.0,
+    "G2_per_V": 2.0e-3,
+    "G3_per_V2": 5.0e-4,
+    "V_min_V": -5.0,
+    "V_max_V": 5.0,
+    "C_xtalk_F": 2.0e-12,
+    "k_xtalk_A_per_V": 1.0e-8
+  },
+  "adc_dac": {
+    "K_oversample": 16,
+    "N_adc_bits": 16,
+    "V_fs_adc_V": 5.0,
+    "k_start": 4,
+    "k_end": 15,
+    "N_dac_bits": 16,
+    "V_ref_dac_V": 6.0,
+    "drv_omega0_rad_per_s": 1.2e7,
+    "drv_zeta": 0.7071067811865476,
+    "aperture_jitter_s": 0.0
+  },
+  "dsp": {
+    "mode": "6state",
+    "alpha_rad": 1.0471975511965976,
+    "K_tot_1": 0.25,
+    "K_P_1": 0.0,
+    "K_tot_2": 0.02,
+    "en_adc_blanking": true,
+    "en_vpi_loop": true,
+    "en_prbs_dither": true,
+    "prbs_amplitude_rad": 3.0e-4,
+    "max_delta_phi_step_rad": 20.0
+  },
+  "noise": {
+    "en_white_noise": true,
+    "en_pink_noise": false,
+    "pink_f_min_Hz": 1.0,
+    "pink_f_max_Hz": 5000.0,
+    "sigma_pink_tia_V": 5.0e-6,
+    "sigma_pink_dac_rel": 1.0e-6,
+    "sigma_pink_xtalk_rel": 1.0e-4,
+    "sine_inject_target": "none",
+    "sine_inject_freq_Hz": 100.0,
+    "sine_inject_amp": 0.0
+  },
+  "ablation_flags": {
+    "en_pol_error": true,
+    "en_kerr": true,
+    "en_shupe": false,
+    "en_faraday": false,
+    "en_mioc_vpi_err": true,
+    "en_ram": true,
+    "en_xtalk": true,
+    "en_ltf_transient": true,
+    "en_tia_poly_nl": true,
+    "en_quantization": true
+  },
+  "simulation": {
+    "duration_s": 60.0,
+    "decimation_tau": 6,
+    "dump_micro_ms": 0.2,
+    "dump_dsp_trace": false,
+    "stimulus": {
+      "type": "constant",
+      "omega_rad_per_s": 0.0
+    }
+  },
+  "slow_scale": {
+    "f_dec_Hz": 100.0,
+    "duration_hours": 10.0,
+    "rrw_mode": "wiener",
+    "K_rrw_deg_per_rt_h3": 0.022,
+    "T_c_s": 10000.0,
+    "B_flicker_deg_per_h": 0.0038,
+    "R_ramp_deg_per_h2": 0.025
+  }
+}
