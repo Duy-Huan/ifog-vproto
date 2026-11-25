@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [1.2.0] - 2026-11-25
+
+### Added
+- **Docker & Podman Portable Container Suite:** Added byte-identical `Containerfile` and `Dockerfile`, `.dockerignore`, OCI `compose.yaml`, and unified launcher `scripts/container_run.sh` (auto-detects `podman` with `:Z` / `--userns=keep-id` or `docker`), continuously verified by a `container-build-and-verify` CI job.
+- **Distro-Independent Linux Git-Source Setup Toolchain:** Added `scripts/install_systemc.sh` (Accellera SystemC `2.3.4`), universal bootstrapper `scripts/setup_env.sh` (SystemC `2.3.4` + SystemC-AMS `2.3.4` + `nlohmann/json` `v3.11.3` + isolated Python venv + generated `env.sh`), and tracked `scripts/env.sh`.
+- **Curated Real 4-Gate Feasibility Example (`examples/full_4gate_baseline/`):** Executed and committed complete real Gate 1–4 outputs (`README.md`, `report.md`, interactive `report.html`, `metrics_summary.json`, all Tier 1–3 JSONs, and all four 300-DPI PNG plots) plus `examples/run_example.sh`.
+- **Project Skill (Rule 6):** Added `skills/ifog-portable-container-env/SKILL.md` and registered it in `skills/README.md` & CI governance checks.
+
+### Changed
+- Upgraded `scripts/install_systemc_ams.sh` and `tier2_sysc_ams/CMakeLists.txt` for multi-distro Linux discovery (`lib`, `lib64`, `lib-linux64`, x86\_64 & ARM64) and portable `IFOG_ENV_PREFIX` installs; `scripts/run_sim.sh` auto-sources `scripts/env.sh`.
+- Fixed Slow-Scale sampling frequency display (`100.0 Hz` derived from `slow_dt_s`) in `viz/export_report.py`.
+- Bumped project version in `pyproject.toml` from `1.1.0` to `1.2.0` and synchronized all `docs/*.{md,tex,pdf}`, `docs/DOCS_BUILD.sha256`, and `README.md` per Rule 16.
+
 ## [1.1.0] - 2026-11-25
 
 ### Added

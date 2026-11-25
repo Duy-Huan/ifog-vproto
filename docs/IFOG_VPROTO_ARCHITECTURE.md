@@ -5,7 +5,7 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-ARCH-001` |
-| **Current Version** | `v1.1.0` |
+| **Current Version** | `v1.2.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) & [`spec/IFOG-SIM-SPEC-004.pdf`](../spec/IFOG-SIM-SPEC-004.pdf) (v4.0) |
 | **Governance Authority** | [`AGENT.md`](../AGENT.md) (Rules 1–16) |
@@ -18,6 +18,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | `v1.0.0` | `2026-11-25` | Initial Release (Gates 1–4, 30 Formulas, 100% Dual Coverage) | `spec/`, `configs/`, `tier1_offline/`, `tier2_sysc_ams/`, `tier3_analysis/`, `viz/`, `tests/`, `.github/workflows/` | Complete 3-tier spec-driven Closed-Loop IFOG Virtual Prototype implementation (`IFOG-SIM-SPEC-004` v4.0), real IEEE 1666.1 SystemC/SystemC-AMS 2.3.4 core, 30/30 formula verification, 100% C++ (`gcovr`) & Python (`pytest-cov`) coverage, full real 4-Gate acceptance & CI/CD release pipeline. |
 | `v1.1.0` | `2026-11-25` | Auto-Reporting, Unified Sim Runner & Rule 16 Doc-Sync | `viz/export_report.py`, `tier3_analysis/sim_runner_cli.py`, `tier3_analysis/doc_sync.py`, `scripts/run_sim.{py,sh}`, `scripts/verify_doc_sync.py`, `scripts/build_docs.sh`, `report/`, `docs/`, `AGENT.md`, `skills/`, `.github/workflows/` | Added centralized automatic `.md` and interactive `.html` report generation + dashboard index under `report/`; added unified simulation runner (`scripts/run_sim.sh`, `scripts/run_sim.py`, `ifog-sim-run`) supporting `single`, `gate1`–`gate4`, `full`, and `sweep` modes; authored synchronized release architecture & release notes documents (`.md`, `.tex`, `.pdf`) under `docs/`; enacted **AGENT.md Rule 16** with automated CI/CD version-document sync enforcement. |
+| `v1.2.0` | `2026-11-25` | Portable Container (Docker/Podman), Universal Linux Source Setup & Full 4-Gate Example | `Containerfile`, `Dockerfile`, `.dockerignore`, `compose.yaml`, `scripts/install_systemc.sh`, `scripts/install_systemc_ams.sh`, `scripts/setup_env.sh`, `scripts/env.sh`, `scripts/container_run.sh`, `tier2_sysc_ams/CMakeLists.txt`, `examples/`, `skills/ifog-portable-container-env/`, `.github/workflows/ci.yml` | Added distro-independent Git-source installers for Accellera SystemC 2.3.4, SystemC-AMS PoC 2.3.4, `nlohmann/json` v3.11.3, and isolated Python venv (`scripts/setup_env.sh` + `scripts/env.sh`); added dual Docker/Podman OCI container suite (`Containerfile`, `Dockerfile`, `compose.yaml`, `scripts/container_run.sh`) verified in CI; executed and committed the complete real 4-Gate feasibility example (`examples/full_4gate_baseline/`) with full `.md`/`.html`/JSON/300-DPI PNG outputs. |
 
 ---
 
@@ -195,13 +196,36 @@ Built as a static library `libifog_core.a` + CLI executable `build/ifog_sim` + u
 
 ---
 
-## 6. Reproducible Simulation & Verification Commands
+## 6. Portable Linux Source Toolchain, OCI Containers & Curated Example
+
+### 6.1 Distro-Independent Source Build (`scripts/setup_env.sh`)
+To eliminate OS package lock-in (e.g., Ubuntu-only `libsystemc-dev`), `scripts/setup_env.sh` builds all native and Python dependencies deterministically from pinned Git sources into a self-contained prefix (`/opt/ifog-env` as root or `~/.local/ifog-env` rootless):
+1. **Accellera SystemC 2.3.4** (`scripts/install_systemc.sh` -> `https://github.com/accellera-official/systemc.git` tag `2.3.4`, CMake C++17 shared library, normalized `lib/` & `lib-linux64` symlink).
+2. **SystemC-AMS PoC 2.3.4** (`scripts/install_systemc_ams.sh` -> pinned commit `a72d365f`, past-ordered autotools timestamps & multi-distro staging view).
+3. **`nlohmann/json` v3.11.3** (auto-installed from Git when absent from `/usr/include`).
+4. **Isolated Python 3 virtual environment** (`<prefix>/venv`) with all runtime & test packages + editable `ifog-vproto`.
+5. **Portable Environment Activator** (`<prefix>/env.sh` & tracked `scripts/env.sh`) setting `SYSTEMC_HOME`, `SYSTEMC_AMS_HOME`, `CMAKE_PREFIX_PATH`, `LD_LIBRARY_PATH`, `PKG_CONFIG_PATH`, `VIRTUAL_ENV`, and `PATH`.
+
+### 6.2 Dual Docker / Podman Container Suite
+- [`Containerfile`](../Containerfile) and byte-identical [`Dockerfile`](../Dockerfile) build the full ready-to-run `ifog-vproto` environment (including pre-compiled `build/ifog_sim`) with layer-cached C++ and Python dependencies.
+- [`compose.yaml`](../compose.yaml) and [`scripts/container_run.sh`](../scripts/container_run.sh) support both Docker and rootless SELinux Podman (`:Z`, `--userns=keep-id`) with `build`, `shell`, `sim`, `example`, `test`, and `verify` subcommands.
+
+### 6.3 Curated Real 4-Gate Feasibility Example (`examples/full_4gate_baseline/`)
+- Commits the complete verified output of `./examples/run_example.sh` (`report.md`, `report.html`, `metrics_summary.json`, all Tier 1–3 JSON summaries, and all 4 300-DPI diagnostic figures) directly in the repository for zero-setup technical feasibility evaluation.
+
+---
+
+## 7. Reproducible Simulation, Container & Verification Commands
 
 ```bash
-# 1. Run single baseline closed-loop simulation -> auto report in report/
-./scripts/run_sim.sh --mode single --run-id baseline_1km_check
+# 1. Option A — Zero-dependency Docker / Podman workflow
+./scripts/container_run.sh build
+./scripts/container_run.sh sim --mode single --run-id container_demo --duration-s 0.5
+./scripts/container_run.sh example
 
-# 2. Run full 4-Gate acceptance suite -> unified report in report/full_4gate/
+# 2. Option B — Portable native Linux setup (Ubuntu, Fedora, RHEL/Rocky, Arch, HPC)
+bash scripts/setup_env.sh --with-system-deps --build-tier2 --verify
+source scripts/env.sh
 ./scripts/run_sim.sh --mode full --run-id full_4gate
 
 # 3. Verify Rule 16 document-version synchronization & rebuild PDF docs

@@ -1,0 +1,320 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-004",
+  "run_dir": "data/full_4gate_baseline",
+  "report_dir": "report/full_4gate_baseline",
+  "phys_params": {
+    "spec_id": "IFOG-SIM-SPEC-004",
+    "seed": 42004,
+    "visibility_V": 0.9999999686702052,
+    "phi_pol_rad": -2.220943718131611e-06,
+    "P_static_max": 3.8828752259010106,
+    "P_static_min": 6.082484294012147e-08,
+    "K_opt_rad_per_rad_s": 1.3521580786785043,
+    "tau_s": 4.8967209175088724e-06,
+    "f_eigen_Hz": 102109.14782016347,
+    "delta_nu_eff_Hz": 7513884342653.131,
+    "delta_phi_kerr_rad": -2.107907328860016e-06,
+    "n_spec": 64,
+    "m_segments": 200
+  },
+  "shupe_summary": {
+    "spec_id": "IFOG-SIM-SPEC-004",
+    "source_mode": "1d_diffusion",
+    "n_samples": 3601,
+    "duration_s": 36000.0,
+    "max_abs_delta_phi_rad": 2.439547046322408e-07,
+    "max_abs_omega_shupe_deg_per_h": 0.0372140437405181,
+    "final_delta_phi_rad": -2.4367841390357794e-07
+  },
+  "sim_summary": {
+    "S_alpha_counts_per_rad": 11005.975282997417,
+    "adc_clip_count": 0,
+    "eta_blanking": 0.75,
+    "final_delta_phi_step_rad": 0.00010420634026756082,
+    "final_eps_vpi_eff": 0.0011135208809909258,
+    "final_g_dac": 0.9814838440009716,
+    "final_omega_out_rad_per_s": 7.706668466560071e-05,
+    "flyback_count": 210,
+    "mean_omega_out_second_half_rad_per_s": 7.977559796051083e-05,
+    "omega_out_lsb_rad_per_s": 1e-12,
+    "spec_id": "IFOG-SIM-SPEC-004",
+    "tia_cf_opt_F": 2.5231325220201605e-13,
+    "tia_omega0_rad_per_s": 76129745.35933477,
+    "tia_ts_0p1pct_s": 1.7409614401939106e-07,
+    "tia_zeta": 0.520601675324012,
+    "total_micro_records": 656,
+    "total_records_written": 3063275,
+    "total_tau_steps": 12253098
+  },
+  "gate1_metrics": {
+    "small_signal_target_rad": 1e-08,
+    "small_signal_err_rad": 3.0962401491211434e-16,
+    "large_step_err_rad": 2.220446049250313e-16,
+    "flyback_count": 1666,
+    "final_eps_vpi_eff": 5.839773109528323e-14,
+    "gate1_pass": true
+  },
+  "k_matrix": {
+    "spec_id": "IFOG-SIM-SPEC-004",
+    "formula_id": "EQ-27",
+    "f_test_Hz": 100.0,
+    "duration_s": 0.1,
+    "K_TIA_to_Omega_rad_s_per_V": 0.000678134653790857,
+    "K_DAC_to_Omega_rad_s_per_V": 0.00011327826327586203,
+    "K_xtalk_to_Omega_rad_s_per_A_per_V": 8382.290403119148,
+    "K_node_unit_vector": [
+      0.000678134653790857,
+      0.0006796695796551722,
+      8.382290403119147e-05
+    ],
+    "K_physical_vector": [
+      0.000678134653790857,
+      0.00011327826327586203,
+      8382.290403119148
+    ],
+    "probes": {
+      "tia": {
+        "target": "tia",
+        "freq_Hz": 100.0,
+        "inject_amp": 0.02,
+        "phys_delta": 0.02,
+        "omega_amp_rad_s": 1.356269307581714e-05,
+        "gain_phys": 0.000678134653790857,
+        "gain_node_unit": 0.000678134653790857
+      },
+      "dac": {
+        "target": "dac",
+        "freq_Hz": 100.0,
+        "inject_amp": 0.005,
+        "phys_delta": 0.03,
+        "omega_amp_rad_s": 3.398347898275861e-06,
+        "gain_phys": 0.00011327826327586203,
+        "gain_node_unit": 0.0006796695796551722
+      },
+      "xtalk": {
+        "target": "xtalk",
+        "freq_Hz": 100.0,
+        "inject_amp": 0.2,
+        "phys_delta": 2e-09,
+        "omega_amp_rad_s": 1.6764580806238296e-05,
+        "gain_phys": 8382.290403119148,
+        "gain_node_unit": 8.382290403119147e-05
+      }
+    }
+  },
+  "gate3_metrics": {
+    "slope_linear": -0.06208272936085279,
+    "slope_nonlinear": -0.8928326805844572,
+    "k_repeatability_max_rel_pct": 0.0,
+    "K_physical_vector": [
+      0.000678134653790857,
+      0.00011327826327586203,
+      8382.290403119148
+    ],
+    "gate3_pass": true
+  },
+  "nonlinearity_summary": {
+    "spec_id": "IFOG-SIM-SPEC-004",
+    "gate_id": "Gate-2",
+    "uncompensated": {
+      "deadband_width_deg_per_s": 1.0,
+      "deadband_peak_err_deg_per_s": 0.4239813262786284,
+      "bunny_ears_peak_err_deg_per_s": 0.4305085796741476,
+      "bunny_ears_peak_sf_ppm": 83995374.55787553,
+      "bunny_ears_pos_peak_ppm": 83371240.85859978,
+      "bunny_ears_neg_peak_ppm": 83995374.55787553,
+      "rate_error_deg_per_s": [
+        0.42095431953907414,
+        0.41830169882442636,
+        0.4243820361016428,
+        0.42263052359146297,
+        0.41936888034568226,
+        0.4208977409787969,
+        0.42182906891007405,
+        0.42371776535286554,
+        0.4138726904162602,
+        0.4204129408933368,
+        0.4199768727893776,
+        0.42023584837844047,
+        0.4168562042929989,
+        0.4239813262786284,
+        0.42095389535315303,
+        0.42397230859267465,
+        0.41997149864114075,
+        0.41908233948478263,
+        0.42176772270124185,
+        0.41137481813584836,
+        0.42420415447702364,
+        0.42270776206187655,
+        0.4305085796741476
+      ],
+      "sf_error_ppm": [
+        -841908.6390781483,
+        -1195147.7109269325,
+        -1697528.1444065713,
+        -2347947.3532859054,
+        -3494740.6695473525,
+        -5261221.762234962,
+        -8436581.378201481,
+        -14123925.511762185,
+        -20693634.52081301,
+        -42041294.08933368,
+        -83995374.55787553,
+        0.0,
+        83371240.85859978,
+        42398132.62786283,
+        21047694.76765765,
+        14132410.28642249,
+        8399429.972822813,
+        5238529.243559782,
+        3514731.022510349,
+        2285415.6563102687,
+        1696816.6179080945,
+        1207736.4630339332,
+        861017.1593482952
+      ]
+    },
+    "compensated": {
+      "deadband_width_deg_per_s": 0.16,
+      "deadband_peak_err_deg_per_s": 0.004856119877750795,
+      "bunny_ears_peak_err_deg_per_s": 0.004856119877750795,
+      "bunny_ears_peak_sf_ppm": 965503.7606303908,
+      "bunny_ears_pos_peak_ppm": 944306.3400779756,
+      "bunny_ears_neg_peak_ppm": 965503.7606303908,
+      "rate_error_deg_per_s": [
+        0.004755807460012418,
+        0.0048033090705347226,
+        0.0047332630976049395,
+        0.004710412781384232,
+        0.004739867332874695,
+        0.00478822840711314,
+        0.0047075990787346575,
+        0.004728718786341242,
+        0.004789429154376272,
+        0.004802108040110448,
+        0.004827518803151954,
+        0.004749332275094049,
+        0.004721531700389878,
+        0.004738937221127858,
+        0.004698404769564853,
+        0.004856119877750795,
+        0.004790123678861259,
+        0.004731155600397857,
+        0.004753617351553094,
+        0.004675236534515292,
+        0.004767755933727247,
+        0.0046586255300990476,
+        0.004805015470105256
+      ],
+      "sf_error_ppm": [
+        -9511.614920024836,
+        -13723.74020152778,
+        -18933.052390419758,
+        -26168.95989657907,
+        -39498.89444062246,
+        -59852.85508891426,
+        -94151.98157469316,
+        -157623.95954470805,
+        -239471.4577188136,
+        -480210.80401104485,
+        -965503.7606303908,
+        0.0,
+        944306.3400779756,
+        473893.72211278573,
+        234920.23847824262,
+        161870.66259169317,
+        95802.47357722519,
+        59139.44500497322,
+        39613.47792960912,
+        25973.536302862736,
+        19071.023734908988,
+        13310.358657425852,
+        9610.030940210512
+      ]
+    },
+    "deadband_reduction_pct": 98.85463826429009,
+    "bunny_ears_sf_reduction_pct": 98.8505274656938,
+    "bunny_ears_err_reduction_pct": 98.87200392581575,
+    "gate2_pass": true
+  },
+  "avar_metrics": {
+    "spec_id": "IFOG-SIM-SPEC-004",
+    "fast_dt_s": 1.958688367054151e-05,
+    "fast_duration_s": 59.9999914874443,
+    "fast_ensemble_count": 4,
+    "slow_dt_s": 0.01,
+    "slow_n_samples": 3600000,
+    "slow_ensemble_count": 12,
+    "Q_fast_rad": 1.0276046691140688e-08,
+    "Q_theory_rad": 9.994288806145839e-09,
+    "N_fast_rad_per_rt_s": 1.1232210670614468e-07,
+    "N_fast_deg_per_rt_h": 0.0003861349596168102,
+    "overlap_check": {
+      "overlap_t_min_s": 0.1,
+      "overlap_t_max_s": 5.0,
+      "max_relative_mismatch": 0.024214331337406355,
+      "max_relative_mismatch_pct": 2.4214331337406354,
+      "continuity_pass_lt_5pct": true
+    },
+    "fitted_ieee952": {
+      "Q_rad": 1.0311758461420307e-08,
+      "N_rad_per_rt_s": 1.1152589841293865e-07,
+      "B_rad_per_s": 2.162343449731094e-08,
+      "K_rad_per_s32": 1.6521509622762479e-09,
+      "R_rad_per_s2": 3.6796856055580365e-11,
+      "Q_arcsec": 0.002126952861111716,
+      "N_deg_per_rt_h": 0.000383397797127969,
+      "B_deg_per_h": 0.0044601535269846206,
+      "K_deg_per_rt_h3": 0.020446835887491844,
+      "R_deg_per_h2": 0.027323626985303683
+    },
+    "slow_synthesis_truth": {
+      "Q_arcsec": 0.0020614700441771955,
+      "N_deg_per_rt_h": 0.0003861349596168102,
+      "B_deg_per_h": 0.004235342231805852,
+      "K_deg_per_rt_h3": 0.022,
+      "R_deg_per_h2": 0.025
+    }
+  },
+  "generated_artifacts": [
+    "report/full_4gate_baseline/figures/waveforms.png",
+    "report/full_4gate_baseline/figures/bunny_ears.png",
+    "report/full_4gate_baseline/figures/psd_flicker.png",
+    "report/full_4gate_baseline/figures/avar_5regions.png",
+    "report/full_4gate_baseline/report.md",
+    "report/full_4gate_baseline/report.html"
+  ],
+  "psd_flicker": {
+    "slope_linear": -0.06208272936085279,
+    "slope_nonlinear": -0.8928326805844572
+  },
+  "gate_statuses": [
+    {
+      "gate": "Gate 1 \u2014 Golden Linear & 2pi Flyback",
+      "status": "PASS",
+      "detail": "Small-signal err=3.10e-16 rad (<1e-9), flybacks=1666 (>1000), eps_Vpi_eff=5.84e-14 (<1e-5)"
+    },
+    {
+      "gate": "Gate 2 \u2014 Deadband & Bunny Ears",
+      "status": "PASS",
+      "detail": "Deadband reduction=98.85% (>=90%), Bunny Ears SF reduction=98.85% (>=90%)"
+    },
+    {
+      "gate": "Gate 3 \u2014 1/f Flicker & K-Matrix",
+      "status": "PASS",
+      "detail": "Linear PSD slope=-0.062 (~0), Nonlinear 1/f slope=-0.893 (~-1), K-matrix repeatability=0.000% (<2%)"
+    },
+    {
+      "gate": "Gate 4 \u2014 Dual-Regime 5-Region AVAR",
+      "status": "PASS",
+      "detail": "Overlap mismatch=2.42% (<5%), Max 5-region WLS err=9.29% (<=10%)"
+    }
+  ],
+  "report_meta": {
+    "run_id": "full_4gate_baseline",
+    "mode": "full",
+    "version": "1.2.0",
+    "generated_utc": "2026-11-25T13:33:14Z",
+    "overall_status": "PASS"
+  }
+}

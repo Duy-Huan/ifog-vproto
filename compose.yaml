@@ -1,0 +1,21 @@
+# OCI Compose specification compatible with both `docker compose` and `podman compose`.
+# Usage:
+#   docker compose build
+#   docker compose run --rm ifog-vproto ./scripts/run_sim.sh --mode single --run-id compose_demo --duration-s 0.5
+#   podman compose run --rm ifog-vproto ./scripts/run_sim.sh --mode full --run-id full_eval
+
+services:
+  ifog-vproto:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: ifog-vproto:1.2.0
+    working_dir: /workspace/ifog-vproto
+    environment:
+      MPLBACKEND: Agg
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - ./data:/workspace/ifog-vproto/data
+      - ./report:/workspace/ifog-vproto/report
+    stdin_open: true
+    tty: true

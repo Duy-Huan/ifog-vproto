@@ -1,0 +1,16 @@
+.git
+build/
+build-cov/
+cmake-build-*/
+data/
+report/*
+!report/README.md
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+*.egg-info/
+third_party/
+.vscode/
+.idea/

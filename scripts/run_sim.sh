@@ -13,6 +13,10 @@ set -euo pipefail
 #   ./scripts/run_sim.sh --mode full --run-id full_4gate_verification
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ -f "${REPO_ROOT}/scripts/env.sh" ]; then
+    # shellcheck source=/dev/null
+    source "${REPO_ROOT}/scripts/env.sh"
+fi
 SIM_BIN="${REPO_ROOT}/build/ifog_sim"
 
 if [ ! -x "${SIM_BIN}" ]; then

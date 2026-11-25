@@ -251,12 +251,14 @@ def _build_markdown_report(
         ov = av["overlap_check"]
         fit = av["fitted_ieee952"]
         truth = av["slow_synthesis_truth"]
+        slow_dt = av.get("slow_dt_s")
+        slow_fs = (1.0 / float(slow_dt)) if slow_dt else av.get("slow_f_dec_Hz")
         lines.extend(
             [
                 "## 6. Gate 4 — Dual-Regime Overlapping AVAR & 5-Region WLS Fit",
                 "",
                 f"- **Fast-Scale Duration:** `{_fmt_num(av.get('fast_duration_s'), '.2f')} s` (ensemble `{av.get('fast_ensemble_count', 1)}` runs)",
-                f"- **Slow-Scale Samples:** `{av.get('slow_n_samples', 0):,}` samples @ `{_fmt_num(av.get('slow_f_dec_Hz'), '.1f')} Hz` (ensemble `{av.get('slow_ensemble_count', 1)}` runs)",
+                f"- **Slow-Scale Samples:** `{av.get('slow_n_samples', 0):,}` samples @ `{_fmt_num(slow_fs, '.1f')} Hz` (ensemble `{av.get('slow_ensemble_count', 1)}` runs)",
                 f"- **Overlap Continuity ($T_m \\in [0.1, 5.0]\\text{{ s}}$):** Max mismatch = **`{ov['max_relative_mismatch_pct']:.2f}%`** (`{'PASS' if ov['continuity_pass_lt_5pct'] else 'FAIL'}`, threshold `< 5%`)",
                 "",
                 "| IEEE Std 952 Parameter | Analytical Truth | WLS Fitted | Relative Error |",

@@ -7,21 +7,50 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(IFOG_ENABLE_COVERAGE "Enable GCC gcov instrumentation for 100% coverage verification" OFF)
 
-# Locate SystemC (Ubuntu libsystemc-dev or SYSTEMC_HOME)
+# Locate SystemC 2.3.4 (SYSTEMC_HOME, portable ifog-env prefix, or distro libsystemc-dev)
+set(SYSTEMC_HINTS "")
 if(DEFINED ENV{SYSTEMC_HOME} AND EXISTS "$ENV{SYSTEMC_HOME}/include/systemc.h")
-    set(SYSTEMC_INCLUDE_DIR "$ENV{SYSTEMC_HOME}/include")
-    find_library(SYSTEMC_LIBRARY NAMES systemc PATHS "$ENV{SYSTEMC_HOME}/lib" "$ENV{SYSTEMC_HOME}/lib-linux64" NO_DEFAULT_PATH REQUIRED)
-else()
-    find_path(SYSTEMC_INCLUDE_DIR NAMES systemc.h PATHS /usr/include /usr/local/include REQUIRED)
-    find_library(SYSTEMC_LIBRARY NAMES systemc PATHS /usr/lib/x86_64-linux-gnu /usr/lib /usr/local/lib REQUIRED)
+    list(APPEND SYSTEMC_HINTS "$ENV{SYSTEMC_HOME}")
 endif()
+if(DEFINED ENV{IFOG_ENV_PREFIX} AND EXISTS "$ENV{IFOG_ENV_PREFIX}/systemc/include/systemc.h")
+    list(APPEND SYSTEMC_HINTS "$ENV{IFOG_ENV_PREFIX}/systemc")
+endif()
+list(APPEND SYSTEMC_HINTS
+    "$ENV{HOME}/.local/ifog-env/systemc"
+    "$ENV{HOME}/.local/systemc"
+    "/opt/ifog-env/systemc"
+    "/usr/local/systemc"
+    "/usr"
+)
 
-# Locate SystemC-AMS PoC 2.3.4 (SYSTEMC_AMS_HOME or ~/.local/systemc-ams or /usr/local/systemc-ams)
+find_path(SYSTEMC_INCLUDE_DIR
+    NAMES systemc.h
+    HINTS ${SYSTEMC_HINTS}
+    PATH_SUFFIXES include
+    REQUIRED
+)
+find_library(SYSTEMC_LIBRARY
+    NAMES systemc
+    HINTS ${SYSTEMC_HINTS}
+    PATH_SUFFIXES lib lib64 lib-linux64 lib/x86_64-linux-gnu lib/aarch64-linux-gnu
+    REQUIRED
+)
+
+# Locate SystemC-AMS PoC 2.3.4 (SYSTEMC_AMS_HOME, portable ifog-env prefix, or standard paths)
 set(SYSTEMC_AMS_HINTS "")
 if(DEFINED ENV{SYSTEMC_AMS_HOME})
     list(APPEND SYSTEMC_AMS_HINTS "$ENV{SYSTEMC_AMS_HOME}")
 endif()
-list(APPEND SYSTEMC_AMS_HINTS "$ENV{HOME}/.local/systemc-ams" "/usr/local/systemc-ams" "/usr")
+if(DEFINED ENV{IFOG_ENV_PREFIX})
+    list(APPEND SYSTEMC_AMS_HINTS "$ENV{IFOG_ENV_PREFIX}/systemc-ams")
+endif()
+list(APPEND SYSTEMC_AMS_HINTS
+    "$ENV{HOME}/.local/ifog-env/systemc-ams"
+    "$ENV{HOME}/.local/systemc-ams"
+    "/opt/ifog-env/systemc-ams"
+    "/usr/local/systemc-ams"
+    "/usr"
+)
 
 find_path(SYSTEMC_AMS_INCLUDE_DIR
     NAMES systemc-ams.h
@@ -32,10 +61,16 @@ find_path(SYSTEMC_AMS_INCLUDE_DIR
 find_library(SYSTEMC_AMS_LIBRARY
     NAMES systemc-ams
     HINTS ${SYSTEMC_AMS_HINTS}
-    PATH_SUFFIXES lib lib-linux64 lib/x86_64-linux-gnu
+    PATH_SUFFIXES lib lib64 lib-linux64 lib/x86_64-linux-gnu lib/aarch64-linux-gnu
     REQUIRED
 )
 
+# Locate nlohmann_json (supports portable source install under ifog-env or distro package)
+list(APPEND CMAKE_PREFIX_PATH
+    "$ENV{IFOG_ENV_PREFIX}/nlohmann_json"
+    "$ENV{HOME}/.local/ifog-env/nlohmann_json"
+    "/opt/ifog-env/nlohmann_json"
+)
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 message(STATUS "SystemC include:     ${SYSTEMC_INCLUDE_DIR}")
