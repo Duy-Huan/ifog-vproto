@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-ARCH-001}
-\newcommand{\DocVersion}{v3.0.0}
+\newcommand{\DocVersion}{v3.0.1}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -65,8 +65,9 @@
 \midrule
 Document Identifier & \texttt{\DocID} \\
 Current Version & \texttt{\DocVersion} (Synchronized with \texttt{pyproject.toml} per \texttt{AGENT.md} Rule 16) \\
-Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 44-Formula, FMI 3.0 FMU \& 21-Scenario Verified}} \\
+Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 44-Formula, FMI 3.0 FMU \& Standardized Report Verified}} \\
 Normative Authority & \texttt{spec/IFOG-SIM-SPEC-006.\{md,tex\}} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (triple SHA-256 locked) \\
+Interactive HTML Model & \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} (Code-Audited 3-Tier + FMI 3.0 Explorer) \\
 Scenarios Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}} (\DocVersion) \\
 Reference Standards & FMI Standard 3.0.2; IEEE Std 952-2020 (IFOG Test \& AVAR); IEEE Std 1666.1-2016 (SystemC-AMS) \\
 Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
@@ -85,6 +86,7 @@ Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \texttt{v2.1.0} & 2026-11-25 & All-Scenarios Example \& 15-Chart HTML & Upgraded \texttt{viz/export\_report.py} with full Gate 5 / TD / ENG Markdown tables, \textbf{15 interactive Plotly HTML5 charts}, and all 16 300-DPI PNG figures; updated \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to execute all 16 gates \& scenarios (\texttt{MC=500}) by default; executed and committed complete curated bundle \texttt{examples/full\_all\_scenarios/}. \\
 \texttt{v2.2.0} & 2026-11-26 & Group C Dynamic, PSD \& Electro-Optic Probe & Added \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py} (\texttt{DYN-01} Step Response, \texttt{DYN-02} Full Bode Magnitude/Phase/Group Delay, \texttt{DYN-03} Broadband Output Rate PSD/ASD \& Cumulative RMS, \texttt{DYN-04} Sinusoidal Input Internal Chain \texttt{PD}, $V_{\text{fb,MIOC}}$, Sagnac phase, $V_{\text{TIA}}$, ADC blanking); expanded CLI to 27 modes, 20 official gates/scenarios, 20 300-DPI PNGs, and 19 interactive Plotly HTML5 charts; refreshed \texttt{examples/full\_all\_scenarios/} (\texttt{20/20} PASS). \\
 \texttt{v3.0.0} & 2026-11-26 & \texttt{SPEC-006} FMI 3.0 Co-Simulation FMU & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-006} v6.0 (44/44 formulas \texttt{EQ-01}--\texttt{EQ-44}); wrapped unmodified Tier 2 SystemC/SystemC-AMS core (\texttt{IfogTopModule}) into standalone FMI 3.0 FMU \texttt{build/ifog\_core.fmu} via vendorized FMI 3.0 C headers, 75-symbol \texttt{fmi3\_bridge.cpp}, 15-variable \texttt{modelDescription.xml.in} (\texttt{canBeInstantiatedOnlyOncePerProcess="true"}), and CMake \texttt{package\_fmu} target; added subprocess-isolated FMPy master orchestrator (\texttt{fmi\_master\_runner.py}, Gate 6: 0 XSD errors, $0.00\times 10^{0}\text{ rad/s}$ bit-exact equivalence, 97.42\% deadband reduction, 3.83\% 5-region AVAR overlap), 100.0\% C++ (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) \& Python coverage, and refreshed \texttt{examples/full\_all\_scenarios/} (\texttt{21/21} PASS). \\
+\texttt{v3.0.1} & 2026-11-26 & Standardized Explanatory Reports \& HTML Model Explorer & Added code-audited interactive HTML5 mathematical architecture explorer (\texttt{viz/architecture\_explorer.py} $\to$ \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} + per-run \texttt{architecture\_model.html}) reconciled 1-to-1 against live C++/Python source code (\texttt{EQ-01}--\texttt{EQ-44}); added \texttt{viz/report\_narratives.py} embedding full theoretical foundations, plain-language non-specialist reading guides, and dynamic simulation proofs beneath all 21 plots in both \texttt{report.md} and KaTeX-rendered \texttt{report.html}; regenerated both curated examples (\texttt{examples/full\_4gate\_baseline/} \& \texttt{examples/full\_all\_scenarios/}) at 100.0\% dual coverage. \\
 \bottomrule
 \end{tabularx}
 \normalsize

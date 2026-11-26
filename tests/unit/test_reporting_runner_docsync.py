@@ -482,6 +482,12 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         fp = ex / fname
         assert fp.exists() and fp.stat().st_size > 100, f"Missing example deliverable: {fname}"
 
+    # Curated full 4-Gate baseline example (regenerated with v3.0.1 standardized reports)
+    assert (REPO_ROOT / "docs" / "IFOG_ARCHITECTURE_EXPLORER.html").stat().st_size > 15_000
+    assert (ex / "architecture_model.html").stat().st_size > 15_000
+    assert "Cơ sở lý thuyết" in (ex / "report.md").read_text(encoding="utf-8")
+    assert "explain-box" in (ex / "report.html").read_text(encoding="utf-8")
+
     ms = json.loads((ex / "metrics_summary.json").read_text(encoding="utf-8"))
     assert ms["report_meta"]["overall_status"] == "PASS"
     assert len(ms["gate_statuses"]) == 4
@@ -493,6 +499,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "README.md",
         "report.md",
         "report.html",
+        "architecture_model.html",
         "metrics_summary.json",
         "virtual_calibration_dataset.csv",
         "phys_params.json",
@@ -550,9 +557,14 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
     assert ms_all["report_meta"]["overall_status"] == "PASS"
     assert len(ms_all["gate_statuses"]) == 21
     assert all(g["status"] == "PASS" for g in ms_all["gate_statuses"])
+    md_all = (ex_all / "report.md").read_text(encoding="utf-8")
+    assert "Tổng quan Mô hình Mô phỏng" in md_all
+    assert "Ý nghĩa biểu đồ" in md_all
     html_all = (ex_all / "report.html").read_text(encoding="utf-8")
     assert "Interactive Telemetry — Core Acceptance Gates" in html_all
     assert "Gate 6" in html_all
     assert "Interactive Telemetry — Group A: 6 Time-Domain Scenarios" in html_all
     assert "Interactive Telemetry — Group B: 5 System Engineering Scenarios" in html_all
     assert "Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe" in html_all
+    assert "architecture_model.html" in html_all
+    assert "explain-box" in html_all

@@ -1,12 +1,14 @@
 # `ifog-vproto` — Closed-Loop IFOG Multi-Scale Virtual Prototype & FMI 3.0 FMU
 
-[![Version](https://img.shields.io/badge/Release-v3.0.0-0E6251)](docs/RELEASE_NOTES.md)
+[![Version](https://img.shields.io/badge/Release-v3.0.1-0E6251)](docs/RELEASE_NOTES.md)
 [![Spec](https://img.shields.io/badge/Spec-IFOG--SIM--SPEC--006%20v6.0-1B365D)](spec/IFOG-SIM-SPEC-006.pdf)
 [![FMI](https://img.shields.io/badge/FMI-3.0%20Co--Simulation%20FMU-0E6251)](spec/IFOG-SIM-SPEC-006.md)
 [![Formulas](https://img.shields.io/badge/Formulas-44%2F44%20Verified-0E6251)](AGENT.md)
 [![Coverage](https://img.shields.io/badge/Coverage-100%25%20C%2B%2B%20%26%20Python-brightgreen)](AGENT.md)
 
 A spec-driven, 3-Tier Hybrid Multi-Scale Co-Simulation Virtual Prototype & **Standalone FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`)** for a **Closed-Loop Interferometric Fiber-Optic Gyroscope (2-State, 4-State Lefèvre, and Official 6-State Symmetric Modulation)** built on **Python + C++17 / IEEE Std 1666.1 SystemC + SystemC-AMS PoC 2.3.4 + FMI 3.0.2** (`IFOG-SIM-SPEC-006` v6.0, preserving `SPEC-005` v5.0 & `SPEC-004` v4.0).
+
+> **Interactive Code-Verified Model Explorer:** Open [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](docs/IFOG_ARCHITECTURE_EXPLORER.html) to explore every module across Tier 1, Tier 2, FMI 3.0 FMU, and Tier 3 with 1-to-1 source-audited equations (`EQ-01`..`EQ-44`), plain-language non-specialist guides, and interactive flow filters.
 
 ---
 
@@ -30,15 +32,15 @@ cmake --build build --target package_fmu
 
 Inspect the **complete genuine full-scale output of ALL 21 official gates & scenarios** (Gates 1–4 with 4×60 s Fast-Scale + 12×10 h Slow-Scale AVAR + Gate 5 Official 6-State DSP + **Gate 6 FMI 3.0 Black-Box FMU** + 6 Time-Domain `TD-01`..`TD-06` + 5 System Engineering `ENG-01`..`ENG-05` with `N=500` MC + 4 Dynamic Response, Output PSD & Electro-Optic Probe `DYN-01`..`DYN-04`, zero mocks / zero smoke tests) directly in [`examples/full_all_scenarios/`](examples/full_all_scenarios/README.md):
 - **Visual Walkthrough (All 21 300-DPI Figures):** [`examples/full_all_scenarios/README.md`](examples/full_all_scenarios/README.md)
-- **Auto-Generated Markdown & 20-Chart Interactive Plotly HTML5 Reports:** [`report.md`](examples/full_all_scenarios/report.md) | [`report.html`](examples/full_all_scenarios/report.html) | [`metrics_summary.json`](examples/full_all_scenarios/metrics_summary.json) | [`virtual_calibration_dataset.csv`](examples/full_all_scenarios/virtual_calibration_dataset.csv)
+- **Standardized Explanatory Reports (`v3.0.1` — Theory + Non-Specialist Guide + Live Proof on Every Figure):** [`report.md`](examples/full_all_scenarios/report.md) | [`report.html`](examples/full_all_scenarios/report.html) | [`architecture_model.html`](examples/full_all_scenarios/architecture_model.html) | [`metrics_summary.json`](examples/full_all_scenarios/metrics_summary.json) | [`virtual_calibration_dataset.csv`](examples/full_all_scenarios/virtual_calibration_dataset.csv)
 - **One-Command Reproduction (Native or Docker/Podman):** `./examples/run_example.sh` or `./scripts/run_all_scenarios.sh` or `./scripts/container_run.sh example`
-- *(Archival SPEC-004 4-Gate only example preserved in [`examples/full_4gate_baseline/`](examples/full_4gate_baseline/README.md).)*
+- *(Complete 4-Gate baseline example also refreshed with `v3.0.1` standardized reports in [`examples/full_4gate_baseline/`](examples/full_4gate_baseline/README.md).)*
 
 ---
 
 ## Official Simulation Flow — 6 Gates + 6 Time-Domain + 5 Engineering + 4 Dynamic/Electro-Optic Scenarios
 
-Every scenario is runnable **individually via CLI** (`./scripts/run_sim.sh --mode <mode>`) or **end-to-end in one command** (`./scripts/run_all_scenarios.sh` / `./examples/run_example.sh`), automatically exporting Markdown (`report.md`), interactive Plotly HTML5 (`report.html` with up to **20 interactive multi-panel charts**), up to **21 300-DPI PNG figures**, and CSV/JSON datasets into `report/<run_id>/`.
+Every scenario is runnable **individually via CLI** (`./scripts/run_sim.sh --mode <mode>`) or **end-to-end in one command** (`./scripts/run_all_scenarios.sh` / `./examples/run_example.sh`), automatically exporting standardized Markdown (`report.md`), KaTeX + interactive Plotly HTML5 (`report.html` with up to **20 interactive multi-panel charts** + embedded `architecture_model.html` + full theoretical/non-specialist explanations beneath every plot), up to **21 300-DPI PNG figures**, and CSV/JSON datasets into `report/<run_id>/`.
 
 Full methodology, equations, and verified real-simulation benchmarks are documented in [`docs/IFOG_SIMULATION_SCENARIOS.md`](docs/IFOG_SIMULATION_SCENARIOS.md) | [`.tex`](docs/IFOG_SIMULATION_SCENARIOS.tex) | [`.pdf`](docs/IFOG_SIMULATION_SCENARIOS.pdf).
 

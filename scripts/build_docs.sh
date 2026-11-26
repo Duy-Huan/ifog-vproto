@@ -20,6 +20,13 @@ for doc in IFOG_VPROTO_ARCHITECTURE RELEASE_NOTES IFOG_SIMULATION_SCENARIOS; do
     ls -lh "${DOCS_DIR}/${doc}.pdf"
 done
 
+PROJ_VER="$(python3 -c "import tomllib; print(tomllib.loads(open('${REPO_ROOT}/pyproject.toml', encoding='utf-8').read())['project']['version'])")"
+echo "[build_docs] Generating interactive docs/IFOG_ARCHITECTURE_EXPLORER.html (v${PROJ_VER})..."
+python3 -m viz.architecture_explorer \
+    --out "${DOCS_DIR}/IFOG_ARCHITECTURE_EXPLORER.html" \
+    --version "${PROJ_VER}"
+ls -lh "${DOCS_DIR}/IFOG_ARCHITECTURE_EXPLORER.html"
+
 python3 "${REPO_ROOT}/scripts/verify_doc_sync.py" --write-checksums
 python3 "${REPO_ROOT}/scripts/verify_doc_sync.py"
-echo "[build_docs] All release PDFs compiled and Rule 16 doc-sync verified!"
+echo "[build_docs] All release PDFs + interactive HTML architecture explorer compiled and Rule 16 doc-sync verified!"

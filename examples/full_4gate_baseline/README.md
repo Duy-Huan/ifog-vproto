@@ -1,17 +1,18 @@
 # Full Real 4-Gate Baseline Example (`examples/full_4gate_baseline/`)
 
-This curated example contains the **complete, genuine, full-scale simulation output** (zero mocks, zero smoke-test shortcuts) of the reference **1 km 4-State Closed-Loop IFOG** (`configs/baseline_1km.json`, `IFOG-SIM-SPEC-004` v4.0, software release `v1.2.0`), committed directly to the repository for technical feasibility evaluation.
+This curated example contains the **complete, genuine, full-scale simulation output** (zero mocks, zero smoke-test shortcuts) of the reference **1 km 4-State Closed-Loop IFOG** (`configs/baseline_1km.json`, `IFOG-SIM-SPEC-004` v4.0, regenerated with standardized `v3.0.1` reporting), committed directly to the repository for technical feasibility evaluation.
 
 ## Included Deliverables
-- [`report.md`](report.md) — Auto-generated full Markdown diagnostic & 4-Gate acceptance report
-- [`report.html`](report.html) — Self-contained interactive Plotly HTML5 report (zoomable Dual-Regime AVAR, Deadband/Bunny Ears, $1/f$ Flicker PSD + KPI tables + figure gallery + JSON inspector)
+- [`architecture_model.html`](architecture_model.html) — Code-audited interactive 3-Tier + FMI 3.0 mathematical architecture explorer with live measured parameters from this run
+- [`report.md`](report.md) — Standardized full Markdown diagnostic & 4-Gate acceptance report with 3-part theoretical foundation, plain-language non-specialist guide, and live measured proof beneath every figure
+- [`report.html`](report.html) — Self-contained KaTeX + interactive Plotly HTML5 report (embedded architecture explorer, zoomable Dual-Regime AVAR, Deadband/Bunny Ears, $1/f$ Flicker PSD + KPI tables + annotated 300-DPI figure gallery + JSON inspector)
 - [`metrics_summary.json`](metrics_summary.json) — Complete structured JSON bundle
 - Tier 1–3 intermediate artifacts: [`phys_params.json`](phys_params.json), [`shupe_summary.json`](shupe_summary.json), [`sim_summary.json`](sim_summary.json), [`gate1_metrics.json`](gate1_metrics.json), [`sweep_results.json`](sweep_results.json), [`nonlinearity_summary.json`](nonlinearity_summary.json), [`k_matrix.json`](k_matrix.json), [`gate3_metrics.json`](gate3_metrics.json), [`avar_metrics.json`](avar_metrics.json)
 - 300-DPI Diagnostic Figures under [`figures/`](figures/): `waveforms.png`, `bunny_ears.png`, `psd_flicker.png`, `avar_5regions.png`
 
 ---
 
-## Executive Feasibility Scorecard (`v1.2.0` — All 4 Gates PASS)
+## Executive Feasibility Scorecard (`v3.0.1` — All 4 Gates PASS)
 
 | Acceptance Gate | Spec Criterion (`IFOG-SIM-SPEC-004`) | Measured Real Simulation Result | Status |
 | :--- | :--- | :--- | :---: |

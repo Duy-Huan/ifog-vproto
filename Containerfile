@@ -5,18 +5,18 @@
 # + standalone FMI 3.0 Co-Simulation FMU (build/ifog_core.fmu).
 #
 # Build:
-#   docker build -t ifog-vproto:3.0.0 .
-#   podman build -f Containerfile -t ifog-vproto:3.0.0 .
+#   docker build -t ifog-vproto:3.0.1 .
+#   podman build -f Containerfile -t ifog-vproto:3.0.1 .
 #
 # Run:
-#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:3.0.0 \
+#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:3.0.1 \
 #     ./scripts/run_all_scenarios.sh --run-id docker_all_scenarios
 
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="ifog-vproto" \
       org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype + FMI 3.0 FMU (IFOG-SIM-SPEC-006)" \
-      org.opencontainers.image.version="3.0.0" \
+      org.opencontainers.image.version="3.0.1" \
       org.opencontainers.image.source="https://github.com/Duy-Huan/ifog-vproto"
 
 ENV DEBIAN_FRONTEND=noninteractive \

@@ -22,6 +22,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from tier3_analysis.binary_io import compute_welch_psd, read_sim_records
+from viz.architecture_explorer import write_architecture_explorer
 from viz.plot_avar_5regions import plot_avar_5regions
 from viz.plot_bunny_ears import plot_bunny_ears
 from viz.plot_psd_flicker import plot_psd_flicker
@@ -33,6 +34,11 @@ from viz.plot_scenarios import (
     plot_td_scenarios,
 )
 from viz.plot_waveforms import plot_waveforms
+from viz.report_narratives import (
+    get_figure_narrative,
+    render_narrative_html,
+    render_narrative_markdown,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -238,8 +244,18 @@ def _build_markdown_report(
         f"| **Run Mode** | `{meta['mode']}` |",
         f"| **Generated (UTC)** | `{meta['generated_utc']}` |",
         f"| **Overall Status** | **{meta['overall_status']}** |",
+        "| **Interactive Model Diagram** | [`architecture_model.html`](architecture_model.html) (Sơ đồ Kiến trúc & Công thức 3 Tầng đối chiếu Source Code) |",
         f"| **Data Directory** | `{summary['run_dir']}` |",
         f"| **Report Directory** | `{summary['report_dir']}` |",
+        "",
+        "## 0. Tổng quan Mô hình Mô phỏng & Hướng dẫn Đọc cho Người không chuyên",
+        "",
+        "Hệ thống mô phỏng vòng kín con quay sợi quang giao thoa (**IFOG — Interferometric Fiber Optic Gyroscope**, chuẩn `IFOG-SIM-SPEC-006`) kết nối 3 tầng vật lý–số và lớp đóng gói công nghiệp **FMI 3.0 FMU**:",
+        "",
+        "- **Tầng 1 (Quang học & Nhiệt Offline — Python):** Tính hằng số tĩnh của cuộn sợi PM 1 km (`jones_spectral.py`: ma trận Jones tách phổ, hệ số Sagnac $K_{\\text{opt}}$, độ tương phản $V$, pha phân cực $\\phi_{\\text{pol}}$, pha Kerr) và truyền nhiệt Shupe (`shupe_thermal.py` $\\rightarrow$ `shupe_lut.bin`).",
+        "- **Tầng 2 (Lõi Vòng kín Thời gian Thực — C++17 / SystemC-AMS @ ~3.27 MHz):** Mô phỏng chi tiết từng mẫu con $\\Delta t_{\\text{fast}} = \\tau/K$ gồm `OpticalEnvelope_TDF` (pha Sagnac, MIOC, trễ vòng $K$ mẫu, RAM), `AnalogFrontEnd_TDF` (xuyên âm $C_{\\text{xtalk}}/k_{\\text{xtalk}}$, nhiễu trắng 6 thành phần, LTF bậc 2 TIA, nhiễu $1/f$ và méo bậc 3), `ADC_Bridge_TDF`/`DAC_Driver_TDF` (cửa sổ Blanking, jitter, `set_delay(1)`), và `DigitalDSP_SC` (điều chế 2/4/**Official 6-State** $\\alpha^*=\\pi/3$, Vòng 1 khóa pha + Anti-windup, Vòng 2 khóa $V_\\pi$, PRBS Dither, BIT/FDIR 5 lỗi), đồng thời đóng gói hộp đen thành `build/ifog_core.fmu`.",
+        "- **Tầng 3 (Phân tích & Nghiệm thu — Python):** Khâu nối hai miền 60 s Thực + 10 h Chậm theo chuẩn **IEEE Std 952-2020 Overlapping AVAR 5 vùng**, chạy toàn bộ 6 Cổng nghiệm thu + 15 kịch bản kỹ thuật (`TD-01..06`, `ENG-01..05`, `DYN-01..04`) và tự động tạo báo cáo chuẩn hóa kèm giải thích lý thuyết.",
+        "- **Sơ đồ Tương tác:** Mở [`architecture_model.html`](architecture_model.html) trong trình duyệt để bấm trực tiếp vào từng khối mô-đun, xem công thức đối chiếu source code và cô lập từng luồng tín hiệu.",
         "",
     ]
 
@@ -396,6 +412,26 @@ def _build_markdown_report(
             ]
         )
 
+    fmi_g = summary.get("fmi_gate")
+    if fmi_g is not None:
+        val = fmi_g["validation"]
+        eq = fmi_g["equivalence"]
+        db = fmi_g["deadband"]
+        av6 = fmi_g["avar"]
+        lines.extend(
+            [
+                "## 7b. Gate 6 — FMI 3.0 Black-Box Co-Simulation FMU (`EQ-42`–`EQ-44`)",
+                "",
+                "| FMI 3.0 Sub-Gate | Criterion | Measured Result | Status |",
+                "| :--- | :--- | ---: | :---: |",
+                f"| Gate 6A — XML/ZIP Schema (`validate_fmu`) | `0` validation errors, `15` SI vars | `{len(val['validation_problems'])}` errors (`{val['variable_count']}` vars) | **{'PASS' if val['validation_pass'] else 'FAIL'}** |",
+                f"| Gate 6B — FMU vs `ifog_sim` Equivalence | `< 1e-12 rad/s` (4-state & 6-state) | `{float(eq['max_final_omega_err_rad_per_s']):.2e} rad/s` | **{'PASS' if eq['equivalence_pass'] else 'FAIL'}** |",
+                f"| Gate 6C — Slow Rate Ramp Deadband Sweep | `>= 90%` Deadband reduction | **`{float(db['deadband_reduction_pct']):.2f}%`** (Bunny Ears `{float(db['bunny_ears_sf_reduction_pct']):.2f}%`) | **{'PASS' if db['deadband_pass'] else 'FAIL'}** |",
+                f"| Gate 6D — FMU → Dual-Regime 5-Region AVAR | `< 5%` overlap & `<= 10%` WLS | **`{float(av6['overlap_check']['max_relative_mismatch_pct']):.2f}%`** (max WLS `{float(av6['max_5region_param_err_pct']):.2f}%`) | **{'PASS' if av6['avar_pass'] else 'FAIL'}** |",
+                "",
+            ]
+        )
+
     td_sc = summary.get("td_scenarios", {})
     if td_sc:
         lines.extend(
@@ -521,34 +557,46 @@ def _build_markdown_report(
             )
 
     if fig_rel_paths:
-        lines.extend(["## 11. Diagnostic Figures (300-DPI)", ""])
+        lines.extend(
+            [
+                "## 11. Biểu đồ Chẩn đoán (300-DPI) kèm Giải thích Lý thuyết & Chứng minh",
+                "",
+                "Mỗi hình dưới đây đi kèm đầy đủ 3 mục chuẩn hóa: **Cơ sở lý thuyết & công thức**, **Ý nghĩa biểu đồ cho người không chuyên**, và **Kết quả thực tế được chứng minh**.",
+                "",
+            ]
+        )
         for rel in fig_rel_paths:
-            title = Path(rel).stem.replace("_", " ").title()
-            lines.append(f"### {title}")
-            lines.append(f"![{title}]({rel})")
+            stem = Path(rel).stem
+            info = get_figure_narrative(stem, summary)
+            lines.append(f"### {info['title']}")
+            lines.append(f"![{info['title']}]({rel})")
+            lines.append("")
+            lines.extend(render_narrative_markdown(stem, summary))
             lines.append("")
 
     out_md.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return out_md
 
 
-def _plotly_div(fig: go.Figure, height: int = 380) -> str:
-    """Serialize a Plotly Figure to a lightweight HTML div (CDN loaded once in document head)."""
+def _plotly_card(fig: go.Figure, fig_stem: str, summary: dict[str, Any], height: int = 380) -> str:
+    """Serialize a Plotly Figure + standardized theory/meaning/proof explanation box into a .plot-card."""
     fig.update_layout(
         height=height,
         template="plotly_white",
         margin={"l": 60, "r": 25, "t": 55, "b": 50},
         legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "right", "x": 1.0},
     )
-    return fig.to_html(full_html=False, include_plotlyjs=False)
+    plot_html = fig.to_html(full_html=False, include_plotlyjs=False)
+    explain_html = render_narrative_html(fig_stem, summary)
+    return f"<div class='plot-card'>{plot_html}{explain_html}</div>"
 
 
 def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
-    """Build interactive Plotly HTML5 chart cards for all available Core, TD, and ENG scenarios."""
+    """Build interactive Plotly HTML5 chart cards + standardized explanations for all scenarios."""
     sections: list[str] = []
 
-    # 1. Core Acceptance Gates (Gate 2, Gate 3, Gate 4, Gate 5)
-    core_divs: list[str] = []
+    # 1. Core Acceptance Gates (Gate 2, Gate 3, Gate 4, Gate 5, Gate 6)
+    core_cards: list[str] = []
     if (rdir / "avar_curve.npz").exists():
         npz = np.load(rdir / "avar_curve.npz")
         fig = go.Figure()
@@ -561,7 +609,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(type="log", title_text="Cluster Time T [s]")
         fig.update_yaxes(type="log", title_text="ADEV [deg/h]")
         fig.update_layout(title="Gate 4 — Dual-Regime Overlapping Allan Deviation (Fast + 10 h Slow)")
-        core_divs.append(_plotly_div(fig, 400))
+        core_cards.append(_plotly_card(fig, "avar_5regions", summary, 400))
 
     if (rdir / "sweep_results.json").exists():
         sw = _load_optional_json(rdir / "sweep_results.json")
@@ -575,7 +623,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Input Rate [deg/s]")
         fig.update_yaxes(title_text="Rate Error [deg/s]")
         fig.update_layout(title="Gate 2 — Closed-Loop Deadband & Bunny Ears Mitigation")
-        core_divs.append(_plotly_div(fig, 370))
+        core_cards.append(_plotly_card(fig, "bunny_ears", summary, 370))
 
     if (rdir / "psd_linear.bin").exists() and (rdir / "psd_nonlinear.bin").exists():
         rec_l = read_sim_records(rdir / "psd_linear.bin")
@@ -591,7 +639,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(type="log", title_text="Frequency [Hz]")
         fig.update_yaxes(type="log", title_text="PSD [(rad/s)^2/Hz]")
         fig.update_layout(title="Gate 3 — 1/f Flicker Modulation Rejection vs Nonlinear Leakage")
-        core_divs.append(_plotly_div(fig, 380))
+        core_cards.append(_plotly_card(fig, "psd_flicker", summary, 380))
 
     dsp6 = summary.get("dsp6_compare")
     if dsp6 is not None:
@@ -620,7 +668,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_yaxes(type="log", title_text="Bias Error [deg/h]", row=1, col=1)
         fig.update_yaxes(title_text="V_pi Fraction", range=[0, 1.2], row=1, col=2)
         fig.update_layout(title=f"Gate 5 — Official 6-State DSP (+{dsp6['ram_xtalk_rejection_dB']:.1f} dB Rejection, -{dsp6['peak_voltage_reduction_pct']:.1f}% Peak Voltage)")
-        core_divs.append(_plotly_div(fig, 380))
+        core_cards.append(_plotly_card(fig, "dsp6_compare", summary, 380))
 
     fmi_g = summary.get("fmi_gate")
     if fmi_g is not None:
@@ -663,14 +711,14 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Input Rate [deg/s]", row=1, col=2)
         fig.update_yaxes(title_text="Rate Error [deg/h]", row=1, col=2)
         fig.update_layout(title=f"Gate 6 — FMI 3.0 Black-Box FMU Verification (AVAR Overlap = {fmi_g['avar']['overlap_check']['max_relative_mismatch_pct']:.2f}%)")
-        core_divs.append(_plotly_div(fig, 390))
+        core_cards.append(_plotly_card(fig, "fmi_fmu_gate", summary, 390))
 
-    if core_divs:
-        sections.append("<h2>Interactive Telemetry — Core Acceptance Gates</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in core_divs))
+    if core_cards:
+        sections.append("<h2 id='sec-core'>Interactive Telemetry — Core Acceptance Gates</h2>" + "".join(core_cards))
 
     # 2. Group A — 6 Time-Domain Scenarios (TD-01..TD-06)
     td_sc = summary.get("td_scenarios", {})
-    td_divs: list[str] = []
+    td_cards: list[str] = []
     if "TD-01" in td_sc:
         d = td_sc["TD-01"]
         ks = list(range(len(d["rel_err_by_k_pct"])))
@@ -681,7 +729,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Sub-sample Index k")
         fig.update_yaxes(type="log", title_text="Settling Error [%]")
         fig.update_layout(title=f"TD-01 — Sub-tau Settling & ADC Blanking Alignment (k*={d['k_start_optimal_0p5pct']}, t_s={d['tia_ts_0p1pct_ns']:.1f} ns)")
-        td_divs.append(_plotly_div(fig, 360))
+        td_cards.append(_plotly_card(fig, "td01_blanking", summary, 360))
 
     if "TD-02" in td_sc:
         d = td_sc["TD-02"]
@@ -694,7 +742,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=1, col=2)
         fig.update_yaxes(title_text="Magnitude [dB]", row=1, col=2)
         fig.update_layout(title="TD-02 — Closed-Loop Step & Sine Bode Bandwidth")
-        td_divs.append(_plotly_div(fig, 380))
+        td_cards.append(_plotly_card(fig, "td02_step_bode", summary, 380))
 
     if "TD-03" in td_sc:
         d = td_sc["TD-03"]
@@ -704,7 +752,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Time after +5% V_pi Shock [ms]")
         fig.update_yaxes(title_text="Residual eps_Vpi [%]")
         fig.update_layout(title="TD-03 — Loop-2 Gain-Lock Convergence Under +5% Thermal Shock")
-        td_divs.append(_plotly_div(fig, 360))
+        td_cards.append(_plotly_card(fig, "td03_vpi_shock", summary, 360))
 
     if "TD-04" in td_sc:
         d = td_sc["TD-04"]
@@ -714,7 +762,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Time [ms]")
         fig.update_yaxes(title_text="Rate [deg/s]")
         fig.update_layout(title=f"TD-04 — High-Rate 0->700 deg/s Tracking ({d['flyback_count']:,} 2pi Wraps @ {d['flyback_rate_kHz']:.1f} kHz)")
-        td_divs.append(_plotly_div(fig, 360))
+        td_cards.append(_plotly_card(fig, "td04_high_rate", summary, 360))
 
     if "TD-05" in td_sc:
         d = td_sc["TD-05"]
@@ -724,7 +772,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Time [ms]")
         fig.update_yaxes(title_text="Thermal Bias Drift [deg/h]")
         fig.update_layout(title=f"TD-05 — Real-Time Shupe Shock & Compensation ({d['thermal_compensation_reduction_pct']:.2f}% Suppression)")
-        td_divs.append(_plotly_div(fig, 360))
+        td_cards.append(_plotly_card(fig, "td05_shupe_shock", summary, 360))
 
     if "TD-06" in td_sc:
         d = td_sc["TD-06"]
@@ -734,14 +782,14 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(type="log", title_text="Frequency [Hz]")
         fig.update_yaxes(title_text="PSD [dB((deg/s)^2/Hz)]")
         fig.update_layout(title=f"TD-06 — 12-Bit Quantization Idle Tones vs PRBS Dither (DAC codes {d['without_dither']['unique_dac_codes']}->{d['with_dither']['unique_dac_codes']})")
-        td_divs.append(_plotly_div(fig, 360))
+        td_cards.append(_plotly_card(fig, "td06_limit_cycles", summary, 360))
 
-    if td_divs:
-        sections.append("<h2>Interactive Telemetry — Group A: 6 Time-Domain Scenarios (TD-01..TD-06)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in td_divs))
+    if td_cards:
+        sections.append("<h2 id='sec-td'>Interactive Telemetry — Group A: 6 Time-Domain Scenarios (TD-01..TD-06)</h2>" + "".join(td_cards))
 
     # 3. Group B — 5 System Engineering & Production Scenarios (ENG-01..ENG-05)
     eng_sc = summary.get("eng_scenarios", {})
-    eng_divs: list[str] = []
+    eng_cards: list[str] = []
     if "ENG-01" in eng_sc:
         d = eng_sc["ENG-01"]
         fig = make_subplots(rows=1, cols=2, subplot_titles=(f"ENOB Sweep (Min Passing = {d['recommended_min_bits']}-bit)", "ADC Aperture Jitter vs ARW"))
@@ -761,7 +809,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Aperture Jitter [ps]", row=1, col=2)
         fig.update_yaxes(title_text="ARW [deg/rt-h]", row=1, col=2)
         fig.update_layout(title="ENG-01 — Hardware Sizing & Cost Trade-Off (ENOB & Aperture Jitter)")
-        eng_divs.append(_plotly_div(fig, 380))
+        eng_cards.append(_plotly_card(fig, "eng01_hw_sizing", summary, 380))
 
     if "ENG-02" in eng_sc:
         d = eng_sc["ENG-02"]
@@ -778,7 +826,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         )
         fig.update_yaxes(title_text="Stationary Axis-Y Bias Error [deg/h]")
         fig.update_layout(title=f"ENG-02 — Concurrent 3-Axis SystemC-AMS IMU Crosstalk (Rail Droop = {d['peak_rail_droop_V']*1e3:.1f} mV)")
-        eng_divs.append(_plotly_div(fig, 360))
+        eng_cards.append(_plotly_card(fig, "eng02_imu_3axis", summary, 360))
 
     if "ENG-03" in eng_sc:
         d = eng_sc["ENG-03"]
@@ -792,7 +840,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="External Magnetic Field B [Gauss]", row=1, col=2)
         fig.update_yaxes(title_text="Faraday Bias [deg/h]", row=1, col=2)
         fig.update_layout(title="ENG-03 — Vibration Rectification Error (VRE) & Faraday Sensitivity")
-        eng_divs.append(_plotly_div(fig, 380))
+        eng_cards.append(_plotly_card(fig, "eng03_vre_faraday", summary, 380))
 
     if "ENG-04" in eng_sc:
         d = eng_sc["ENG-04"]
@@ -806,7 +854,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         )
         fig.update_xaxes(title_text="BIT Time-to-Alert [us]")
         fig.update_layout(title="ENG-04 — Real-Time FPGA BIT/FDIR Detection Latency (5 Fault Modes)")
-        eng_divs.append(_plotly_div(fig, 340))
+        eng_cards.append(_plotly_card(fig, "eng04_fault_bit", summary, 340))
 
     if "ENG-05" in eng_sc:
         d = eng_sc["ENG-05"]
@@ -828,14 +876,14 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Thermal Point Index (21 pts)", row=1, col=2)
         fig.update_yaxes(title_text="Bias [deg/h]", row=1, col=2)
         fig.update_layout(title="ENG-05 — Monte Carlo Production Yield & -40..+85 C Virtual Thermal Calibration")
-        eng_divs.append(_plotly_div(fig, 390))
+        eng_cards.append(_plotly_card(fig, "eng05_mc_yield_cal", summary, 390))
 
-    if eng_divs:
-        sections.append("<h2>Interactive Telemetry — Group B: 5 System Engineering Scenarios (ENG-01..ENG-05)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in eng_divs))
+    if eng_cards:
+        sections.append("<h2 id='sec-eng'>Interactive Telemetry — Group B: 5 System Engineering Scenarios (ENG-01..ENG-05)</h2>" + "".join(eng_cards))
 
     # 4. Group C — 4 Dynamic Response, Output PSD & Electro-Optic Probe Scenarios (DYN-01..DYN-04)
     dyn_sc = summary.get("dyn_scenarios", {})
-    dyn_divs: list[str] = []
+    dyn_cards: list[str] = []
     if "DYN-01" in dyn_sc:
         d = dyn_sc["DYN-01"]
         c10_4 = d["cases"]["step10_4state"]
@@ -860,7 +908,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Time Relative to Step [ms]", range=[-0.2, 1.5], row=1, col=2)
         fig.update_yaxes(title_text="Optical Phase [rad]", row=1, col=2)
         fig.update_layout(title="DYN-01 — Closed-Loop Step Response & Loop-1 Gain Trade-Off")
-        dyn_divs.append(_plotly_div(fig, 400))
+        dyn_cards.append(_plotly_card(fig, "dyn01_step_response", summary, 400))
 
     if "DYN-02" in dyn_sc:
         d = dyn_sc["DYN-02"]
@@ -888,7 +936,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_yaxes(title_text="Magnitude [dB]", row=1, col=1)
         fig.update_yaxes(title_text="Phase [deg]", row=2, col=1)
         fig.update_layout(title="DYN-02 — Full Closed-Loop Frequency Response (Bode Magnitude & Phase)")
-        dyn_divs.append(_plotly_div(fig, 520))
+        dyn_cards.append(_plotly_card(fig, "dyn02_freq_response", summary, 520))
 
     if "DYN-03" in dyn_sc:
         d = dyn_sc["DYN-03"]
@@ -907,7 +955,7 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=1, col=2)
         fig.update_yaxes(title_text="Cumulative RMS [deg/h]", row=1, col=2)
         fig.update_layout(title=f"DYN-03 — Output Angular-Rate PSD & Cumulative Noise (6-State LF Suppression = +{d['low_freq_6state_suppression_dB']:.1f} dB)")
-        dyn_divs.append(_plotly_div(fig, 400))
+        dyn_cards.append(_plotly_card(fig, "dyn03_output_psd", summary, 400))
 
     if "DYN-04" in dyn_sc:
         d = dyn_sc["DYN-04"]
@@ -940,10 +988,10 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_xaxes(title_text="Sub-tau Zoom Offset [us]", row=2, col=2)
         fig.update_yaxes(title_text="P_PD [uW] / 20*V_TIA", row=2, col=2)
         fig.update_layout(title="DYN-04 — Sinusoidal Input Internal Electro-Optic Chain (Sagnac, V_fb MIOC, PD & TIA)")
-        dyn_divs.append(_plotly_div(fig, 580))
+        dyn_cards.append(_plotly_card(fig, "dyn04_sine_electro_optic", summary, 580))
 
-    if dyn_divs:
-        sections.append("<h2>Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe (DYN-01..DYN-04)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in dyn_divs))
+    if dyn_cards:
+        sections.append("<h2 id='sec-dyn'>Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe (DYN-01..DYN-04)</h2>" + "".join(dyn_cards))
 
     return "".join(sections)
 
@@ -954,7 +1002,7 @@ def _build_interactive_html(
     fig_rel_paths: list[str],
     out_html: Path,
 ) -> Path:
-    """Build self-contained industrial HTML5 diagnostic report with interactive Plotly charts & KPI tables."""
+    """Build standardized industrial HTML5 diagnostic report with interactive model explorer, Plotly charts, KaTeX theory & plain-language proofs."""
     meta = summary["report_meta"]
     gate_rows = summary["gate_statuses"]
     plot_sections_html = _build_plotly_sections(rdir, summary)
@@ -993,37 +1041,84 @@ def _build_interactive_html(
             f"<tbody>{''.join(av_rows)}</tbody></table>"
         )
 
+    arch_section = (
+        "<section id='sec-arch' class='arch-card'>"
+        "<div class='arch-head'>"
+        "<div><h2>Sơ đồ Kiến trúc &amp; Dòng chảy Toán học IFOG (Đối chiếu Source Code Thực tế)</h2>"
+        "<p class='arch-sub'>Bấm trực tiếp vào từng khối bên dưới để xem giải thích dễ hiểu cho người không chuyên, công thức C++/Python thực tế (<code>EQ-01..EQ-44</code>) và tiêu chí nghiệm thu V&amp;V.</p></div>"
+        "<a class='btn-arch' href='architecture_model.html' target='_blank' rel='noopener'>Mở Sơ đồ Toàn màn hình ↗</a>"
+        "</div>"
+        "<iframe class='arch-frame' src='architecture_model.html' title='IFOG-SIM-SPEC-006 Interactive Architecture Explorer' loading='lazy'></iframe>"
+        "</section>"
+    )
+
     gallery_html = ""
     if fig_rel_paths:
-        cards = "".join(
-            f"<figure><figcaption>{html.escape(Path(p).stem.replace('_', ' ').title())}</figcaption>"
-            f"<img src='{html.escape(p)}' alt='{html.escape(Path(p).name)}'></figure>"
-            for p in fig_rel_paths
+        cards = []
+        for p in fig_rel_paths:
+            stem = Path(p).stem
+            info = get_figure_narrative(stem, summary)
+            cards.append(
+                "<figure class='fig-card'>"
+                f"<figcaption>{html.escape(info['title'])}</figcaption>"
+                f"<img src='{html.escape(p)}' alt='{html.escape(Path(p).name)}'>"
+                f"{render_narrative_html(stem, summary)}"
+                "</figure>"
+            )
+        gallery_html = (
+            f"<h2 id='sec-gallery'>Thư viện Biểu đồ 300-DPI kèm Giải thích Lý thuyết &amp; Ý nghĩa ({len(fig_rel_paths)} Plots)</h2>"
+            f"<div class='gallery'>{''.join(cards)}</div>"
         )
-        gallery_html = f"<h2>300-DPI Diagnostic Figures Gallery ({len(fig_rel_paths)} Plots)</h2><div class='gallery'>{cards}</div>"
 
     summary_pre = html.escape(json.dumps(summary, indent=2))
     html_doc = (
-        "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>"
+        "<!DOCTYPE html><html lang='vi'><head><meta charset='utf-8'>"
+        "<meta name='viewport' content='width=device-width,initial-scale=1.0'>"
         f"<title>IFOG Simulation Report — {html.escape(meta['run_id'])}</title>"
         "<script src='https://cdn.plot.ly/plotly-2.35.2.min.js'></script>"
+        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css'>"
+        "<script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js'></script>"
+        "<script defer src='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js'></script>"
         "<style>"
-        "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1200px;margin:2rem auto;padding:0 1.25rem;color:#1A202C;background:#F8FAFC;}"
-        ".header{background:#1B365D;color:#FFF;padding:1.5rem 2rem;border-radius:10px;margin-bottom:1.5rem;}"
-        ".header h1{margin:0 0 .5rem 0;font-size:1.6rem;}"
-        ".meta{display:flex;flex-wrap:wrap;gap:.75rem;font-size:.9rem;opacity:.95;}"
-        ".badge{display:inline-block;padding:.2rem .6rem;border-radius:999px;font-weight:700;font-size:.82rem;}"
+        "*{box-sizing:border-box;}"
+        "body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,Inter,sans-serif;max-width:1320px;margin:0 auto;padding:1.25rem 1.25rem 3rem;color:#0F172A;background:#F8FAFC;line-height:1.55;}"
+        ".header{background:linear-gradient(135deg,#0F172A 0%,#1B365D 65%,#0E6251 100%);color:#FFF;padding:1.6rem 2rem;border-radius:14px;margin-bottom:1rem;box-shadow:0 6px 20px rgba(15,23,42,.15);}"
+        ".header h1{margin:0 0 .5rem 0;font-size:1.55rem;letter-spacing:-.01em;}"
+        ".meta{display:flex;flex-wrap:wrap;gap:.85rem;font-size:.9rem;opacity:.96;align-items:center;}"
+        ".nav-bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);padding:.65rem 1rem;border:1px solid #E2E8F0;border-radius:10px;margin-bottom:1.25rem;box-shadow:0 2px 6px rgba(15,23,42,.06);}"
+        ".nav-bar a{text-decoration:none;font-size:.82rem;font-weight:700;color:#1B365D;background:#EDF2F7;padding:.35rem .7rem;border-radius:8px;transition:background .15s;}"
+        ".nav-bar a:hover{background:#DBEAFE;}"
+        ".nav-bar a.nav-primary{background:#1B365D;color:#FFF;margin-left:auto;}"
+        ".badge{display:inline-block;padding:.2rem .65rem;border-radius:999px;font-weight:700;font-size:.8rem;}"
         ".badge.pass{background:#0E6251;color:#FFF;} .badge.fail{background:#9B2C2C;color:#FFF;} .badge.info{background:#4A5568;color:#FFF;}"
-        "h2{color:#1B365D;border-bottom:2px solid #CBD5E0;padding-bottom:.35rem;margin-top:2rem;}"
-        "table{width:100%;border-collapse:collapse;background:#FFF;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);}"
-        "th,td{padding:.65rem .9rem;border-bottom:1px solid #E2E8F0;text-align:left;font-size:.92rem;}"
-        "th{background:#EDF2F7;color:#1B365D;}"
-        ".plot-card{background:#FFF;padding:.75rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);margin-bottom:1.25rem;}"
-        ".gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:1.25rem;}"
-        "figure{margin:0;background:#FFF;padding:1rem;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);}"
-        "figcaption{font-weight:600;color:#1B365D;margin-bottom:.5rem;}"
-        "figure img{width:100%;height:auto;border:1px solid #E2E8F0;border-radius:4px;}"
-        "pre{background:#1A202C;color:#E2E8F0;padding:1rem;border-radius:8px;overflow-x:auto;font-size:.82rem;}"
+        "h2{color:#1B365D;border-bottom:2px solid #CBD5E0;padding-bottom:.35rem;margin-top:2.2rem;font-size:1.25rem;}"
+        "table{width:100%;border-collapse:collapse;background:#FFF;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(15,23,42,.08);}"
+        "th,td{padding:.65rem .9rem;border-bottom:1px solid #E2E8F0;text-align:left;font-size:.9rem;}"
+        "th{background:#EDF2F7;color:#1B365D;font-weight:700;}"
+        ".arch-card{background:#FFF;border:1px solid #CBD5E1;border-radius:12px;padding:1rem 1.25rem;margin-top:1.5rem;box-shadow:0 2px 8px rgba(15,23,42,.06);}"
+        ".arch-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:.75rem;}"
+        ".arch-head h2{margin:0;border:none;padding:0;}"
+        ".arch-sub{margin:.25rem 0 0;font-size:.88rem;color:#475569;}"
+        ".btn-arch{display:inline-block;background:#1B365D;color:#FFF;text-decoration:none;padding:.5rem .95rem;border-radius:8px;font-weight:700;font-size:.84rem;}"
+        ".arch-frame{width:100%;height:760px;border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFC;}"
+        ".plot-card{background:#FFF;padding:1rem;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(15,23,42,.07);margin-bottom:1.4rem;}"
+        ".explain-box{margin-top:.85rem;border:1px solid #E2E8F0;border-radius:10px;overflow:hidden;background:#F8FAFC;}"
+        ".explain-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.5rem;padding:.55rem .9rem;background:#EDF2F7;border-bottom:1px solid #E2E8F0;font-weight:700;font-size:.88rem;color:#1B365D;}"
+        ".eq-pill{background:#1B365D;color:#FFF;padding:.12rem .55rem;border-radius:6px;font-size:.76rem;font-family:ui-monospace,monospace;}"
+        ".explain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:0;}"
+        ".explain-col{padding:.75rem .95rem;border-right:1px solid #E2E8F0;font-size:.86rem;}"
+        ".explain-col:last-child{border-right:none;}"
+        ".explain-col p{margin:.3rem 0 0;color:#334155;}"
+        ".explain-label{font-size:.76rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}"
+        ".explain-theory{background:#F8FAFC;} .explain-theory .explain-label{color:#1D4ED8;}"
+        ".explain-plain{background:#F0FDF4;} .explain-plain .explain-label{color:#047857;}"
+        ".explain-proof{background:#FFFBEB;} .explain-proof .explain-label{color:#B45309;}"
+        ".gallery{display:grid;grid-template-columns:1fr;gap:1.4rem;}"
+        "figure.fig-card{margin:0;background:#FFF;padding:1.1rem;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(15,23,42,.07);}"
+        "figcaption{font-weight:800;color:#1B365D;margin-bottom:.65rem;font-size:.98rem;}"
+        "figure.fig-card img{width:100%;max-width:1040px;display:block;margin:0 auto;height:auto;border:1px solid #E2E8F0;border-radius:6px;}"
+        "pre{background:#0F172A;color:#E2E8F0;padding:1rem;border-radius:10px;overflow-x:auto;font-size:.82rem;}"
+        "code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;}"
         "</style></head><body>"
         "<div class='header'>"
         f"<h1>IFOG-SIM-SPEC-006 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
@@ -1033,18 +1128,34 @@ def _build_interactive_html(
         f"<span>Generated: <strong>{html.escape(meta['generated_utc'])}</strong></span>"
         f"<span class='badge {status_cls}'>{html.escape(meta['overall_status'])}</span>"
         "</div></div>"
+        "<nav class='nav-bar'>"
+        "<a href='#sec-scorecard'>Bảng Nghiệm thu</a>"
+        "<a href='#sec-arch'>Sơ đồ Mô hình 3 Tầng</a>"
+        "<a href='#sec-core'>Core Gates (1–6)</a>"
+        "<a href='#sec-td'>Group A (TD)</a>"
+        "<a href='#sec-eng'>Group B (ENG)</a>"
+        "<a href='#sec-dyn'>Group C (DYN)</a>"
+        "<a href='#sec-gallery'>Thư viện 300-DPI</a>"
+        "<a href='#sec-raw'>Raw JSON</a>"
+        "<a class='nav-primary' href='architecture_model.html' target='_blank' rel='noopener'>Sơ đồ Kiến trúc HTML ↗</a>"
+        "</nav>"
         + (
-            "<h2>Executive Gate & Scenario Verification Summary</h2>"
+            "<h2 id='sec-scorecard'>Executive Gate &amp; Scenario Verification Summary</h2>"
             "<table><thead><tr><th>Gate / Scenario</th><th>Status</th><th>Quantitative Metrics</th></tr></thead>"
             f"<tbody>{gate_table_rows}</tbody></table>"
             if gate_rows
             else ""
         )
+        + arch_section
         + avar_section
         + plot_sections_html
         + gallery_html
-        + "<h2>Raw Metrics Summary (<code>metrics_summary.json</code>)</h2>"
+        + "<h2 id='sec-raw'>Raw Metrics Summary (<code>metrics_summary.json</code>)</h2>"
         + f"<details><summary>Expand full JSON payload</summary><pre>{summary_pre}</pre></details>"
+        + "<script>window.addEventListener('DOMContentLoaded',function(){"
+        + "if(window.renderMathInElement){renderMathInElement(document.body,{delimiters:["
+        + "{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});}"
+        + "});</script>"
         + "</body></html>"
     )
     out_html.write_text(html_doc, encoding="utf-8")
@@ -1074,6 +1185,7 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
                 "status": str(meta.get("overall_status", "INFO")),
                 "has_md": "yes" if (sub / "report.md").exists() else "no",
                 "has_html": "yes" if (sub / "report.html").exists() else "no",
+                "has_arch": "yes" if (sub / "architecture_model.html").exists() else "no",
             }
         )
     entries.sort(key=lambda e: (e["generated_utc"], e["dir"]), reverse=True)
@@ -1083,18 +1195,20 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
         "",
         f"Automatically maintained by `viz/export_report.py` (`v{get_project_version()}`).",
         "",
-        "| Run ID | Mode | Version | Generated (UTC) | Status | Markdown | HTML |",
-        "| :--- | :--- | :---: | :--- | :---: | :---: | :---: |",
+        "| Run ID | Mode | Version | Generated (UTC) | Status | Markdown | HTML | Model Explorer |",
+        "| :--- | :--- | :---: | :--- | :---: | :---: | :---: | :---: |",
     ]
     html_rows: list[str] = []
     for e in entries:
         md_link = f"[report.md]({e['dir']}/report.md)" if e["has_md"] == "yes" else "—"
         html_link = f"[report.html]({e['dir']}/report.html)" if e["has_html"] == "yes" else "—"
+        arch_link = f"[architecture_model.html]({e['dir']}/architecture_model.html)" if e["has_arch"] == "yes" else "—"
         md_lines.append(
-            f"| `{e['run_id']}` | `{e['mode']}` | `v{e['version']}` | `{e['generated_utc']}` | **{e['status']}** | {md_link} | {html_link} |"
+            f"| `{e['run_id']}` | `{e['mode']}` | `v{e['version']}` | `{e['generated_utc']}` | **{e['status']}** | {md_link} | {html_link} | {arch_link} |"
         )
         md_a = f"<a href='{html.escape(e['dir'])}/report.md'>report.md</a>" if e["has_md"] == "yes" else "—"
         html_a = f"<a href='{html.escape(e['dir'])}/report.html'>report.html</a>" if e["has_html"] == "yes" else "—"
+        arch_a = f"<a href='{html.escape(e['dir'])}/architecture_model.html'>architecture_model.html</a>" if e["has_arch"] == "yes" else "—"
         cls = "pass" if e["status"] == "PASS" else ("fail" if e["status"] == "FAIL" else "info")
         html_rows.append(
             f"<tr><td><code>{html.escape(e['run_id'])}</code></td>"
@@ -1102,7 +1216,7 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
             f"<td>v{html.escape(e['version'])}</td>"
             f"<td>{html.escape(e['generated_utc'])}</td>"
             f"<td><span class='badge {cls}'>{html.escape(e['status'])}</span></td>"
-            f"<td>{md_a}</td><td>{html_a}</td></tr>"
+            f"<td>{md_a}</td><td>{html_a}</td><td>{arch_a}</td></tr>"
         )
 
     idx_md = root / "index.md"
@@ -1113,14 +1227,14 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
         "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>"
         "<title>IFOG Simulation Reports Index</title>"
         "<style>"
-        "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1100px;margin:2rem auto;padding:0 1.25rem;background:#F8FAFC;color:#1A202C;}"
+        "body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1160px;margin:2rem auto;padding:0 1.25rem;background:#F8FAFC;color:#1A202C;}"
         "h1{color:#1B365D;} table{width:100%;border-collapse:collapse;background:#FFF;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);}"
         "th,td{padding:.65rem .9rem;border-bottom:1px solid #E2E8F0;text-align:left;font-size:.92rem;} th{background:#1B365D;color:#FFF;}"
         ".badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-weight:700;font-size:.8rem;color:#FFF;}"
         ".badge.pass{background:#0E6251;} .badge.fail{background:#9B2C2C;} .badge.info{background:#4A5568;}"
         "</style></head><body>"
         f"<h1>IFOG-SIM-SPEC-006 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
-        "<table><thead><tr><th>Run ID</th><th>Mode</th><th>Version</th><th>Generated (UTC)</th><th>Status</th><th>Markdown</th><th>HTML</th></tr></thead>"
+        "<table><thead><tr><th>Run ID</th><th>Mode</th><th>Version</th><th>Generated (UTC)</th><th>Status</th><th>Markdown</th><th>HTML</th><th>Model Explorer</th></tr></thead>"
         f"<tbody>{''.join(html_rows)}</tbody></table>"
         "</body></html>",
         encoding="utf-8",
@@ -1135,7 +1249,7 @@ def export_run_report(
     run_meta: dict[str, Any] | None = None,
     update_index: bool = False,
 ) -> dict[str, Any]:
-    """Export metrics_summary.json, 300-DPI PNG figures, Markdown (.md), and HTML (.html) reports."""
+    """Export metrics_summary.json, 300-DPI PNG figures, Markdown (.md), HTML (.html), and interactive architecture_model.html."""
     rdir = Path(run_dir)
     dest_dir = Path(report_dir) if report_dir is not None else rdir
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -1269,6 +1383,13 @@ def export_run_report(
         summary["generated_artifacts"].append(str(md_path))
 
     if "html" in formats:
+        arch_path = write_architecture_explorer(
+            dest_dir / "architecture_model.html",
+            version=summary["report_meta"]["version"],
+            summary=summary,
+            back_report_href="report.html",
+        )
+        summary["generated_artifacts"].append(str(arch_path))
         html_path = _build_interactive_html(rdir, summary, fig_rel_paths, dest_dir / "report.html")
         summary["generated_artifacts"].append(str(html_path))
 
@@ -1288,7 +1409,7 @@ def export_run_report(
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for unified diagnostic report export."""
     parser = argparse.ArgumentParser(
-        description="Export IFOG-SIM-SPEC-005 Metrics Summary, 300-DPI PNGs, Markdown & HTML Reports"
+        description="Export IFOG-SIM-SPEC-006 Standardized Metrics Summary, 300-DPI PNGs, Annotated Markdown & Interactive HTML Reports"
     )
     parser.add_argument("--run", required=True, help="Simulation data directory")
     parser.add_argument(

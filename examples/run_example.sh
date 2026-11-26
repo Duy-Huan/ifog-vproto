@@ -31,6 +31,7 @@ if [ "${LEGACY_4GATE}" -eq 1 ]; then
         mkdir -p "${DST}/figures"
         cp "${REPO_ROOT}/report/full_4gate_baseline/report.md" "${DST}/"
         cp "${REPO_ROOT}/report/full_4gate_baseline/report.html" "${DST}/"
+        cp "${REPO_ROOT}/report/full_4gate_baseline/architecture_model.html" "${DST}/"
         cp "${REPO_ROOT}/report/full_4gate_baseline/metrics_summary.json" "${DST}/"
         cp "${REPO_ROOT}/report/full_4gate_baseline/figures/"*.png "${DST}/figures/"
         for jf in phys_params.json shupe_summary.json sim_summary.json gate1_metrics.json \
@@ -51,6 +52,7 @@ if [ "${SYNC_EXAMPLE}" -eq 1 ]; then
     mkdir -p "${DST}/figures"
     cp "${REPO_ROOT}/report/full_all_scenarios/report.md" "${DST}/"
     cp "${REPO_ROOT}/report/full_all_scenarios/report.html" "${DST}/"
+    cp "${REPO_ROOT}/report/full_all_scenarios/architecture_model.html" "${DST}/"
     cp "${REPO_ROOT}/report/full_all_scenarios/metrics_summary.json" "${DST}/"
     cp "${REPO_ROOT}/report/full_all_scenarios/figures/"*.png "${DST}/figures/"
     if [ -f "${REPO_ROOT}/report/full_all_scenarios/virtual_calibration_dataset.csv" ]; then

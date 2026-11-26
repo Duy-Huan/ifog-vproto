@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v3.0.0}
+\newcommand{\DocVersion}{v3.0.1}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -50,18 +50,16 @@
 {\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-006} v6.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
-\section{Release v3.0.0 (2026-11-26)}
+\section{Release v3.0.1 (2026-11-26)}
 
 \subsection{Key New Features}
 \begin{enumerate}
-    \item \textbf{Owner-Authorized Spec Upgrade --- \texttt{IFOG-SIM-SPEC-006} (v6.0) \& 44-Formula Matrix:}
-    Authored checksum-locked \texttt{spec/IFOG-SIM-SPEC-006.\{md,tex,pdf,sha256\}} preserving \texttt{SPEC-004} and \texttt{SPEC-005} byte-identical and SHA-256 locked, while expanding the CI formula verification matrix to \textbf{44 / 44 equations (\texttt{EQ-01}--\texttt{EQ-44})}.
-    \item \textbf{Standalone Tool-Agnostic FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}):}
-    Wrapped the unmodified Tier 2 Accellera SystemC/SystemC-AMS core (\texttt{IfogTopModule}, compiled \texttt{-fPIC}) via vendorized FMI 3.0 C headers (\texttt{fmi\_wrapper/include/fmi3/}), full 75-symbol C-API bridge (\texttt{fmi\_wrapper/src/fmi3\_bridge.cpp}), 15-variable \texttt{modelDescription.xml.in} (\texttt{fmiVersion="3.0"}, \texttt{canBeInstantiatedOnlyOncePerProcess="true"}), and CMake \texttt{package\_fmu} target bundling \texttt{modelDescription.xml}, \texttt{binaries/x86\_64-linux/ifog\_core.so}, and Tier 1 \texttt{resources/\{phys\_params.json, shupe\_lut.bin, baseline\_cfg.json\}}.
-    \item \textbf{FMPy Master Orchestrator \& Gate 6 Verification (\texttt{tier3\_analysis/fmi\_master\_runner.py}, \texttt{--mode fmi\_gate}):}
-    Subprocess-isolated FMPy master orchestrator verifying \textbf{0 FMI 3.0 XSD errors} (\texttt{validate\_fmu}), \textbf{bit-exact $0.00\times 10^{0}\text{ rad/s}$ ($<10^{-12}$)} standalone vs FMU equivalence on 4-state \& 6-state modes, \textbf{97.42\%} Deadband reduction (99.59\% Bunny Ears SF reduction) on Slow Rate Ramp across $0^\circ/\text{h}$, and seamless FMU $\to$ Tier 3 Dual-Regime 5-Region IEEE Std 952 AVAR (\textbf{3.83\%} $< 5\%$ overlap, all 5 parameters $\le 8.92\%$).
-    \item \textbf{21-Gate/Scenario Official Flow, 100.0\% Dual Coverage \& Governance Sync:}
-    Expanded CLI to 28 modes, \texttt{viz/plot\_scenarios.py} to 21 300-DPI PNGs (\texttt{fmi\_fmu\_gate.png}), and \texttt{viz/export\_report.py} to 20 interactive Plotly HTML5 charts; refreshed \texttt{examples/full\_all\_scenarios/} (\textbf{21 / 21 PASS}); verified \textbf{100.0\% C++} (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) and \textbf{100.0\% Python} line coverage, 10 real system tests, new skill \texttt{skills/ifog-fmi3-cosim-fmu/}, and full Rule 16 doc sync.
+    \item \textbf{Code-Audited Interactive HTML5 Mathematical Architecture Explorer (\texttt{viz/architecture\_explorer.py}):}
+    Generated standalone \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} (attached to Release \texttt{v3.0.1}) and automatic per-run \texttt{report/<run\_id>/architecture\_model.html} audited 1-to-1 against live C++/Python source code (\texttt{EQ-01}--\texttt{EQ-44}), with 4 interactive signal-flow highlight modes, non-specialist intuition, live run parameter strip, and formula-to-source audit table.
+    \item \textbf{Standardized Professional \texttt{.md} \& \texttt{.html} Reports with Full Theory \& Plain-Language Guides (\texttt{viz/report\_narratives.py}, \texttt{viz/export\_report.py}):}
+    Embedded standardized 3-part explanations beneath all \textbf{21 official diagnostic figures} in both Markdown (\texttt{report.md}) and KaTeX/Plotly HTML5 (\texttt{report.html}): (1) theoretical foundation \& exact \texttt{EQ-xx} equations, (2) plain-language reading guide for non-specialists, and (3) dynamically populated quantitative simulation proof, plus sticky quick-navigation bar and embedded interactive architecture diagram inside \texttt{report.html}.
+    \item \textbf{Regenerated Both Curated Examples \& 100.0\% Dual Coverage:}
+    Re-executed both \texttt{examples/full\_4gate\_baseline/} (\textbf{4 / 4 PASS}) and \texttt{examples/full\_all\_scenarios/} (\textbf{21 / 21 PASS}) with the standardized \texttt{v3.0.1} reporting suite and \texttt{architecture\_model.html}; verified \textbf{100.0\% C++} (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) and \textbf{100.0\% Python} coverage (including \texttt{viz/architecture\_explorer.py} and \texttt{viz/report\_narratives.py}), 44/44 verified formulas, 10/10 real system tests, and full Rule 16 doc sync.
 \end{enumerate}
 
 \subsection{Verified Quality Gates \& Attached Release Assets}
@@ -69,10 +67,10 @@
 \toprule
 \textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
 \midrule
-Triple Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004/005/006} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
+Triple Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004/005/006} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs + HTML explorer synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
 FMI 3.0 FMU Compliance (Gate 6) & 0 XSD errors; $0.00\times 10^0\text{ rad/s}$ equiv; 97.42\% deadband; 3.83\% AVAR overlap & \textcolor{TealDark}{\textbf{PASS}} \\
 Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% (\texttt{tier2} + \texttt{fmi\_wrapper}) \& Python \texttt{pytest-cov} 100.0\% & \textcolor{TealDark}{\textbf{PASS}} \\
-44-Formula \& 21-Scenario Suite & 44 / 44 formulas + Gates 1--6 + 6 TD + 5 ENG + 4 DYN + \texttt{full\_all\_scenarios} & \textcolor{TealDark}{\textbf{PASS}} \\
+44-Formula \& Standardized Reports & 44 / 44 formulas + 21 annotated figures + both curated examples regenerated & \textcolor{TealDark}{\textbf{PASS}} \\
 Container Build \& In-Container FMU & Live \texttt{Containerfile} build from Git + in-container FMU validation \& 6-State report & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
@@ -80,6 +78,7 @@ Container Build \& In-Container FMU & Live \texttt{Containerfile} build from Git
 \section{Previous Releases}
 
 \begin{itemize}
+    \item \textbf{Release v3.0.0 (2026-11-26):} Owner-authorized \texttt{IFOG-SIM-SPEC-006} v6.0 (44/44 verified formulas), standalone FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}, 75 C-API exports, 15 SI variables), FMPy Gate 6 orchestrator (0 XSD errors, $0.00\times 10^0\text{ rad/s}$ equivalence, 97.42\% deadband red., 3.83\% AVAR overlap), and 21/21 PASS curated example.
     \item \textbf{Release v2.2.0 (2026-11-26):} Added Group C dedicated dynamic \& internal electro-optic probe scenarios (\texttt{DYN-01} Step Response, \texttt{DYN-02} Full Bode Magnitude/Phase/Group Delay, \texttt{DYN-03} Broadband Output Rate PSD/ASD \& Cumulative RMS, \texttt{DYN-04} Sinusoidal Input Internal Chain \texttt{PD}, $V_{\text{fb,MIOC}}$, Sagnac phase, $V_{\text{TIA}}$, ADC blanking); 20/20 PASS curated example.
     \item \textbf{Release v2.1.0 (2026-11-25):} Upgraded \texttt{viz/export\_report.py} with 15 interactive Plotly HTML5 charts and full scenario Markdown tables; switched \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to all-scenarios default (\texttt{MC=500}); committed initial \texttt{examples/full\_all\_scenarios/} bundle.
     \item \textbf{Release v2.0.0 (2026-11-25):} Owner-authorized \texttt{IFOG-SIM-SPEC-005} v5.0 (41/41 verified formulas), official 6-state symmetric DSP ($+136.94\text{ dB}$ RAM/xtalk rejection, $-33.3\%$ $V_{\text{peak}}$), 6 Time-Domain scenarios (\texttt{TD-01}..\texttt{TD-06}), 5 System Engineering scenarios (\texttt{ENG-01}..\texttt{ENG-05}, concurrent 3-axis SystemC-AMS IMU \texttt{--imu3axis}, 5-fault FPGA BIT/FDIR, parallel MC Yield + $-40..+85^\circ\text{C}$ calibration), \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, and resilient \texttt{release.yml}.
