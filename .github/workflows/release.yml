@@ -101,6 +101,7 @@ jobs:
           cp docs/IFOG_VPROTO_ARCHITECTURE.pdf data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.md data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.tex data/release_bundle/
+          cp docs/IFOG_ARCHITECTURE_EXPLORER.html data/release_bundle/
           cp docs/IFOG_SIMULATION_SCENARIOS.pdf data/release_bundle/
           cp docs/IFOG_SIMULATION_SCENARIOS.md data/release_bundle/
           cp docs/IFOG_SIMULATION_SCENARIOS.tex data/release_bundle/
@@ -114,14 +115,15 @@ jobs:
           # Release ${TAG} — Closed-Loop IFOG Virtual Prototype & FMI 3.0 Co-Simulation FMU (\`IFOG-SIM-SPEC-006\`)
 
           ## Verified Release Gates (100% Passed on \`main\`)
+          - **Standardized Diagnostic Reporting & Code-Audited Interactive HTML Explorer (\`IFOG_ARCHITECTURE_EXPLORER.html\`):** Interactive 3-Tier + FMI 3.0 mathematical architecture explorer audited 1-to-1 against live C++/Python source code (\`EQ-01\`..\`EQ-44\`), plus standardized Markdown (\`.md\`) and KaTeX/Plotly HTML5 (\`.html\`) reports containing full theoretical foundations, plain-language reading guides for non-specialists, and dynamic simulation proofs for all 21 diagnostic figures.
           - **Standalone FMI 3.0 Co-Simulation FMU (\`ifog_core.fmu\`):** Attached tool-agnostic \`x86_64-linux\` FMI 3.0 FMU wrapping Accellera SystemC/SystemC-AMS Tier 2 (\`IfogTopModule\`) with 0 \`fmpy.validation.validate_fmu\` errors, \`canBeInstantiatedOnlyOncePerProcess="true"\`, bit-exact (\`0.00e+00 rad/s < 1e-12\`) equivalence vs standalone \`ifog_sim\` on both 4-state and 6-state DSP modes, \`>=90%\` Deadband reduction, and \`<5%\` Dual-Regime 5-Region IEEE Std 952 AVAR overlap continuity.
           - **Triple Specification Lock (Rule 7):** \`spec/IFOG-SIM-SPEC-004.tex\`, \`spec/IFOG-SIM-SPEC-005.tex\`, and \`spec/IFOG-SIM-SPEC-006.{md,tex}\` SHA-256 verified + all compiled PDFs attached.
-          - **Version–Document Synchronization (Rule 16):** \`pyproject.toml\`, \`docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}\`, \`docs/IFOG_SIMULATION_SCENARIOS.{md,tex,pdf}\`, \`docs/RELEASE_NOTES.{md,tex,pdf}\`, \`docs/DOCS_BUILD.sha256\`, \`docs/CHANGELOG.md\`, and \`README.md\` strictly verified against tag \`${TAG}\`.
+          - **Version–Document Synchronization (Rule 16):** \`pyproject.toml\`, \`docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}\`, \`docs/IFOG_ARCHITECTURE_EXPLORER.html\`, \`docs/IFOG_SIMULATION_SCENARIOS.{md,tex,pdf}\`, \`docs/RELEASE_NOTES.{md,tex,pdf}\`, \`docs/DOCS_BUILD.sha256\`, \`docs/CHANGELOG.md\`, and \`README.md\` strictly verified against tag \`${TAG}\`.
           - **Formula Traceability (Rule 3):** All **44 / 44** normative formulas (\`EQ-01\` .. \`EQ-44\`) individually verified.
           - **Dual-Domain 100% Coverage (Rules 2 & 14):** C++ SystemC-AMS core + FMI 3.0 bridge (\`tier2_sysc_ams/\` & \`fmi_wrapper/src/\`) = **100.0%** line & function coverage (\`gcovr\`); Python Tier 1 / Tier 3 / FMI Master / Viz = **100.0%** line coverage (\`pytest-cov\`).
           - **Full Real Simulations (Rule 5):** Gates 1–6 (Golden Linear, Deadband & Bunny Ears, 1/f Flicker & K-Matrix, 60 s Fast + 10 h Slow Dual-Regime AVAR, Official 6-State Symmetric DSP, and FMI 3.0 FMU Gate 6), all 6 Time-Domain scenarios (\`TD-01\`..\`TD-06\`), all 5 System Engineering scenarios (\`ENG-01\`..\`ENG-05\`), and all 4 Dynamic Response & Electro-Optic Probe scenarios (\`DYN-01\`..\`DYN-04\`).
 
-          See attached \`IFOG-SIM-SPEC-006.pdf\`, \`RELEASE_NOTES.pdf\`, \`IFOG_VPROTO_ARCHITECTURE.pdf\`, and \`IFOG_SIMULATION_SCENARIOS.pdf\` for complete details.
+          See attached \`IFOG_ARCHITECTURE_EXPLORER.html\`, \`IFOG-SIM-SPEC-006.pdf\`, \`RELEASE_NOTES.pdf\`, \`IFOG_VPROTO_ARCHITECTURE.pdf\`, and \`IFOG_SIMULATION_SCENARIOS.pdf\` for complete details.
           EOF
           for attempt in 1 2 3 4 5 6 7 8; do
             if gh release view "${TAG}" >/dev/null 2>&1; then
@@ -151,6 +153,7 @@ jobs:
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.pdf \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.md \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.tex \
+            data/release_bundle/IFOG_ARCHITECTURE_EXPLORER.html \
             data/release_bundle/IFOG_SIMULATION_SCENARIOS.pdf \
             data/release_bundle/IFOG_SIMULATION_SCENARIOS.md \
             data/release_bundle/IFOG_SIMULATION_SCENARIOS.tex \

@@ -1,10 +1,11 @@
 # Full Real All-Scenarios Example (`examples/full_all_scenarios/`)
 
-This curated example contains the **complete, genuine, full-scale simulation output** (zero mocks, zero smoke-test shortcuts) covering **all 21 official acceptance gates & engineering scenarios** (`IFOG-SIM-SPEC-004` v4.0 + `IFOG-SIM-SPEC-005` v5.0 + `IFOG-SIM-SPEC-006` v6.0, software release `v3.0.0`), generated directly by `./examples/run_example.sh --sync-example` and committed to the repository for complete feasibility and architectural evaluation.
+This curated example contains the **complete, genuine, full-scale simulation output** (zero mocks, zero smoke-test shortcuts) covering **all 21 official acceptance gates & engineering scenarios** (`IFOG-SIM-SPEC-004` v4.0 + `IFOG-SIM-SPEC-005` v5.0 + `IFOG-SIM-SPEC-006` v6.0, software release `v3.0.1`), generated directly by `./examples/run_example.sh --sync-example` and committed to the repository for complete feasibility and architectural evaluation.
 
 ## Included Deliverables
-- [`report.md`](report.md) — Auto-generated comprehensive Markdown report covering Core Gates 1–4, Gate 5 (Official 6-State DSP), **Gate 6 (FMI 3.0 Black-Box Co-Simulation FMU)**, Group A (`TD-01`..`TD-06`), Group B (`ENG-01`..`ENG-05`), Group C (`DYN-01`..`DYN-04`), and all 21 embedded figures
-- [`report.html`](report.html) — Self-contained interactive HTML5 Plotly report featuring **20 interactive multi-panel Plotly charts** (Core Gates + Gate 6 FMU + Group A + Group B + Group C), KPI summary cards, 21-figure 300-DPI gallery, and collapsible JSON inspector
+- [`architecture_model.html`](architecture_model.html) — Code-audited interactive 3-Tier + FMI 3.0 mathematical architecture explorer with live measured parameters from this run
+- [`report.md`](report.md) — Standardized comprehensive Markdown report covering Core Gates 1–4, Gate 5 (Official 6-State DSP), **Gate 6 (FMI 3.0 Black-Box Co-Simulation FMU)**, Group A (`TD-01`..`TD-06`), Group B (`ENG-01`..`ENG-05`), Group C (`DYN-01`..`DYN-04`), and all 21 embedded figures each with full theoretical foundation, plain-language non-specialist reading guide, and dynamic measured proof
+- [`report.html`](report.html) — Self-contained KaTeX + interactive HTML5 Plotly report featuring an embedded interactive architecture explorer, sticky quick-navigation bar, **20 interactive multi-panel Plotly charts** (each with 3-column theory/non-specialist/proof cards), annotated 21-figure 300-DPI gallery, and collapsible JSON inspector
 - [`metrics_summary.json`](metrics_summary.json) — Complete structured JSON payload across all 21 gates & scenarios
 - [`virtual_calibration_dataset.csv`](virtual_calibration_dataset.csv) — Real 21-point `-40..+85 °C` virtual environmental chamber calibration table from `ENG-05`
 - Per-stage JSON artifacts:
@@ -15,7 +16,7 @@ This curated example contains the **complete, genuine, full-scale simulation out
 
 ---
 
-## Executive Scorecard (`v3.0.0` — 21 / 21 PASS)
+## Executive Scorecard (`v3.0.1` — 21 / 21 PASS)
 
 | # | Gate / Scenario | Specification Scope | Measured Real Simulation Result | Status |
 | :---: | :--- | :--- | :--- | :---: |

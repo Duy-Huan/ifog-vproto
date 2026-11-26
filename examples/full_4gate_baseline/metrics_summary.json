@@ -1,5 +1,5 @@
 {
-  "spec_id": "IFOG-SIM-SPEC-004",
+  "spec_id": "IFOG-SIM-SPEC-006",
   "run_dir": "data/full_4gate_baseline",
   "report_dir": "report/full_4gate_baseline",
   "phys_params": {
@@ -29,7 +29,13 @@
   "sim_summary": {
     "S_alpha_counts_per_rad": 11005.975282997417,
     "adc_clip_count": 0,
+    "anti_windup_count": 0,
+    "bit_alert_time_s": -1.0,
+    "bit_first_fault_code": 0,
+    "bit_time_to_alert_s": -1.0,
+    "e_asym_rms": 0.0,
     "eta_blanking": 0.75,
+    "fdir_recovered": false,
     "final_delta_phi_step_rad": 0.00010420634026756082,
     "final_eps_vpi_eff": 0.0011135208809909258,
     "final_g_dac": 0.9814838440009716,
@@ -37,11 +43,12 @@
     "flyback_count": 210,
     "mean_omega_out_second_half_rad_per_s": 7.977559796051083e-05,
     "omega_out_lsb_rad_per_s": 1e-12,
-    "spec_id": "IFOG-SIM-SPEC-004",
+    "spec_id": "IFOG-SIM-SPEC-005",
     "tia_cf_opt_F": 2.5231325220201605e-13,
     "tia_omega0_rad_per_s": 76129745.35933477,
     "tia_ts_0p1pct_s": 1.7409614401939106e-07,
     "tia_zeta": 0.520601675324012,
+    "total_dsp_trace_records": 0,
     "total_micro_records": 656,
     "total_records_written": 3063275,
     "total_tau_steps": 12253098
@@ -276,12 +283,18 @@
       "R_deg_per_h2": 0.025
     }
   },
+  "dsp6_compare": null,
+  "fmi_gate": null,
+  "td_scenarios": {},
+  "eng_scenarios": {},
+  "dyn_scenarios": {},
   "generated_artifacts": [
     "report/full_4gate_baseline/figures/waveforms.png",
     "report/full_4gate_baseline/figures/bunny_ears.png",
     "report/full_4gate_baseline/figures/psd_flicker.png",
     "report/full_4gate_baseline/figures/avar_5regions.png",
     "report/full_4gate_baseline/report.md",
+    "report/full_4gate_baseline/architecture_model.html",
     "report/full_4gate_baseline/report.html"
   ],
   "psd_flicker": {
@@ -313,8 +326,8 @@
   "report_meta": {
     "run_id": "full_4gate_baseline",
     "mode": "full",
-    "version": "1.2.0",
-    "generated_utc": "2026-11-25T13:33:14Z",
+    "version": "3.0.1",
+    "generated_utc": "2026-11-26T09:24:01Z",
     "overall_status": "PASS"
   }
 }

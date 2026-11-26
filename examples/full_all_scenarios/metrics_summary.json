@@ -48239,6 +48239,7 @@
     "/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios/figures/dyn04_sine_electro_optic.png",
     "/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios/virtual_calibration_dataset.csv",
     "/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios/report.md",
+    "/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios/architecture_model.html",
     "/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios/report.html"
   ],
   "psd_flicker": {
@@ -48355,8 +48356,8 @@
   "report_meta": {
     "run_id": "full_all_scenarios",
     "mode": "all_scenarios",
-    "version": "3.0.0",
-    "generated_utc": "2026-11-26T06:46:03Z",
+    "version": "3.0.1",
+    "generated_utc": "2026-11-26T09:23:28Z",
     "overall_status": "PASS"
   }
 }

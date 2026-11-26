@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-SCEN-001}
-\newcommand{\DocVersion}{v3.0.0}
+\newcommand{\DocVersion}{v3.0.1}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -81,6 +81,7 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 \texttt{v2.1.0} & 2026-11-25 & All-Scenarios Curated Example \& 15-Chart HTML & Upgraded \texttt{viz/export\_report.py} with full Gate 5 / TD / ENG Markdown tables, 15 interactive Plotly HTML5 charts, and 16 300-DPI PNG figures; updated \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to execute all 16 gates \& scenarios (\texttt{MC=500}) by default; committed full curated example \texttt{examples/full\_all\_scenarios/}. \\
 \texttt{v2.2.0} & 2026-11-26 & Group C Dynamic, PSD \& Electro-Optic Probe (\texttt{20/20}) & Added Group C (\texttt{tier3\_analysis/scenarios\_dynamic\_probe.py}, 5 CLI modes): dedicated multi-amplitude/gain-sweep Step Response (\texttt{DYN-01}), 15-pt Bode Magnitude/Phase/Group Delay (\texttt{DYN-02}), broadband Output Rate PSD/ASD \& Cumulative RMS (\texttt{DYN-03}), and Sinusoidal Internal Electro-Optic Probe exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $P_{\text{PD}}/I_{\text{PD}}$, $V_{\text{TIA}}$, and ADC blanking (\texttt{DYN-04}); expanded suite to 20 gates/scenarios, 20 PNGs, and 19 interactive Plotly HTML5 charts. \\
 \texttt{v3.0.0} & 2026-11-26 & \texttt{SPEC-006} Gate 6 FMI 3.0 FMU (\texttt{21/21}) & Added standalone FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}, \texttt{fmi\_wrapper/}) and \textbf{Gate 6} (\texttt{--mode fmi\_gate}, \texttt{tier3\_analysis/fmi\_master\_runner.py}, \texttt{EQ-42}--\texttt{EQ-44}): 0 XSD validation errors, $0.00\times 10^{0}\text{ rad/s}$ bit-exact equivalence vs \texttt{ifog\_sim} (4s \& 6s), 97.42\% deadband reduction, and 3.83\% ($<5\%$) 5-region AVAR overlap; expanded suite to 21 gates/scenarios, 28 CLI modes, 21 PNGs, and 20 interactive Plotly HTML5 charts. \\
+\texttt{v3.0.1} & 2026-11-26 & Standardized Explanatory Reports \& HTML Explorer & Standardized auto-generated \texttt{report.md} and KaTeX/Plotly \texttt{report.html} with embedded code-audited interactive model diagram (\texttt{architecture\_model.html} / \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html}) plus 3-part theoretical foundation, plain-language reading guide (for non-specialists), and live measured proof beneath all 21 figures; regenerated both curated examples. \\
 \bottomrule
 \end{tabularx}
 \normalsize

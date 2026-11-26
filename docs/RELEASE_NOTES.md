@@ -5,12 +5,28 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v3.0.0` |
+| **Current Version** | `v3.0.1` |
 | **Status** | `RELEASED (Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](../spec/IFOG-SIM-SPEC-006.pdf) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
+| **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) |
 | **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v3.0.1` (2026-11-26)
+
+### Highlights & New Capabilities
+1. **Code-Audited Interactive HTML5 Mathematical Architecture Explorer (`viz/architecture_explorer.py`):**
+   - Authored standalone [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) and automatic per-run `report/<run_id>/architecture_model.html` inspired by the SPEC-004 interactive architecture flow and **audited 1-to-1 against live `IFOG-SIM-SPEC-006` C++/Python source code** (`EQ-01`..`EQ-44`).
+   - Reconciled every physical formula and signal path (exact Spectral-Sliced Jones reciprocity in `jones_spectral.py`, 1D Crank–Nicolson/FEM Shupe integral without outer $n_{\text{eff}}$ in `shupe_thermal.py`, TIA inverting-node crosstalk injection in `analog_frontend_tdf.cpp`, `set_delay(1)` loop break in `adc_dac_bridge.cpp`, Official 6-State Symmetric DSP & 5-fault BIT/FDIR in `digital_dsp_sc.cpp`, 15-variable FMI 3.0 wrapper in `fmi3_bridge.cpp`, and Dual-Regime AVAR stitching in `dual_regime_avar.py`), complete with 4 interactive path filters, live parameter strip, and formula-to-source audit table.
+2. **Standardized Professional `.md` & `.html` Diagnostic Reports with Full Theory & Non-Specialist Explanations (`viz/report_narratives.py`, `viz/export_report.py`):**
+   - Added [`viz/report_narratives.py`](../viz/report_narratives.py) providing standardized 3-part commentary for all **21 official diagnostic figures**: (1) **Cơ sở Lý thuyết & Công thức (`EQ-xx`)**, (2) **Ý nghĩa Biểu đồ & Cách đọc cho Người không chuyên**, and (3) **Kết quả Thực tế & Điều được Chứng minh** dynamically populated from measured run metrics.
+   - Upgraded `report.md` (Section 0 3-Tier overview, Gate 6 FMI 3.0 table, and annotated Section 11 figures) and `report.html` (KaTeX auto-rendering, sticky quick-nav bar, embedded interactive `architecture_model.html` panel, annotated Plotly cards & 300-DPI gallery), plus `Model Explorer` links in `report/index.{md,html}`.
+3. **Regenerated Both Curated Examples & 100.0% Dual Coverage:**
+   - Re-ran both `./examples/run_example.sh --4gate-only --sync-example` ([`examples/full_4gate_baseline/`](../examples/full_4gate_baseline/README.md), `4 / 4` PASS) and `./examples/run_example.sh --sync-example` ([`examples/full_all_scenarios/`](../examples/full_all_scenarios/README.md), `21 / 21` PASS) with the new `v3.0.1` standardized reports and `architecture_model.html`.
+   - Maintained **100.0% C++** (`gcovr`, `2,102/2,102` lines) & **100.00% Python** (`pytest-cov`, including `viz/architecture_explorer.py` and `viz/report_narratives.py`), **44/44 verified formulas**, **10/10 real system tests**, and attached `IFOG_ARCHITECTURE_EXPLORER.html` to GitHub Release `v3.0.1` (18 release assets).
 
 ---
 
