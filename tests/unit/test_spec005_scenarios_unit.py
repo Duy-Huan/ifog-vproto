@@ -193,6 +193,7 @@ def test_sim_runner_cli_all_spec005_mode_dispatches(tmp_path: Path, monkeypatch:
         "run_gate3_stage",
         "run_gate4_stage",
         "run_dsp6_comparison",
+        "run_fmi_gate_suite",
         "run_td_blanking",
         "run_td_step_sine",
         "run_td_vpi_shock",
@@ -216,6 +217,7 @@ def test_sim_runner_cli_all_spec005_mode_dispatches(tmp_path: Path, monkeypatch:
 
     modes = [
         "dsp6_compare",
+        "fmi_gate",
         "td_blanking",
         "td_step_sine",
         "td_vpi_shock",
@@ -261,6 +263,7 @@ def test_sim_runner_cli_all_spec005_mode_dispatches(tmp_path: Path, monkeypatch:
 
     for expected in (
         "run_dsp6_comparison",
+        "run_fmi_gate_suite",
         "run_td_blanking",
         "run_td_step_sine",
         "run_td_vpi_shock",

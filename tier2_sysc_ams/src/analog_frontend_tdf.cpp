@@ -6,7 +6,8 @@ namespace ifog {
 AnalogFrontEnd_TDF::AnalogFrontEnd_TDF(
     sc_core::sc_module_name name,
     const IfogConfig& cfg,
-    MicroTraceCollector* micro_trace
+    MicroTraceCollector* micro_trace,
+    const ExternalDriveState* ext_drive
 )
     : sca_tdf::sca_module(name),
       p_det_in("p_det_in"),
@@ -35,7 +36,8 @@ AnalogFrontEnd_TDF::AnalogFrontEnd_TDF(
       rng_(cfg.seed ^ 0xA24BAED4963EE407ULL),
       cluster_idx_(0),
       clip_count_(0),
-      micro_trace_(micro_trace) {
+      micro_trace_(micro_trace),
+      ext_drive_(ext_drive) {
     // Precompute P_det-independent terms of EQ-15 (dark + thermal + op-amp white + capacitive gain)
     var_fixed_A2_ = compute_tia_noise_variance(
         0.0,
@@ -86,7 +88,11 @@ void AnalogFrontEnd_TDF::processing() {
 
     const double n_pink_tia = pink_tia_in.read();
     const double n_pink_xtalk = pink_xtalk_in.read();
-    const double k_xtalk_mod = k_xtalk_eff_ * (1.0 + n_pink_xtalk);
+    const double k_xtalk_base =
+        (ext_drive_ != nullptr && ext_drive_->use_live_params && cfg_.ablation.en_xtalk)
+            ? ext_drive_->k_xtalk_live_A_per_V
+            : k_xtalk_eff_;
+    const double k_xtalk_mod = k_xtalk_base * (1.0 + n_pink_xtalk);
     const bool adc_sat_fault =
         (cfg_.fault_type == FaultType::AdcSaturation) &&
         is_fault_active(t_cluster, cfg_.fault_inject_time_s, cfg_.fault_duration_s);

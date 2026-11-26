@@ -5,12 +5,33 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v2.2.0` |
+| **Current Version** | `v3.0.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
-| **Normative Specification** | [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0) & [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
+| **Normative Specification** | [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](../spec/IFOG-SIM-SPEC-006.pdf) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v3.0.0` (2026-11-26)
+
+### Highlights & New Capabilities
+1. **Owner-Authorized Specification Upgrade — `IFOG-SIM-SPEC-006` (v6.0):**
+   - Authored checksum-locked [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md), [`spec/IFOG-SIM-SPEC-006.tex`](../spec/IFOG-SIM-SPEC-006.tex), 3-pass LuaLaTeX compiled [`spec/IFOG-SIM-SPEC-006.pdf`](../spec/IFOG-SIM-SPEC-006.pdf), and [`spec/IFOG-SIM-SPEC-006.sha256`](../spec/IFOG-SIM-SPEC-006.sha256) while preserving `SPEC-004` and `SPEC-005` 100% untouched & SHA-256 locked.
+   - Expanded CI formula verification matrix from 41 to **44 / 44 independent equations (`EQ-01` .. `EQ-44`)** covering multi-rate ZOH alignment & anti-aliased macro-step averaging (`EQ-42`), residual $V_\pi$ phase error & 6-bit BIT/FDIR status bitmask (`EQ-43`), and black-box FMU vs standalone `< 1e-12 rad/s` equivalence (`EQ-44`).
+2. **Standalone Tool-Agnostic FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`):**
+   - Wrapped the exact unmodified Tier 2 Accellera SystemC/SystemC-AMS core (`IfogTopModule`, compiled `-fPIC`) with vendorized official BSD-2-Clause FMI 3.0 C headers (`fmi_wrapper/include/fmi3/`), full 75-symbol FMI 3.0 C-API bridge (`fmi_wrapper/src/fmi3_bridge.cpp`), 15-variable `modelDescription.xml.in` (`fmiVersion="3.0"`, `canBeInstantiatedOnlyOncePerProcess="true"`), and CMake `package_fmu` target bundling `modelDescription.xml`, `binaries/x86_64-linux/ifog_core.so`, and Tier 1 `resources/{phys_params.json, shupe_lut.bin, baseline_cfg.json}`.
+   - Shipped `ifog_core.fmu` directly as a verified GitHub Release asset alongside all specs and docs.
+3. **FMPy Master Orchestrator & Gate 6 Verification (`tier3_analysis/fmi_master_runner.py`, `--mode fmi_gate`):**
+   - Subprocess-isolated FMPy master orchestrator honoring `canBeInstantiatedOnlyOncePerProcess="true"`:
+     - **Gate 6A (FMI 3.0 Compliance):** `fmpy.validation.validate_fmu("build/ifog_core.fmu")` passes with **0 errors, 0 warnings**.
+     - **Gate 6B (Bit-Exact Equivalence):** Standalone `build/ifog_sim` vs `build/ifog_core.fmu` (4-state & 6-state, noisy `seed=42004`, `step_size=1e-3`) matches with **`0.00e+00 rad/s` (`< 1e-12`)** discrepancy and clean `bit_status == 0`.
+     - **Gate 6C (Slow Rate Ramp Deadband Sweep):** `fmpy.simulate_fmu(..., step_size=1e-3)` across `0 deg/h` achieves **`97.42%`** Deadband reduction and **`99.59%`** Bunny Ears scale-factor reduction (`enable_dither=False` vs `True`).
+     - **Gate 6D (FMU -> Tier 3 Dual-Regime 5-Region AVAR):** `omega_out_avg` stream feeds directly into `run_dual_regime_avar()` achieving **`3.83%`** (`< 5%`) overlap continuity and all 5 IEEE Std 952 parameters ($Q, N, B, K, R$) within `<= 8.92%` (`<= 10%`).
+4. **21-Gate/Scenario Official Flow, 100.0% Dual Coverage & Governance Sync (`v3.0.0`):**
+   - Expanded CLI to **28 modes**, `viz/plot_scenarios.py` to **21 300-DPI PNGs** (`fmi_fmu_gate.png`), `viz/export_report.py` to **20 interactive Plotly HTML5 charts**, and refreshed `examples/full_all_scenarios/` (`21 / 21` PASS).
+   - Achieved **100.0% C++ line & function coverage** (`gcovr`) across BOTH `tier2_sysc_ams/` AND `fmi_wrapper/src/` (`2,102/2,102` lines, `200/200` functions), **100.0% Python line coverage** (`pytest-cov` including `fmi_master_runner.py`), **44/44 verified formulas**, **10 real system tests**, added project skill [`skills/ifog-fmi3-cosim-fmu/SKILL.md`](../skills/ifog-fmi3-cosim-fmu/SKILL.md) (9 skills), and verified Rule 16 doc sync for `v3.0.0`.
 
 ---
 

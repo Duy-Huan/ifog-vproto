@@ -11,12 +11,12 @@ set -euo pipefail
 #   build              Build the OCI container image (SystemC 2.3.4 + SystemC-AMS 2.3.4 + Python venv + Tier 2)
 #   shell              Start an interactive bash shell with data/ and report/ mounted
 #   sim [args...]      Run ./scripts/run_sim.sh inside the container (outputs appear in host report/ & data/)
-#   example            Run ALL 20 official scenarios (Gates 1-5 + 6 TD + 5 ENG + 4 DYN, MC=500) inside the container -> report/
-#   test               Run unit tests, 41 formulas, 100% C++ & Python coverage inside the container
-#   verify             Run full verification including all real system scenario tests inside the container
+#   example            Run ALL 21 official scenarios (Gates 1-6 + 6 TD + 5 ENG + 4 DYN, MC=500) inside the container -> report/
+#   test               Run unit tests, 44 formulas, 100% C++ & Python coverage inside the container
+#   verify             Run full verification including all real system scenario & FMI 3.0 FMU tests inside the container
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:2.2.0}"
+IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:3.0.0}"
 ENGINE="${CONTAINER_ENGINE:-}"
 
 while [ "$#" -gt 0 ]; do
@@ -81,11 +81,11 @@ case "${CMD}" in
         ;;
     test)
         "${ENGINE}" run --rm "${EXTRA_RUN_ARGS[@]}" "${IMAGE_TAG}" bash -lc \
-            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing"
+            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing"
         ;;
     verify)
         "${ENGINE}" run --rm "${EXTRA_RUN_ARGS[@]}" "${IMAGE_TAG}" bash -lc \
-            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing && pytest tests/system -v"
+            "sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 && python3 scripts/verify_doc_sync.py && bash scripts/run_cpp_coverage.sh && python3 scripts/verify_formulas_ci.py && pytest tests/unit tests/formula_verification --cov --cov-report=term-missing && pytest tests/system -v"
         ;;
     *)
         sed -n '4,16p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'

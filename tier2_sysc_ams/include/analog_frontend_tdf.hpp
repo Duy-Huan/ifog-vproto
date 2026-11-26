@@ -24,7 +24,8 @@ public:
     AnalogFrontEnd_TDF(
         sc_core::sc_module_name name,
         const IfogConfig& cfg,
-        MicroTraceCollector* micro_trace = nullptr
+        MicroTraceCollector* micro_trace = nullptr,
+        const ExternalDriveState* ext_drive = nullptr
     );
 
     void set_attributes() override;
@@ -55,6 +56,7 @@ private:
     uint64_t cluster_idx_;
     uint64_t clip_count_;
     MicroTraceCollector* micro_trace_;
+    const ExternalDriveState* ext_drive_;
 };
 
 }  // namespace ifog

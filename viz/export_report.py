@@ -29,6 +29,7 @@ from viz.plot_scenarios import (
     plot_dsp6_compare,
     plot_dyn_scenarios,
     plot_eng_scenarios,
+    plot_fmi_gate,
     plot_td_scenarios,
 )
 from viz.plot_waveforms import plot_waveforms
@@ -120,6 +121,20 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
             f"RAM/xtalk gain={_fmt_num(dsp6.get('ram_xtalk_rejection_dB'), '.1f')} dB"
         )
         rows.append({"gate": "Gate 5 — Official 6-State DSP (EQ-31..34)", "status": "PASS" if passed else "FAIL", "detail": detail})
+
+    fmi_gate = summary.get("fmi_gate")
+    if fmi_gate is not None:
+        passed = bool(fmi_gate.get("fmi_gate_pass", False))
+        eq_err = float(fmi_gate["equivalence"]["max_final_omega_err_rad_per_s"])
+        db_red = float(fmi_gate["deadband"]["deadband_reduction_pct"])
+        av_ov = float(fmi_gate["avar"]["overlap_check"]["max_relative_mismatch_pct"])
+        detail = (
+            f"FMI 3.0 val={fmi_gate['validation']['validation_pass']}, "
+            f"equiv err={eq_err:.2e} rad/s (<1e-12), "
+            f"deadband red={db_red:.1f}% (>=90%), "
+            f"AVAR overlap={av_ov:.2f}% (<5%)"
+        )
+        rows.append({"gate": "Gate 6 — FMI 3.0 Black-Box FMU (EQ-42..44)", "status": "PASS" if passed else "FAIL", "detail": detail})
 
     for sc_id, sc in summary.get("td_scenarios", {}).items():
         rows.append(
@@ -218,7 +233,7 @@ def _build_markdown_report(
         "",
         "| Field | Value |",
         "| :--- | :--- |",
-        f"| **Specification** | `{summary['spec_id']}` (v5.0) |",
+        f"| **Specification** | `{summary['spec_id']}` (v6.0) |",
         f"| **Software Version** | `v{meta['version']}` |",
         f"| **Run Mode** | `{meta['mode']}` |",
         f"| **Generated (UTC)** | `{meta['generated_utc']}` |",
@@ -607,6 +622,49 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
         fig.update_layout(title=f"Gate 5 — Official 6-State DSP (+{dsp6['ram_xtalk_rejection_dB']:.1f} dB Rejection, -{dsp6['peak_voltage_reduction_pct']:.1f}% Peak Voltage)")
         core_divs.append(_plotly_div(fig, 380))
 
+    fmi_g = summary.get("fmi_gate")
+    if fmi_g is not None:
+        eq4 = fmi_g["equivalence"]["modes"]["4state"]
+        db = fmi_g["deadband"]
+        r_in = np.asarray(db["rates_in_deg_per_s"], dtype=np.float64)
+        e_off = (np.asarray(db["dither_off_out_deg_per_s"], dtype=np.float64) - r_in) * 3600.0
+        e_on = (np.asarray(db["dither_on_out_deg_per_s"], dtype=np.float64) - r_in) * 3600.0
+        fig = make_subplots(
+            rows=1,
+            cols=2,
+            subplot_titles=(
+                f"Gate 6B: FMU vs Standalone (err={fmi_g['equivalence']['max_final_omega_err_rad_per_s']:.2e} rad/s)",
+                f"Gate 6C: FMU Deadband Sweep ({db['deadband_reduction_pct']:.1f}% Red.)",
+            ),
+        )
+        t_ms = np.asarray(eq4["time_s"], dtype=np.float64) * 1.0e3
+        fig.add_trace(
+            go.Scatter(x=t_ms, y=eq4["standalone_omega_out_rad_per_s"], mode="lines", name="Standalone 4s", line={"color": "#1B365D"}),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(x=t_ms, y=eq4["fmu_omega_out_rad_per_s"], mode="markers", name="FMU 4s", marker={"color": "#DD6B20", "size": 6}),
+            row=1,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(x=r_in, y=e_off, mode="lines+markers", name="FMU Dither OFF", line={"color": "#9B2C2C"}),
+            row=1,
+            col=2,
+        )
+        fig.add_trace(
+            go.Scatter(x=r_in, y=e_on, mode="lines+markers", name="FMU Dither ON", line={"color": "#0E6251"}),
+            row=1,
+            col=2,
+        )
+        fig.update_xaxes(title_text="Time [ms]", row=1, col=1)
+        fig.update_yaxes(title_text="Omega_out [rad/s]", row=1, col=1)
+        fig.update_xaxes(title_text="Input Rate [deg/s]", row=1, col=2)
+        fig.update_yaxes(title_text="Rate Error [deg/h]", row=1, col=2)
+        fig.update_layout(title=f"Gate 6 — FMI 3.0 Black-Box FMU Verification (AVAR Overlap = {fmi_g['avar']['overlap_check']['max_relative_mismatch_pct']:.2f}%)")
+        core_divs.append(_plotly_div(fig, 390))
+
     if core_divs:
         sections.append("<h2>Interactive Telemetry — Core Acceptance Gates</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in core_divs))
 
@@ -968,7 +1026,7 @@ def _build_interactive_html(
         "pre{background:#1A202C;color:#E2E8F0;padding:1rem;border-radius:8px;overflow-x:auto;font-size:.82rem;}"
         "</style></head><body>"
         "<div class='header'>"
-        f"<h1>IFOG-SIM-SPEC-005 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
+        f"<h1>IFOG-SIM-SPEC-006 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
         "<div class='meta'>"
         f"<span>Version: <strong>v{html.escape(meta['version'])}</strong></span>"
         f"<span>Mode: <strong>{html.escape(meta['mode'])}</strong></span>"
@@ -1061,7 +1119,7 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
         ".badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-weight:700;font-size:.8rem;color:#FFF;}"
         ".badge.pass{background:#0E6251;} .badge.fail{background:#9B2C2C;} .badge.info{background:#4A5568;}"
         "</style></head><body>"
-        f"<h1>IFOG-SIM-SPEC-005 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
+        f"<h1>IFOG-SIM-SPEC-006 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
         "<table><thead><tr><th>Run ID</th><th>Mode</th><th>Version</th><th>Generated (UTC)</th><th>Status</th><th>Markdown</th><th>HTML</th></tr></thead>"
         f"<tbody>{''.join(html_rows)}</tbody></table>"
         "</body></html>",
@@ -1110,9 +1168,10 @@ def export_run_report(
     eng_loaded = {k: v for k, fname in eng_files if (v := _load_optional_json(rdir / fname)) is not None}
     dyn_loaded = {k: v for k, fname in dyn_files if (v := _load_optional_json(rdir / fname)) is not None}
     dsp6_loaded = _load_optional_json(rdir / "dsp6_compare.json")
+    fmi_loaded = _load_optional_json(rdir / "fmi_gate_summary.json")
 
     summary: dict[str, Any] = {
-        "spec_id": "IFOG-SIM-SPEC-005",
+        "spec_id": "IFOG-SIM-SPEC-006",
         "run_dir": str(rdir),
         "report_dir": str(dest_dir),
         "phys_params": _load_optional_json(rdir / "phys_params.json"),
@@ -1124,6 +1183,7 @@ def export_run_report(
         "nonlinearity_summary": _load_optional_json(rdir / "nonlinearity_summary.json"),
         "avar_metrics": _load_optional_json(rdir / "avar_metrics.json"),
         "dsp6_compare": dsp6_loaded,
+        "fmi_gate": fmi_loaded,
         "td_scenarios": td_loaded,
         "eng_scenarios": eng_loaded,
         "dyn_scenarios": dyn_loaded,
@@ -1169,6 +1229,11 @@ def export_run_report(
             p = plot_dsp6_compare(dsp6_loaded, fig_dir / "dsp6_compare.png")
             summary["generated_artifacts"].append(str(p))
             fig_rel_paths.append("figures/dsp6_compare.png")
+
+        if fmi_loaded is not None:
+            p = plot_fmi_gate(fmi_loaded, rdir, fig_dir / "fmi_fmu_gate.png")
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append("figures/fmi_fmu_gate.png")
 
         for p in plot_td_scenarios(rdir, fig_dir):
             summary["generated_artifacts"].append(str(p))

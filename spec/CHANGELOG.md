@@ -3,11 +3,27 @@
 This file tracks the revision history and audit trail of the normative IFOG virtual prototype specifications stored in `spec/`.
 
 > **Normative Governance Rule (AGENT.md Rule 7):**
-> Both `spec/IFOG-SIM-SPEC-004.tex` (archived v4.0 baseline) and `spec/IFOG-SIM-SPEC-005.tex` (active v5.0 baseline, authorized by project owner for `v2.0.0`) are checksum-locked (`spec/IFOG-SIM-SPEC-004.sha256`, `spec/IFOG-SIM-SPEC-005.sha256`) and MUST NOT be modified without explicit written approval from the project owner.
+> `spec/IFOG-SIM-SPEC-004.tex` (archived v4.0 baseline), `spec/IFOG-SIM-SPEC-005.tex` (archived v5.0 baseline), and `spec/IFOG-SIM-SPEC-006.{md,tex}` (active v6.0 baseline, authorized by project owner for `v3.0.0`) are all checksum-locked (`spec/IFOG-SIM-SPEC-004.sha256`, `spec/IFOG-SIM-SPEC-005.sha256`, `spec/IFOG-SIM-SPEC-006.sha256`) and MUST NOT be modified without explicit written approval from the project owner.
 
 ---
 
-## [v5.0] — `IFOG-SIM-SPEC-005` (Current Normative Baseline — Owner-Authorized)
+## [v6.0] — `IFOG-SIM-SPEC-006` (Current Normative Baseline — Owner-Authorized)
+
+- **Document ID:** `IFOG-SIM-SPEC-006`
+- **Supersedes / Extends:** `IFOG-SIM-SPEC-005` & `IFOG-SIM-SPEC-004` (preserves 100% of `EQ-01`..`EQ-41`, Gates 1..5, `TD-01`..`TD-06`, `ENG-01`..`ENG-05`, and `DYN-01`..`DYN-04`)
+- **Reference Standards:** FMI Standard 3.0.2; IEEE Std 952-2020; IEEE Std 1666.1-2016
+- **SHA-256 (`IFOG-SIM-SPEC-006.md`):** `9056a6e9bbfbe7fc9b0bec810ee2aa40447cf0b709d01ddcace1431f88121cf6`
+- **SHA-256 (`IFOG-SIM-SPEC-006.tex`):** `d53751bb2e8bd1d288dcafb4dd02d1f20aaa6f5c3de23947e965505a279fee44`
+
+### Key Architectural & Standard Additions (v5.0 -> v6.0)
+1. **Standalone FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`):** Wraps Tier 2 (`IfogTopModule` — exact unmodified Accellera SystemC/SystemC-AMS TDF/DE closed-loop core) via vendorized BSD-2-Clause official FMI 3.0 C headers (`fmi_wrapper/include/fmi3/`) and full 75-symbol FMI 3.0 C-API bridge (`fmi_wrapper/src/fmi3_bridge.cpp`), compiled with `-fPIC` and packaged with `modelDescription.xml`, `binaries/x86_64-linux/ifog_core.so`, and Tier 1 `resources/{phys_params.json, shupe_lut.bin, baseline_cfg.json}`.
+2. **15-Variable `modelDescription.xml` Contract (`fmiVersion="3.0"`):** Declares `canBeInstantiatedOnlyOncePerProcess="true"` honoring the Accellera SystemC singleton kernel, `omega_in`/`shupe_phase_in` ZOH inputs, `omega_out`/`omega_out_avg`/`e_vpi_res`/`bit_status` outputs, tunable `eps_vpi`/`k_xtalk`/`enable_dither`, and fixed `dsp_mode` (`2`/`4`/`6` states), `en_white_noise`, `en_pink_noise`, `en_vpi_loop`, and `seed`.
+3. **Three Normative FMI 3.0 Equations (`EQ-42`..`EQ-44`):** Multi-rate macro/micro ZOH alignment & anti-aliased interval-averaged rate output (`EQ-42`), Loop-2 residual $V_\pi$ phase error (`rad`) & 6-bit BIT/FDIR status bitmask (`EQ-43`), and black-box FMU vs standalone Tier 2 `< 1e-12 rad/s` equivalence contract (`EQ-44`) — expanding the CI formula verification matrix to **44 / 44** equations.
+4. **FMPy Master Orchestrator & Verification Gate 6 (`tier3_analysis/fmi_master_runner.py`):** Programmatic `fmpy.validation.validate_fmu` compliance check, bit-exact (`0.00e+00 rad/s` < `1e-12`) standalone vs FMU equivalence on 4-state & 6-state modes, Slow Rate Ramp deadband sweep (dither OFF vs ON), and seamless FMU -> Tier 3 Dual-Regime 5-Region IEEE Std 952 Overlapping AVAR synthesis.
+
+---
+
+## [v5.0] — `IFOG-SIM-SPEC-005` (Archived Immutable Baseline)
 
 - **Document ID:** `IFOG-SIM-SPEC-005`
 - **Supersedes / Extends:** `IFOG-SIM-SPEC-004` (preserves 100% of `EQ-01`..`EQ-30` and Gates 1..4)

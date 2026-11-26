@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v2.2.0}
+\newcommand{\DocVersion}{v3.0.0}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -35,6 +35,7 @@
 \fancyhead[L]{\small\color{NavyBlue}\textbf{\DocID} --- Release Notes}
 \fancyhead[R]{\small\color{TealDark}\textbf{\DocVersion} (\DocDate)}
 \fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
 
 \setlength{\parskip}{0.30em}
 \setlength{\parindent}{0pt}
@@ -46,23 +47,21 @@
 
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=9pt,bottom=9pt]
 {\color{white}\Large\bfseries \texttt{ifog-vproto} --- Official Release Notes}\\[3pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-005} v5.0 \quad|\quad Date: \DocDate}
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-006} v6.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
-\section{Release v2.2.0 (2026-11-26)}
+\section{Release v3.0.0 (2026-11-26)}
 
 \subsection{Key New Features}
 \begin{enumerate}
-    \item \textbf{Group C --- Dedicated Dynamic Response, Broadband Output PSD \& Internal Electro-Optic Probe (\texttt{DYN-01}..\texttt{DYN-04}):}
-    Implemented \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py} adding four essential closed-loop characterization scenarios backed by real SystemC-AMS Tier 2 simulations:
-    \texttt{DYN-01} (\texttt{dyn\_step\_response}: 10 \& $100^\circ/\text{s}$ steps, 4-State vs 6-State, $K_{\text{tot},1}\in\{0.15,0.25,0.45\}$ sweep, Sagnac vs feedback phase);
-    \texttt{DYN-02} (\texttt{dyn\_freq\_response}: 15-pt $20\text{ Hz}$--$10\text{ kHz}$ Bode Magnitude/Phase/Group Delay comparing 4-State $2{,}544\text{ Hz}$ / $65.2\ \mu\text{s}$ and 6-State $1{,}642\text{ Hz}$ / $103.3\ \mu\text{s}$ against half-frame Z-domain theory);
-    \texttt{DYN-03} (\texttt{dyn\_output\_psd}: broadband $3\text{ Hz}$--$25\text{ kHz}$ output rate PSD/ASD \& cumulative RMS noise confirming \texttt{EQ-15} ARW $0.000352$ vs $0.000363\,^\circ/\sqrt{\text{h}}$ and $+29.2\text{ dB}$ 6-State LF suppression);
-    and \texttt{DYN-04} (\texttt{dyn\_sine\_electro\_optic}: $50^\circ/\text{s}$ @ $250\text{ Hz}$ sinusoidal excitation exposing $\Omega_{\text{in}}/\Omega_{\text{out}}$ [THD $-67.5\text{ dB}$, SFDR $43.6\text{ dB}$], Sagnac phase $\pm 1.180\text{ rad}$, $V_{\text{fb,MIOC}}$ [$391$ $2\pi$ wraps], Photodiode $P_{\text{PD}}/I_{\text{PD}}$ [$r=0.9960$], $V_{\text{TIA}}$, and $60\ \mu\text{s}$ sub-$\tau$ ADC blanking zoom).
-    \item \textbf{20-Scenario Default Official Flow, 19-Chart Interactive HTML5 \& Refreshed Curated Example:}
-    Expanded \texttt{sim\_runner\_cli.py} to 27 CLI modes, \texttt{viz/plot\_scenarios.py} to 20 300-DPI PNG figures, and \texttt{viz/export\_report.py} to Section 10 Group C Markdown tables + \textbf{19 interactive multi-panel Plotly HTML5 charts}. Re-ran \texttt{./examples/run\_example.sh --sync-example} (\textbf{20 / 20 PASS}) and committed the complete bundle in \texttt{examples/full\_all\_scenarios/}.
-    \item \textbf{Governance, 100\% Dual Coverage, 9 Real System Tests \& Rule 16 Sync:}
-    Verified 100.0\% C++ ($1{,}546/1{,}546$ lines, $109/109$ functions) and 100.0\% Python line coverage, 41/41 verified formulas, 9/9 real system tests, updated \texttt{skills/}, and synchronized all 3 \texttt{docs/*.\{md,tex,pdf\}}, \texttt{Containerfile}/\texttt{Dockerfile}/\texttt{compose.yaml}, and \texttt{README.md} to \texttt{\DocVersion}.
+    \item \textbf{Owner-Authorized Spec Upgrade --- \texttt{IFOG-SIM-SPEC-006} (v6.0) \& 44-Formula Matrix:}
+    Authored checksum-locked \texttt{spec/IFOG-SIM-SPEC-006.\{md,tex,pdf,sha256\}} preserving \texttt{SPEC-004} and \texttt{SPEC-005} byte-identical and SHA-256 locked, while expanding the CI formula verification matrix to \textbf{44 / 44 equations (\texttt{EQ-01}--\texttt{EQ-44})}.
+    \item \textbf{Standalone Tool-Agnostic FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}):}
+    Wrapped the unmodified Tier 2 Accellera SystemC/SystemC-AMS core (\texttt{IfogTopModule}, compiled \texttt{-fPIC}) via vendorized FMI 3.0 C headers (\texttt{fmi\_wrapper/include/fmi3/}), full 75-symbol C-API bridge (\texttt{fmi\_wrapper/src/fmi3\_bridge.cpp}), 15-variable \texttt{modelDescription.xml.in} (\texttt{fmiVersion="3.0"}, \texttt{canBeInstantiatedOnlyOncePerProcess="true"}), and CMake \texttt{package\_fmu} target bundling \texttt{modelDescription.xml}, \texttt{binaries/x86\_64-linux/ifog\_core.so}, and Tier 1 \texttt{resources/\{phys\_params.json, shupe\_lut.bin, baseline\_cfg.json\}}.
+    \item \textbf{FMPy Master Orchestrator \& Gate 6 Verification (\texttt{tier3\_analysis/fmi\_master\_runner.py}, \texttt{--mode fmi\_gate}):}
+    Subprocess-isolated FMPy master orchestrator verifying \textbf{0 FMI 3.0 XSD errors} (\texttt{validate\_fmu}), \textbf{bit-exact $0.00\times 10^{0}\text{ rad/s}$ ($<10^{-12}$)} standalone vs FMU equivalence on 4-state \& 6-state modes, \textbf{97.42\%} Deadband reduction (99.59\% Bunny Ears SF reduction) on Slow Rate Ramp across $0^\circ/\text{h}$, and seamless FMU $\to$ Tier 3 Dual-Regime 5-Region IEEE Std 952 AVAR (\textbf{3.83\%} $< 5\%$ overlap, all 5 parameters $\le 8.92\%$).
+    \item \textbf{21-Gate/Scenario Official Flow, 100.0\% Dual Coverage \& Governance Sync:}
+    Expanded CLI to 28 modes, \texttt{viz/plot\_scenarios.py} to 21 300-DPI PNGs (\texttt{fmi\_fmu\_gate.png}), and \texttt{viz/export\_report.py} to 20 interactive Plotly HTML5 charts; refreshed \texttt{examples/full\_all\_scenarios/} (\textbf{21 / 21 PASS}); verified \textbf{100.0\% C++} (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) and \textbf{100.0\% Python} line coverage, 10 real system tests, new skill \texttt{skills/ifog-fmi3-cosim-fmu/}, and full Rule 16 doc sync.
 \end{enumerate}
 
 \subsection{Verified Quality Gates \& Attached Release Assets}
@@ -70,16 +69,18 @@
 \toprule
 \textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
 \midrule
-Dual Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004} \& \texttt{SPEC-005} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
-Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% ($1{,}546/1{,}546$ lines, $109/109$ fn) \& Python \texttt{pytest-cov} 100.0\% & \textcolor{TealDark}{\textbf{PASS}} \\
-41-Formula \& 20-Scenario Suite & 41 / 41 formulas + Gates 1--5 + 6 TD + 5 ENG + 4 DYN + committed \texttt{full\_all\_scenarios} & \textcolor{TealDark}{\textbf{PASS}} \\
-Container Build \& In-Container Sim & Live \texttt{Containerfile} build from Git + in-container \texttt{ifog\_cpp\_tests} \& 6-State DSP report & \textcolor{TealDark}{\textbf{PASS}} \\
+Triple Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004/005/006} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
+FMI 3.0 FMU Compliance (Gate 6) & 0 XSD errors; $0.00\times 10^0\text{ rad/s}$ equiv; 97.42\% deadband; 3.83\% AVAR overlap & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% (\texttt{tier2} + \texttt{fmi\_wrapper}) \& Python \texttt{pytest-cov} 100.0\% & \textcolor{TealDark}{\textbf{PASS}} \\
+44-Formula \& 21-Scenario Suite & 44 / 44 formulas + Gates 1--6 + 6 TD + 5 ENG + 4 DYN + \texttt{full\_all\_scenarios} & \textcolor{TealDark}{\textbf{PASS}} \\
+Container Build \& In-Container FMU & Live \texttt{Containerfile} build from Git + in-container FMU validation \& 6-State report & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
 
 \section{Previous Releases}
 
 \begin{itemize}
+    \item \textbf{Release v2.2.0 (2026-11-26):} Added Group C dedicated dynamic \& internal electro-optic probe scenarios (\texttt{DYN-01} Step Response, \texttt{DYN-02} Full Bode Magnitude/Phase/Group Delay, \texttt{DYN-03} Broadband Output Rate PSD/ASD \& Cumulative RMS, \texttt{DYN-04} Sinusoidal Input Internal Chain \texttt{PD}, $V_{\text{fb,MIOC}}$, Sagnac phase, $V_{\text{TIA}}$, ADC blanking); 20/20 PASS curated example.
     \item \textbf{Release v2.1.0 (2026-11-25):} Upgraded \texttt{viz/export\_report.py} with 15 interactive Plotly HTML5 charts and full scenario Markdown tables; switched \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to all-scenarios default (\texttt{MC=500}); committed initial \texttt{examples/full\_all\_scenarios/} bundle.
     \item \textbf{Release v2.0.0 (2026-11-25):} Owner-authorized \texttt{IFOG-SIM-SPEC-005} v5.0 (41/41 verified formulas), official 6-state symmetric DSP ($+136.94\text{ dB}$ RAM/xtalk rejection, $-33.3\%$ $V_{\text{peak}}$), 6 Time-Domain scenarios (\texttt{TD-01}..\texttt{TD-06}), 5 System Engineering scenarios (\texttt{ENG-01}..\texttt{ENG-05}, concurrent 3-axis SystemC-AMS IMU \texttt{--imu3axis}, 5-fault FPGA BIT/FDIR, parallel MC Yield + $-40..+85^\circ\text{C}$ calibration), \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, and resilient \texttt{release.yml}.
     \item \textbf{Release v1.2.0 (2026-11-25):} Portable Docker/Podman container suite, distro-independent Git-source installers for SystemC 2.3.4 / SystemC-AMS 2.3.4 / \texttt{nlohmann/json} / Python venv, and committed 4-Gate baseline example (\texttt{examples/full\_4gate\_baseline/}).

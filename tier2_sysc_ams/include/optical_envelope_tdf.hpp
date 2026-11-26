@@ -20,7 +20,8 @@ public:
         sc_core::sc_module_name name,
         const IfogConfig& cfg,
         double init_v_drv,
-        MicroTraceCollector* micro_trace = nullptr
+        MicroTraceCollector* micro_trace = nullptr,
+        const ExternalDriveState* ext_drive = nullptr
     );
 
     void set_attributes() override;
@@ -40,6 +41,7 @@ private:
     int ring_pos_;
     std::vector<double> phi_mioc_ring_;
     MicroTraceCollector* micro_trace_;
+    const ExternalDriveState* ext_drive_;
 };
 
 }  // namespace ifog

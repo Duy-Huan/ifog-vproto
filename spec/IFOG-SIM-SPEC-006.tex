@@ -1,0 +1,242 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[a4paper, margin=2.0cm]{geometry}
+\usepackage{fontspec}
+\usepackage[vietnamese, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{english}
+\babelfont{rm}{Noto Sans}
+\usepackage{enumitem}
+\setlist[itemize]{label=-, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{topsep=3pt, itemsep=2pt}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, calc, fit, backgrounds, shapes.geometric, babel}
+\usepackage{hyperref}
+
+\definecolor{primaryblue}{HTML}{1B365D}
+\definecolor{accentteal}{HTML}{0E6251}
+\definecolor{alertred}{HTML}{9B2C2C}
+\definecolor{warmamber}{HTML}{975A16}
+\definecolor{mutedgray}{HTML}{4A5568}
+\definecolor{rulegray}{HTML}{CBD5E0}
+\definecolor{softblue}{HTML}{EBF4FF}
+\definecolor{softteal}{HTML}{E6FFFA}
+\definecolor{softamber}{HTML}{FEFCBF}
+\definecolor{softgray}{HTML}{F7FAFC}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryblue,
+    citecolor=accentteal,
+    urlcolor=primaryblue,
+    pdftitle={IFOG-SIM-SPEC-006 - Dac ta Nguyen mau Ao IFOG Dong goi FMI 3.0 Co-Simulation FMU},
+    pdfauthor={Technical Design Specification v6.0}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\setlength{\headheight}{16pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.5pt}
+\emergencystretch=2em
+\raggedbottom
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{mutedgray}Đặc tả Kỹ thuật Nguyên mẫu Ảo IFOG — FMI 3.0 Co-Simulation FMU}
+\fancyhead[R]{\small\color{mutedgray}\texttt{IFOG-SIM-SPEC-006}}
+\fancyfoot[L]{\small\color{mutedgray}Phiên bản 6.0 --- Đóng gói FMU Độc lập, 44 Công thức \& Cổng Nghiệm thu Gate 6}
+\fancyfoot[R]{\small\color{mutedgray}Trang \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+% --- TITLE BLOCK ---
+\thispagestyle{plain}
+{\color{primaryblue}\rule{\textwidth}{1.5pt}}
+\vspace{0.3cm}
+
+{\Large\bfseries\color{primaryblue} ĐẶC TẢ KỸ THUẬT NGUYÊN MẪU ẢO ĐỒNG MÔ PHỎNG ĐA THANG ĐO CHO IFOG VÒNG KÍN ĐÓNG GÓI CHUẨN FMI 3.0 CO-SIMULATION FMU}
+
+\vspace{0.15cm}
+{\normalsize\color{mutedgray} Phiên bản 6.0 --- Nâng cấp từ \texttt{IFOG-SIM-SPEC-005} với Cầu nối FMI 3.0 C-API cho Accellera SystemC/SystemC-AMS, Đóng gói \texttt{ifog\_core.fmu}, Ma trận 44 Công thức (\texttt{EQ-01}--\texttt{EQ-44}) và Cổng Nghiệm thu Gate 6}
+
+\vspace{0.2cm}
+{\color{rulegray}\rule{\textwidth}{0.6pt}}
+\vspace{0.15cm}
+
+\begin{tabular}{@{}l L{4.7cm} l L{5.1cm}@{}}
+\textbf{Mã tài liệu:} & \texttt{IFOG-SIM-SPEC-006} & \textbf{Phiên bản:} & 6.0 (Mở rộng \texttt{SPEC-005} \& \texttt{SPEC-004}) \\
+\textbf{Hệ thống:} & Closed-Loop IFOG (2/4/6-State) & \textbf{Chuẩn tham chiếu:} & FMI 3.0.2; IEEE 952-2020; IEEE 1666.1 \\
+\textbf{Kiến trúc:} & 3-Tier Hybrid + FMI 3.0 FMU & \textbf{Sản phẩm đầu ra:} & \texttt{build/ifog\_core.fmu} (\texttt{x86\_64-linux}) \\
+\end{tabular}
+
+\vspace{0.15cm}
+{\color{primaryblue}\rule{\textwidth}{1.0pt}}
+\vspace{0.25cm}
+
+\begin{abstract}
+\noindent Tài liệu \texttt{IFOG-SIM-SPEC-006} nâng cấp chuẩn \texttt{IFOG-SIM-SPEC-005} (bảo toàn 100\% toàn bộ 41 phương trình \texttt{EQ-01}--\texttt{EQ-41}, các khóa kiểm tra bất biến \texttt{SPEC-004}/\texttt{SPEC-005}, 5 cổng nghiệm thu Gate 1--5 và 15 kịch bản \texttt{TD-01..06}, \texttt{ENG-01..05}, \texttt{DYN-01..04}) bằng cách đóng gói toàn bộ lõi đồng mô phỏng Tầng 2 (\texttt{tier2\_sysc\_ams}) thành một mô-đun hộp đen độc lập công cụ chuẩn **FMI 3.0 Co-Simulation Functional Mock-up Unit (\texttt{build/ifog\_core.fmu})**. Quá trình đóng gói không sửa đổi bất kỳ phương trình vật lý quang học, mạch tương tự phi tuyến (\texttt{sca\_ltf\_nd} / LTF chính xác) hay thuật toán DSP chuẩn bit (2/4/6 trạng thái) nào, đồng thời chuẩn hóa 3 phương trình liên kết đa tốc độ mới (\texttt{EQ-42}--\texttt{EQ-44}), hợp đồng biến \texttt{modelDescription.xml} (15 biến chuẩn FMI 3.0), quy tắc cách ly hạt nhân đơn thể SystemC (\texttt{canBeInstantiatedOnlyOncePerProcess="true"}), và **Cổng Nghiệm thu Gate 6** xác minh tương đương số $< 10^{-12}\text{ rad/s}$ giữa \texttt{ifog\_core.fmu} và \texttt{ifog\_sim}.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.25cm}
+
+% ====================================================================
+\section{Tổng quan Nâng cấp từ SPEC-005 lên SPEC-006}
+
+Việc đóng gói Tầng 2 thành \texttt{build/ifog\_core.fmu} theo chuẩn FMI 3.0.2 cho phép nhúng trực tiếp nguyên mẫu ảo IFOG chính xác vật lý vào bất kỳ bộ điều phối hệ thống dẫn đường quán tính (INS/GNC) nào như Python **FMPy**, MATLAB/Simulink, Dymola, Ansys Twin Builder hoặc OpenModelica mà không cần biên dịch lại lõi C++/SystemC-AMS.
+
+\begin{table}[htbp]
+\centering
+\caption{So sánh nâng cấp kiến trúc từ \texttt{IFOG-SIM-SPEC-005} (v5.0) lên \texttt{IFOG-SIM-SPEC-006} (v6.0).}
+\label{tab:spec006_diff}
+\footnotesize
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}L{2.8cm} L{4.6cm} L{5.4cm} L{2.6cm}@{}}
+\toprule
+\textbf{Hạng mục} & \textbf{SPEC-005 (v5.0)} & \textbf{SPEC-006 (v6.0)} & \textbf{Mã EQ / Gate} \\
+\midrule
+Biên giới thực thi & Tệp thực thi độc lập \texttt{build/ifog\_sim} đọc cấu hình tĩnh JSON/LUT & Bổ sung FMU hộp đen \texttt{build/ifog\_core.fmu} tương đương từng bit ($<10^{-12}\text{ rad/s}$) với \texttt{ifog\_sim} & \texttt{EQ-42}, \texttt{EQ-44} \\
+Điều khiển \& Tham số động & Kích thích định sẵn theo thời gian & Ngõ vào ZOH động \texttt{omega\_in}, \texttt{shupe\_phase\_in} và tham số điều chỉnh nóng \texttt{eps\_vpi}, \texttt{k\_xtalk}, \texttt{enable\_dither} & \texttt{EQ-42}, \texttt{EQ-43} \\
+Đầu ra chống răng cưa & Luồng nhị phân tốc độ cao \texttt{sim\_out.bin} & Cả tốc độ tức thời \texttt{omega\_out} (so khớp $<10^{-12}$) lẫn trung bình bước vĩ mô \texttt{omega\_out\_avg} (không bí danh ARW) & \texttt{EQ-42} \\
+Chẩn đoán thời gian thực & Đọc sau mô phỏng qua \texttt{sim\_summary.json} & Xuất trực tiếp \texttt{e\_vpi\_res} (\texttt{rad}) và mặt nạ lỗi \texttt{bit\_status} (\texttt{UInt32}) tại mọi bước giao tiếp & \texttt{EQ-43} \\
+Cổng nghiệm thu CI/CD & Gate 1--5 + 15 kịch bản (\texttt{EQ-01}--\texttt{EQ-41}) & Thêm **Gate 6 (FMI 3.0 FMU Compliance, Equivalence, Deadband \& AVAR)** qua \texttt{fmi\_master\_runner.py} & Gate 6, \texttt{EQ-42}--\texttt{EQ-44} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\section{Kiến trúc Cầu nối FMI 3.0 Co-Simulation \& Hệ phân cấp Đa tốc độ}
+
+Hình~\ref{fig:fmi3_arch} minh họa cấu trúc đóng gói hộp đen FMI 3.0 kết nối Bộ điều phối vĩ mô ($H = 1\text{ ms}$) với lõi đồng mô phỏng vi mô SystemC/SystemC-AMS ($\tau = 4.897\,\mu\text{s}$, $\Delta t_{\text{fast}} = 306\text{ ns}$).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.1cm,
+    box/.style={draw=primaryblue, rounded corners=3pt, fill=softblue, align=center, font=\footnotesize, inner sep=6pt, minimum height=1.0cm},
+    core/.style={draw=accentteal, rounded corners=3pt, fill=softteal, align=center, font=\footnotesize, inner sep=6pt, minimum height=1.0cm},
+    res/.style={draw=warmamber, rounded corners=3pt, fill=softamber, align=center, font=\footnotesize, inner sep=5pt},
+    arr/.style={-{Stealth[length=2.4mm]}, thick, primaryblue}
+]
+\node[box, minimum width=3.4cm] (master) {\textbf{FMI 3.0 Master}\\(FMPy / Simulink / INS)\\Bước vĩ mô $H = 1\text{ ms}$};
+\node[box, right=1.3cm of master, minimum width=3.5cm] (bridge) {\textbf{\texttt{fmi3\_bridge.cpp}}\\75 hàm C-API FMI 3.0\\\texttt{sc\_start(H)} \& Giữ bậc 0 (ZOH)};
+\node[core, right=1.3cm of bridge, minimum width=4.2cm] (top) {\textbf{\texttt{IfogTopModule} (\texttt{SC\_MODULE})}\\Cụm TDF ($K=16$, $\Delta t_{\text{fast}}=306\text{ ns}$)\\$\leftrightarrow$ \texttt{DigitalDSP\_SC} (2/4/6-State, BIT)};
+\node[res, below=0.85cm of bridge, minimum width=3.5cm] (resources) {\textbf{\texttt{resources/} trong \texttt{.fmu}}\\\texttt{phys\_params.json}, \texttt{shupe\_lut.bin},\\\texttt{baseline\_cfg.json}};
+\node[res, below=0.85cm of master, minimum width=3.4cm] (tier3) {\textbf{Tầng 3 Phân tích}\\Deadband Dither OFF/ON\\Dual-Regime 5-Region AVAR};
+
+\draw[arr] ([yshift=6pt]master.east) -- node[above, font=\scriptsize]{\texttt{fmi3Set* / DoStep}} ([yshift=6pt]bridge.west);
+\draw[arr] ([yshift=-6pt]bridge.west) -- node[below, font=\scriptsize]{\texttt{fmi3Get*}} ([yshift=-6pt]master.east);
+\draw[arr, <->] (bridge.east) -- node[above, font=\scriptsize]{\texttt{sc\_signal}} (top.west);
+\draw[arr, dashed, warmamber] (resources.north) -- node[right, font=\scriptsize]{Nạp khi khởi tạo} (bridge.south);
+\draw[arr] (master.south) -- node[right, font=\scriptsize]{\texttt{omega\_out\_avg}} (tier3.north);
+
+\begin{scope}[on background layer]
+    \node[draw=mutedgray, dashed, rounded corners=5pt, fill=softgray, fit=(bridge)(top)(resources), inner sep=9pt, label={[font=\footnotesize\bfseries, text=primaryblue]above:Kho lưu trữ FMU chuẩn FMI 3.0 (\texttt{build/ifog\_core.fmu} + \texttt{modelDescription.xml})}] {};
+\end{scope}
+\end{tikzpicture}
+\caption{Kiến trúc đóng gói FMI 3.0 Co-Simulation cho lõi Accellera SystemC/SystemC-AMS (\texttt{IFOG-SIM-SPEC-006}).}
+\label{fig:fmi3_arch}
+\end{figure}
+
+\subsection{Vòng đời API FMI 3.0 \& Quy tắc Đơn thể Hạt nhân SystemC}
+\begin{enumerate}
+    \item \textbf{\texttt{fmi3InstantiateCoSimulation}:} Kiểm tra mã định danh \texttt{instantiationToken = \{6e9c4b1a-7f20-4f06-9a5c-000000000006\}}, chuẩn hóa đường dẫn \texttt{resourcePath} (hỗ trợ cả đường dẫn gốc và URI \texttt{file://}, giải mã phần trăm \texttt{\%XX} trên Linux/Windows), nạp \texttt{phys\_params.json}, \texttt{baseline\_cfg.json}, \texttt{shupe\_lut.bin} và cưỡng chế khóa đơn thể tiến trình (\texttt{canBeInstantiatedOnlyOncePerProcess="true"}).
+    \item \textbf{\texttt{fmi3EnterInitializationMode} $\to$ \texttt{fmi3Set*} $\to$ \texttt{fmi3ExitInitializationMode}:} Nạp các tham số cố định (\texttt{dsp\_mode} $\in \{2,4,6\}$, \texttt{en\_white\_noise}, \texttt{en\_pink\_noise}, \texttt{en\_vpi\_loop}, \texttt{seed}) và tham số điều chỉnh nóng (\texttt{eps\_vpi}, \texttt{k\_xtalk}, \texttt{enable\_dither}), khởi tạo \texttt{IfogTopModule}, nối toàn bộ kênh \texttt{sc\_signal} và gọi \texttt{sc\_start(SC\_ZERO\_TIME)} để hoàn tất quá trình lập lịch TDF tĩnh.
+    \item \textbf{\texttt{fmi3DoStep}:} Áp dụng giữ bậc không (ZOH) lên \texttt{omega\_in}, \texttt{shupe\_phase\_in} và tham số điều chỉnh nóng, đặt lại bộ tích lũy trung bình bước, gọi \texttt{sc\_start(sc\_time(communicationStepSize, SC\_SEC))} và cập nhật đầu ra.
+    \item \textbf{\texttt{fmi3Terminate} \& \texttt{fmi3FreeInstance}:} Dừng mô phỏng sạch qua \texttt{sc\_stop()} và giải phóng toàn bộ bộ nhớ \texttt{IfogTopModule}.
+\end{enumerate}
+
+% ====================================================================
+\section{Ba Phương trình Chuẩn hóa Bổ sung (\texttt{EQ-42}--\texttt{EQ-44})}
+
+Bên cạnh 41 phương trình bảo toàn nguyên vẹn từ \texttt{SPEC-004} (\texttt{EQ-01}--\texttt{EQ-30}) và \texttt{SPEC-005} (\texttt{EQ-31}--\texttt{EQ-41}), phiên bản 6.0 chuẩn hóa 3 phương trình cho giao diện FMI 3.0:
+
+\begin{enumerate}
+    \item \textbf{Đồng bộ Đa tốc độ Vĩ mô/Vi mô \& Trung bình Chống Bí danh (\texttt{EQ-42}):}
+    Trong mỗi bước giao tiếp $H = \Delta t_{\text{comm}} > 0$ tại thời điểm $t_k$, lõi SystemC-AMS thực thi $N_{\tau,k}$ chu kỳ truyền quang $\tau = n_{\text{eff}}L/c$ (mỗi chu kỳ gồm $K$ mẫu con $\Delta t_{\text{fast}} = \tau/K$) với đầu vào giữ bậc không và xuất đồng thời tốc độ tức thời $\Omega_{\text{out}}(t_{k+1})$ cùng tốc độ trung bình bước chống bí danh $\bar{\Omega}_{\text{out},k}$:
+    \begin{equation}
+    N_{\tau,k} = \left\lfloor \frac{t_k + H}{\tau} \right\rfloor - \left\lfloor \frac{t_k}{\tau} \right\rfloor, \qquad
+    \bar{\Omega}_{\text{out},k} = \frac{1}{N_{\tau,k}} \sum_{n=n_k}^{n_k+N_{\tau,k}-1} \Omega_{\text{out}}[n] \quad [\text{rad/s}]
+    \label{eq:eq42_multirate}
+    \end{equation}
+
+    \item \textbf{Sai số Pha Dư Vòng 2 $V_\pi$ \& Mặt nạ Trạng thái BIT/FDIR (\texttt{EQ-43}):}
+    Tại mỗi điểm giao tiếp, FMU cung cấp trực tiếp sai số pha dư tại điểm hồi lưu $2\pi$ (đơn vị \texttt{rad}) và thanh ghi mặt nạ lỗi 32-bit không dấu:
+    \begin{equation}
+    \begin{aligned}
+    e_{V_\pi,\text{res}} &= 2\pi \left[ (1 + \epsilon_{V_\pi})\frac{G_{\text{DAC}} V_{\text{ref,DAC}}}{2 V_{\pi,0}} - 1 \right] \quad [\text{rad}], \\
+    \texttt{bit\_status} &= \mathbb{I}_{\text{SLD}}2^0 \lor \mathbb{I}_{\text{Break}}2^1 \lor \mathbb{I}_{\text{MIOC}}2^2 \lor \mathbb{I}_{\text{ADCSat}}2^3 \lor \mathbb{I}_{\text{SEU}}2^4 \lor \mathbb{I}_{\text{AntiWindup}}2^5
+    \end{aligned}
+    \label{eq:eq43_evpi_bit}
+    \end{equation}
+
+    \item \textbf{Ngưỡng Tương đương Hộp đen FMU so với Lõi Độc lập (\texttt{EQ-44}):}
+    Trên cùng tệp \texttt{phys\_params.json}, hạt giống PRNG/LFSR, chế độ DSP $M \in \{2,4,6\}$ và đầu vào hằng trong khoảng thời gian $T$:
+    \begin{equation}
+    \left|\Omega_{\text{out}}^{\text{FMU}}(T) - \Omega_{\text{out}}^{\text{standalone}}(T)\right| < 10^{-12}\;\text{rad/s}, \qquad
+    \left|e_{V_\pi,\text{res}}^{\text{FMU}}(T) - 2\pi\,\epsilon_{V_\pi,\text{eff}}^{\text{standalone}}(T)\right| < 10^{-12}\;\text{rad}
+    \label{eq:eq44_equiv}
+    \end{equation}
+\end{enumerate}
+
+% ====================================================================
+\section{Hợp đồng Giao diện \texttt{modelDescription.xml} (FMI 3.0)}
+
+\begin{table}[htbp]
+\centering
+\caption{Bảng định nghĩa đầy đủ 15 biến FMI 3.0 của \texttt{build/ifog\_core.fmu} (\texttt{fmiVersion="3.0"}).}
+\label{tab:fmi3_vars}
+\footnotesize
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{@{}c L{2.5cm} L{1.4cm} L{1.9cm} L{1.7cm} c c L{4.0cm}@{}}
+\toprule
+\textbf{VR} & \textbf{Tên biến} & \textbf{Kiểu} & \textbf{Causality} & \textbf{Variability} & \textbf{Đơn vị} & \textbf{Mặc định} & \textbf{Mô tả vật lý} \\
+\midrule
+\texttt{0} & \texttt{time} & \texttt{Float64} & \texttt{independent} & \texttt{continuous} & \texttt{s} & --- & Thời gian mô phỏng độc lập \\
+\texttt{1} & \texttt{omega\_in} & \texttt{Float64} & \texttt{input} & \texttt{continuous} & \texttt{rad/s} & \texttt{0.0} & Tốc độ góc đầu vào $\Omega_{\text{in}}(t)$ \\
+\texttt{2} & \texttt{shupe\_phase\_in} & \texttt{Float64} & \texttt{input} & \texttt{continuous} & \texttt{rad} & \texttt{0.0} & Nhiễu pha nhiệt Shupe ngoài \\
+\texttt{3} & \texttt{omega\_out} & \texttt{Float64} & \texttt{output} & \texttt{continuous} & \texttt{rad/s} & calc & Tốc độ góc đầu ra tức thời \\
+\texttt{4} & \texttt{e\_vpi\_res} & \texttt{Float64} & \texttt{output} & \texttt{continuous} & \texttt{rad} & calc & Sai số pha dư $V_\pi$ Vòng 2 \\
+\texttt{5} & \texttt{bit\_status} & \texttt{UInt32} & \texttt{output} & \texttt{discrete} & --- & calc & Mặt nạ lỗi BIT/FDIR (`0`=tốt) \\
+\texttt{6} & \texttt{eps\_vpi} & \texttt{Float64} & \texttt{parameter} & \texttt{tunable} & \texttt{1} & \texttt{0.02} & Sai lệch hệ số $V_\pi$ MIOC \\
+\texttt{7} & \texttt{k\_xtalk} & \texttt{Float64} & \texttt{parameter} & \texttt{tunable} & \texttt{A/V} & \texttt{1e-8} & Độ dẫn xuyên âm DAC--TIA \\
+\texttt{8} & \texttt{enable\_dither} & \texttt{Boolean} & \texttt{parameter} & \texttt{tunable} & --- & \texttt{true} & Bật/tắt nhiễu rung PRBS LFSR \\
+\texttt{9} & \texttt{dsp\_mode} & \texttt{Int32} & \texttt{parameter} & \texttt{fixed} & --- & \texttt{4} & Chế độ DSP (`2`, `4`, hoặc `6`) \\
+\texttt{10} & \texttt{en\_white\_noise} & \texttt{Boolean} & \texttt{parameter} & \texttt{fixed} & --- & \texttt{true} & Bật nhiễu trắng 6 thành phần \\
+\texttt{11} & \texttt{en\_pink\_noise} & \texttt{Boolean} & \texttt{parameter} & \texttt{fixed} & --- & \texttt{false} & Bật nhiễu hồng $1/f$ 5 cực \\
+\texttt{12} & \texttt{en\_vpi\_loop} & \texttt{Boolean} & \texttt{parameter} & \texttt{fixed} & --- & \texttt{true} & Bật vòng khóa độ lợi $V_\pi$ \\
+\texttt{13} & \texttt{seed} & \texttt{Int32} & \texttt{parameter} & \texttt{fixed} & --- & \texttt{42004} & Hạt giống PRNG/LFSR tất định \\
+\texttt{14} & \texttt{omega\_out\_avg} & \texttt{Float64} & \texttt{output} & \texttt{continuous} & \texttt{rad/s} & calc & Trung bình bước chống bí danh \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ====================================================================
+\section{Cổng Nghiệm thu Gate 6 \& Ma trận 44 Công thức CI/CD}
+
+Cổng nghiệm thu **Gate 6** (\texttt{./scripts/run\_sim.sh --mode fmi\_gate} / \texttt{tier3\_analysis/fmi\_master\_runner.py}) xác minh độc lập toàn bộ vòng đời FMU bằng FMPy trong các tiến trình con cô lập:
+\begin{enumerate}
+    \item \textbf{Gate 6A (Chuẩn hóa FMI 3.0):} \texttt{fmpy.validation.validate\_fmu("build/ifog\_core.fmu")} báo **0 lỗi**, xác nhận \texttt{fmiVersion="3.0"}, \texttt{canBeInstantiatedOnlyOncePerProcess="true"}, đầy đủ 15 biến, thư viện nhị phân \texttt{binaries/x86\_64-linux/ifog\_core.so} và tài nguyên \texttt{resources/*}.
+    \item \textbf{Gate 6B (Tương đương Số $< 10^{-12}$):} Chạy đối chiếu \texttt{build/ifog\_sim} với \texttt{build/ifog\_core.fmu} ở cả chế độ **4 trạng thái** lẫn **6 trạng thái** (bật đầy đủ nhiễu trắng, PRBS dither, Vòng 2), đạt sai lệch cuối $< 10^{-12}\text{ rad/s}$ (thực tế bit-exact $0.0\text{ rad/s}$) và \texttt{bit\_status == 0}.
+    \item \textbf{Gate 6C (Quét Vùng chết Slow Rate Ramp):} Chạy qua \texttt{fmpy.simulate\_fmu(..., step\_size=1e-3)} băng qua $0^\circ/\text{h}$ giữa \texttt{enable\_dither=False} và \texttt{enable\_dither=True}, giảm sai số vùng chết $\ge 90\%$.
+    \item \textbf{Gate 6D (Tích hợp AVAR 5 vùng Tầng 3):} Nối luồng \texttt{omega\_out\_avg} từ FMU vào \texttt{run\_dual\_regime\_avar()}, đạt sai lệch vùng giao $[0.1, 5]\text{ s} < 5\%$ và sai số khớp 5 tham số IEEE Std 952 $(Q,N,B,K,R) \le 10\%$.
+\end{enumerate}
+
+Mọi công thức từ \texttt{EQ-01} đến \texttt{EQ-44} đều có bài kiểm thử độc lập trong \texttt{tests/formula\_verification/}, chạy bắt buộc bởi \texttt{scripts/verify\_formulas\_ci.py} cùng ràng buộc **100.0\% line coverage** cho cả C++ (bao gồm \texttt{tier2\_sysc\_ams/} và \texttt{fmi\_wrapper/src/}) lẫn Python (\texttt{tier1\_offline/}, \texttt{tier3\_analysis/}, \texttt{viz/}).
+
+\begin{thebibliography}{4}
+\bibitem{fmi3} Modelica Association Project FMI, \emph{Functional Mock-up Interface Specification 3.0.2}, 2024. \url{https://fmi-standard.org/}
+\bibitem{ieee952} IEEE Std 952-2020, \emph{IEEE Standard Specification Format Guide and Test Procedure for Single-Axis Interferometric Fiber Optic Gyros}, 2020.
+\bibitem{ieee16661} IEEE Std 1666.1-2016, \emph{IEEE Standard for Standard SystemC\textregistered\ Analog/Mixed-Signal Extensions}, 2016.
+\bibitem{lefevre2022} H.~C. Lefèvre, \emph{The Fiber-Optic Gyroscope}, 3rd ed. Artech House, 2022.
+\end{thebibliography}
+
+\end{document}

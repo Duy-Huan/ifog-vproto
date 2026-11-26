@@ -8,7 +8,8 @@ OpticalEnvelope_TDF::OpticalEnvelope_TDF(
     sc_core::sc_module_name name,
     const IfogConfig& cfg,
     double init_v_drv,
-    MicroTraceCollector* micro_trace
+    MicroTraceCollector* micro_trace,
+    const ExternalDriveState* ext_drive
 )
     : sca_tdf::sca_module(name),
       v_drv_in("v_drv_in"),
@@ -29,7 +30,8 @@ OpticalEnvelope_TDF::OpticalEnvelope_TDF(
       sample_idx_(0),
       ring_pos_(0),
       phi_mioc_ring_(static_cast<size_t>(cfg.K_oversample), 0.0),
-      micro_trace_(micro_trace) {}
+      micro_trace_(micro_trace),
+      ext_drive_(ext_drive) {}
 
 void OpticalEnvelope_TDF::set_attributes() {
     v_drv_in.set_rate(cfg_.K_oversample);
@@ -54,7 +56,10 @@ void OpticalEnvelope_TDF::processing() {
         double p_scale = p_scale_in.read(k);
 
         // EQ-06..EQ-10: Total non-reciprocal phase Delta_phi_NR[m]
-        const double omega_in = eval_stimulus(cfg_, t);
+        const double omega_in =
+            (ext_drive_ != nullptr && ext_drive_->use_external_omega)
+                ? ext_drive_->omega_in_rad_per_s
+                : eval_stimulus(cfg_, t);
         double delta_phi_nr = cfg_.K_opt * omega_in + phi_kerr_eff_ + phi_faraday_dc_;
         if (cfg_.ablation.en_faraday && cfg_.B_ac_T > 0.0) {
             // EQ-38: Dynamic external AC magnetic field Faraday phase
@@ -67,6 +72,9 @@ void OpticalEnvelope_TDF::processing() {
         if (cfg_.ablation.en_shupe) {
             delta_phi_nr += interpolate_shupe(cfg_.shupe_lut, t);
         }
+        if (ext_drive_ != nullptr && ext_drive_->use_external_shupe) {
+            delta_phi_nr += ext_drive_->shupe_phase_rad;
+        }
 
         // EQ-37: Mechanical vibration optical loss & microphonic phase modulation (ENG-03)
         if (cfg_.en_vibration && cfg_.vib_g_rms > 0.0) {
@@ -75,8 +83,11 @@ void OpticalEnvelope_TDF::processing() {
             p_scale *= (1.0 + cfg_.vib_loss_mod_per_g * a_g);
         }
 
-        // TD-03: Thermal shock step jump in MIOC scale factor eps_Vpi
-        double eps_now = eps_vpi_eff_;
+        // TD-03 & SPEC-006 tunable eps_vpi: Thermal shock step jump or live FMI parameter
+        double eps_now =
+            (ext_drive_ != nullptr && ext_drive_->use_live_params && cfg_.ablation.en_mioc_vpi_err)
+                ? ext_drive_->eps_vpi_live
+                : eps_vpi_eff_;
         if (cfg_.ablation.en_mioc_vpi_err && cfg_.eps_vpi_step_time_s >= 0.0 && t >= cfg_.eps_vpi_step_time_s) {
             eps_now += cfg_.eps_vpi_step_delta;
         }

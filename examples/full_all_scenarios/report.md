@@ -2,10 +2,10 @@
 
 | Field | Value |
 | :--- | :--- |
-| **Specification** | `IFOG-SIM-SPEC-005` (v5.0) |
-| **Software Version** | `v2.2.0` |
+| **Specification** | `IFOG-SIM-SPEC-006` (v6.0) |
+| **Software Version** | `v3.0.0` |
 | **Run Mode** | `all_scenarios` |
-| **Generated (UTC)** | `2026-11-26T01:47:13Z` |
+| **Generated (UTC)** | `2026-11-26T06:46:03Z` |
 | **Overall Status** | **PASS** |
 | **Data Directory** | `/home/antigravity/Duy-Huan/ifog-vproto/data/full_all_scenarios` |
 | **Report Directory** | `/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios` |
@@ -19,6 +19,7 @@
 | Gate 3 — 1/f Flicker & K-Matrix | **PASS** | Linear PSD slope=-0.062 (~0), Nonlinear 1/f slope=-0.893 (~-1), K-matrix repeatability=0.000% (<2%) |
 | Gate 4 — Dual-Regime 5-Region AVAR | **PASS** | Overlap mismatch=2.42% (<5%), Max 5-region WLS err=9.29% (<=10%) |
 | Gate 5 — Official 6-State DSP (EQ-31..34) | **PASS** | 6-state static err=1.28e-16 rad, eps_Vpi=1.31e-11, RAM/xtalk gain=136.9 dB |
+| Gate 6 — FMI 3.0 Black-Box FMU (EQ-42..44) | **PASS** | FMI 3.0 val=True, equiv err=0.00e+00 rad/s (<1e-12), deadband red=97.4% (>=90%), AVAR overlap=3.83% (<5%) |
 | TD-01 — Sub-tau Switching Transient & ADC Blanking Alignment | **PASS** | t_s=174.1 ns, k*_opt=5, clean_err=2.978%, ARW x1.155 |
 | TD-02 — Closed-Loop Step Response (0->100 deg/s) & Dynamic -3 dB Bandwidth | **PASS** | t_r=0.22 ms, OS=0.0%, BW=2540 Hz (theory 2354 Hz) |
 | TD-03 — Loop-2 V_pi Gain-Lock Transient Under 5% Thermal Shock | **PASS** | 4s eps=1.78e-15, 6s eps=1.68e-11, 6s conv=6.3 ms |
@@ -191,6 +192,9 @@
 
 ### Dsp6 Compare
 ![Dsp6 Compare](figures/dsp6_compare.png)
+
+### Fmi Fmu Gate
+![Fmi Fmu Gate](figures/fmi_fmu_gate.png)
 
 ### Td01 Blanking
 ![Td01 Blanking](figures/td01_blanking.png)
