@@ -333,6 +333,129 @@ private:
     double x2_;
 };
 
+// EQ-47 (SPEC-007 §2.2a): Dynamic Sagnac scale factor K_opt(t)
+inline double compute_dynamic_k_opt(
+    double K_opt_0,
+    double dT_coil_K,
+    double dT_sld_K,
+    double alpha_bobbin_ppm_K,
+    double alpha_lambda_pm_K,
+    double lambda_bar_m,
+    double kappa_back_m_per_W,
+    double P_back_W,
+    double n_eff_0,
+    double dn_dT_per_K
+) {
+    const double term_bobbin = (alpha_bobbin_ppm_K * 1.0e-6) * dT_coil_K;
+    const double term_lambda =
+        ((alpha_lambda_pm_K * 1.0e-12) * dT_sld_K + kappa_back_m_per_W * P_back_W) / lambda_bar_m;
+    const double term_neff = (dn_dT_per_K / n_eff_0) * dT_coil_K;
+    return K_opt_0 * (1.0 + term_bobbin - term_lambda + term_neff);
+}
+
+// EQ-49 (SPEC-007 §2.3): O(1) linear interpolation across all 6 channels of shupe_lut.bin v2
+inline ShupeLutRecordV2 interpolate_shupe_v2(const std::vector<ShupeLutRecordV2>& lut, double t_s) {
+    if (lut.empty()) {
+        return ShupeLutRecordV2{};
+    }
+    if (lut.size() == 1u || t_s <= lut.front().t_s) {
+        return lut.front();
+    }
+    if (t_s >= lut.back().t_s) {
+        return lut.back();
+    }
+    const double dt = lut[1].t_s - lut[0].t_s;
+    const size_t idx = static_cast<size_t>((t_s - lut.front().t_s) / dt);
+    const size_t i0 = std::min(idx, lut.size() - 2u);
+    const double a = (t_s - lut[i0].t_s) / (lut[i0 + 1u].t_s - lut[i0].t_s);
+    const ShupeLutRecordV2& r0 = lut[i0];
+    const ShupeLutRecordV2& r1 = lut[i0 + 1u];
+    ShupeLutRecordV2 out{};
+    out.t_s = t_s;
+    out.delta_phi_shupe_rad = r0.delta_phi_shupe_rad + a * (r1.delta_phi_shupe_rad - r0.delta_phi_shupe_rad);
+    out.delta_phi_stress_rad = r0.delta_phi_stress_rad + a * (r1.delta_phi_stress_rad - r0.delta_phi_stress_rad);
+    out.visibility_V_t = r0.visibility_V_t + a * (r1.visibility_V_t - r0.visibility_V_t);
+    out.phi_pol_rad_t = r0.phi_pol_rad_t + a * (r1.phi_pol_rad_t - r0.phi_pol_rad_t);
+    out.v_pi_V_t = r0.v_pi_V_t + a * (r1.v_pi_V_t - r0.v_pi_V_t);
+    out.k_opt_scale_rel_t = r0.k_opt_scale_rel_t + a * (r1.k_opt_scale_rel_t - r0.k_opt_scale_rel_t);
+    return out;
+}
+
+// EQ-51 (SPEC-007 §2.4b): Capacitive + resistive PCB/package crosstalk current at TIA summing node
+inline double compute_capacitive_crosstalk_A(
+    double v_dac_now,
+    double v_dac_prev,
+    double dt_tdf,
+    double G_xtalk_S,
+    double C_xtalk_F
+) {
+    return G_xtalk_S * v_dac_now + C_xtalk_F * ((v_dac_now - v_dac_prev) / dt_tdf);
+}
+
+// EQ-52 (SPEC-007 §2.5): Coherent cavity facet + Rayleigh backscattering phase RMS [rad]
+inline double compute_backscatter_sigma_rad(
+    double R_facet_dB,
+    double alpha_R_per_m,
+    double S_capture,
+    double delta_nu_eff_Hz
+) {
+    const double r_facet = (R_facet_dB > -199.0) ? std::pow(10.0, R_facet_dB / 10.0) : 0.0;
+    const double l_coh = C_LIGHT / delta_nu_eff_Hz;
+    return 2.0 * std::sqrt(std::max(0.0, r_facet + 0.5 * alpha_R_per_m * S_capture * l_coh));
+}
+
+// EQ-50 (SPEC-007 §2.4a): LiNbO3 MIOC electrode cutoff + 2nd-order electro-acoustic step dynamics
+class MiocDynamicsFilter {
+public:
+    MiocDynamicsFilter()
+        : active_(false), a_elec_(0.0), v_elec_(0.0), g_ac_(0.0), has_ac_(false), ac_ltf_() {}
+
+    void configure(
+        double f_elec_Hz,
+        double f_acoustic_Hz,
+        double zeta_acoustic,
+        double g_acoustic,
+        double dt_s,
+        double init_v = 0.0
+    ) {
+        active_ = (f_elec_Hz > 0.0) || (f_acoustic_Hz > 0.0 && g_acoustic > 0.0);
+        v_elec_ = init_v;
+        a_elec_ = (f_elec_Hz > 0.0) ? std::exp(-TWO_PI * f_elec_Hz * dt_s) : 0.0;
+        has_ac_ = (f_acoustic_Hz > 0.0 && g_acoustic > 0.0);
+        g_ac_ = has_ac_ ? g_acoustic : 0.0;
+        if (has_ac_) {
+            ac_ltf_.configure(1.0, TWO_PI * f_acoustic_Hz, zeta_acoustic, dt_s, init_v);
+        }
+    }
+
+    inline bool active() const { return active_; }
+
+    inline double step(double v_in) {
+        if (!active_) {
+            return v_in;
+        }
+        v_elec_ = (a_elec_ > 0.0) ? (a_elec_ * v_elec_ + (1.0 - a_elec_) * v_in) : v_in;
+        if (has_ac_) {
+            const double v_ac = ac_ltf_.step(v_elec_);
+            return v_elec_ + g_ac_ * (v_ac - v_elec_);
+        }
+        return v_elec_;
+    }
+
+private:
+    bool active_;
+    double a_elec_;
+    double v_elec_;
+    double g_ac_;
+    bool has_ac_;
+    ExactSecondOrderLtf ac_ltf_;
+};
+
+// Stateless functional helper wrapping MiocDynamicsFilter::step (EQ-50)
+inline double step_mioc_dynamics(MiocDynamicsFilter& filt, double v_in) {
+    return filt.step(v_in);
+}
+
 }  // namespace ifog
 
 #endif  // IFOG_MATH_HPP

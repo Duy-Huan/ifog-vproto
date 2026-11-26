@@ -1,22 +1,24 @@
 # Full Real All-Scenarios Example (`examples/full_all_scenarios/`)
 
-This curated example contains the **complete, genuine, full-scale simulation output** (zero mocks, zero smoke-test shortcuts) covering **all 21 official acceptance gates & engineering scenarios** (`IFOG-SIM-SPEC-004` v4.0 + `IFOG-SIM-SPEC-005` v5.0 + `IFOG-SIM-SPEC-006` v6.0, software release `v3.0.1`), generated directly by `./examples/run_example.sh --sync-example` and committed to the repository for complete feasibility and architectural evaluation.
+This curated example contains the **complete, genuine, full-scale simulation output** (zero mocks, zero smoke-test shortcuts) covering **all 23 official acceptance gates & engineering scenarios** (`IFOG-SIM-SPEC-004` v4.0 + `IFOG-SIM-SPEC-005` v5.0 + `IFOG-SIM-SPEC-006` v6.0 + `IFOG-SIM-SPEC-007` v7.0, software release `v4.0.0`), generated directly by `./examples/run_example.sh --sync-example` and committed to the repository for complete feasibility and partner-presentation evaluation.
 
 ## Included Deliverables
-- [`architecture_model.html`](architecture_model.html) — Code-audited interactive 3-Tier + FMI 3.0 mathematical architecture explorer with live measured parameters from this run
-- [`report.md`](report.md) — Standardized comprehensive Markdown report covering Core Gates 1–4, Gate 5 (Official 6-State DSP), **Gate 6 (FMI 3.0 Black-Box Co-Simulation FMU)**, Group A (`TD-01`..`TD-06`), Group B (`ENG-01`..`ENG-05`), Group C (`DYN-01`..`DYN-04`), and all 21 embedded figures each with full theoretical foundation, plain-language non-specialist reading guide, and dynamic measured proof
-- [`report.html`](report.html) — Self-contained KaTeX + interactive HTML5 Plotly report featuring an embedded interactive architecture explorer, sticky quick-navigation bar, **20 interactive multi-panel Plotly charts** (each with 3-column theory/non-specialist/proof cards), annotated 21-figure 300-DPI gallery, and collapsible JSON inspector
-- [`metrics_summary.json`](metrics_summary.json) — Complete structured JSON payload across all 21 gates & scenarios
+- [`architecture_model.html`](architecture_model.html) — Code-audited interactive 3-Tier + FMI 3.0 + `SPEC-007` mathematical architecture explorer with live measured parameters from this run
+- [`report.md`](report.md) — Standardized comprehensive Markdown report covering Core Gates 1–6, Group A (`TD-01`..`TD-06`), Group B (`ENG-01`..`ENG-05`), Group C (`DYN-01`..`DYN-04`), **Group D (`PHY-01`, `CAL-01`)**, all **23** embedded 300-DPI figures (each with full theoretical foundation, plain-language non-specialist reading guide, and dynamic measured proof), and **Section 12 Complete Tier-by-Tier Mathematical Formulation Compendium (`EQ-01`..`EQ-53`)**
+- [`report.html`](report.html) — Self-contained KaTeX + interactive HTML5 Plotly report featuring an embedded interactive architecture explorer, sticky quick-navigation bar, complete `#sec-formulas` tier-by-tier mathematical cards (`EQ-01`..`EQ-53`), multi-panel Plotly charts, annotated 23-figure 300-DPI gallery, and collapsible JSON inspector
+- [`calibrated_params.json`](calibrated_params.json) — Calibrated 10-parameter `IFOG-SIM-SPEC-007` physical-prototype model with Gauss–Newton 95% confidence intervals from `CAL-01`
+- [`metrics_summary.json`](metrics_summary.json) — Complete structured JSON payload across all 23 gates & scenarios
 - [`virtual_calibration_dataset.csv`](virtual_calibration_dataset.csv) — Real 21-point `-40..+85 °C` virtual environmental chamber calibration table from `ENG-05`
 - Per-stage JSON artifacts:
   - Core Gates 1–6: [`phys_params.json`](phys_params.json), [`shupe_summary.json`](shupe_summary.json), [`sim_summary.json`](sim_summary.json), [`gate1_metrics.json`](gate1_metrics.json), [`sweep_results.json`](sweep_results.json), [`nonlinearity_summary.json`](nonlinearity_summary.json), [`k_matrix.json`](k_matrix.json), [`gate3_metrics.json`](gate3_metrics.json), [`avar_metrics.json`](avar_metrics.json), [`dsp6_compare.json`](dsp6_compare.json), [`fmi_gate_summary.json`](fmi_gate_summary.json)
   - Group A & Group B: [`td01_blanking.json`](td01_blanking.json), [`td02_step_sine.json`](td02_step_sine.json), [`td03_vpi_shock.json`](td03_vpi_shock.json), [`td04_high_rate.json`](td04_high_rate.json), [`td05_shupe_shock.json`](td05_shupe_shock.json), [`td06_limit_cycles.json`](td06_limit_cycles.json), [`eng01_hw_sizing.json`](eng01_hw_sizing.json), [`eng02_imu_3axis.json`](eng02_imu_3axis.json), [`eng03_vre_faraday.json`](eng03_vre_faraday.json), [`eng04_fault_bit.json`](eng04_fault_bit.json), [`eng05_mc_yield_cal.json`](eng05_mc_yield_cal.json)
   - Group C Dynamic, PSD & Electro-Optic Probe: [`dyn01_step_response.json`](dyn01_step_response.json), [`dyn02_freq_response.json`](dyn02_freq_response.json), [`dyn03_output_psd.json`](dyn03_output_psd.json), [`dyn04_sine_electro_optic.json`](dyn04_sine_electro_optic.json), [`dyn_summary.json`](dyn_summary.json)
-- **21 Publication-Grade 300-DPI Figures** under [`figures/`](figures/)
+  - Group D `SPEC-007` Predictive Physics & Inverse Calibration: [`spec007_physics.json`](spec007_physics.json), [`spec007_calibration.json`](spec007_calibration.json), [`calibrated_params.json`](calibrated_params.json), [`spec007_summary.json`](spec007_summary.json)
+- **23 Publication-Grade 300-DPI Figures** under [`figures/`](figures/)
 
 ---
 
-## Executive Scorecard (`v3.0.1` — 21 / 21 PASS)
+## Executive Scorecard (`v4.0.0` — 23 / 23 PASS)
 
 | # | Gate / Scenario | Specification Scope | Measured Real Simulation Result | Status |
 | :---: | :--- | :--- | :--- | :---: |
@@ -41,10 +43,12 @@ This curated example contains the **complete, genuine, full-scale simulation out
 | 19 | **`DYN-02`** | Full Closed-Loop Bode Frequency Response (Mag, Phase & Group Delay, 15 pts) | 4s BW **`2,544 Hz`** ($\tau_{g,0}=65.2\ \mu\text{s}$), 6s BW **`1,642 Hz`** ($\tau_{g,0}=103.3\ \mu\text{s}$), exact **`1.55×`** ratio | **PASS** |
 | 20 | **`DYN-03`** | Broadband Output Angular-Rate PSD, ASD & Cumulative RMS Noise | White ARW **`0.000352 deg/rt-h`** (`0.97×` EQ-15), 6s LF $1/f$ suppression **`+29.2 dB`**, HF roll-off **`-13.5 dB`** | **PASS** |
 | 21 | **`DYN-04`** | Sinusoidal Rate (`50 deg/s @ 250 Hz`) & Internal Electro-Optic Probe | Gain `0.9889`, phase `-9.36°`, **THD `-67.5 dB`**, **SFDR `43.6 dB`**, $\Delta\phi_S = 1.180\text{ rad}$, `391` $V_{\text{fb,MIOC}}$ wraps, **$r(\Delta P_{\text{PD}},\Delta\phi_{\text{err}}) = 0.9960$** | **PASS** |
+| 22 | **`PHY-01`** | **`SPEC-007` Discrete Winding, Stress, LUT v2 & MIOC/Xtalk (`EQ-45`..`EQ-52`)** | Octupole **`-47.69%`** Shupe reduction, LUT v2 exact roundtrip (`0.0`), $\delta K_{\text{opt}} = \mathbf{85.59\text{ ppm}}$, MIOC+$C_{\text{xtalk}}$ $\Delta V_{\text{TIA}} = \mathbf{0.583\text{ V}}$ | **PASS** |
+| 23 | **`CAL-01`** | **`SPEC-007` 3-Stage Bounded Inverse Calibration (`EQ-52`, `EQ-53`)** | Uncalibrated `40.2–102.7%` $\to$ **AVAR `0.81%`, Deadband `0.91%`, Thermal `0.29%`, SF `0.04%` (`< 5%`)**; all 10 hidden params $\le \mathbf{2.18\%}$; real Tier 2 rate err `0.034%` | **PASS** |
 
 ---
 
-## Visual Walkthrough (All 21 300-DPI Real Outputs)
+## Visual Walkthrough (All 23 300-DPI Real Outputs)
 
 ### Part I — Core Acceptance Gates (Gates 1–6)
 
@@ -125,14 +129,24 @@ This curated example contains the **complete, genuine, full-scale simulation out
 
 ---
 
+### Part V — Group D: `IFOG-SIM-SPEC-007` High-Fidelity Predictive Physics & Inverse Calibration (`PHY-01`, `CAL-01`)
+
+#### 22. `PHY-01` — Discrete Quadrupole vs Octupole Winding, Stress-Optic Drift, Dynamic $K_{\text{opt}}(t)$ & MIOC / Capacitive Crosstalk
+![PHY-01 SPEC-007 Predictive Physics](figures/fig_spec007_physics_winding_mioc.png)
+
+#### 23. `CAL-01` — Automated 3-Stage Bounded Inverse Calibration (`> 40%` Baseline Error $\to$ `< 1%` Calibrated Fit Across 4 Domains)
+![CAL-01 SPEC-007 Inverse Calibration](figures/fig_spec007_calibration_validation.png)
+
+---
+
 ## Reproduce This Exact All-Scenarios Example
 
 ### Option A — Inside Docker or Podman (Zero Host Dependencies)
 ```bash
 ./scripts/container_run.sh build
 ./scripts/container_run.sh example
-# Generates full Markdown + 20-Chart Interactive Plotly HTML5 report + 21 300-DPI PNGs in:
-# report/full_all_scenarios/{report.md, report.html, figures/*.png}
+# Generates full Markdown + Interactive KaTeX/Plotly HTML5 report + 23 300-DPI PNGs in:
+# report/full_all_scenarios/{report.md, report.html, calibrated_params.json, figures/*.png}
 ```
 
 ### Option B — Native Linux (Portable Source Setup)
@@ -143,13 +157,11 @@ source scripts/env.sh
 # Optional: pass --sync-example to also mirror outputs into examples/full_all_scenarios/
 ```
 
-### Option C — Run Gate 6 (FMI 3.0 FMU) or Group C Scenarios Individually via CLI
+### Option C — Run `SPEC-007` Physics/Calibration or Gate 6 Individually via CLI
 ```bash
 cmake --build build --target package_fmu
+./scripts/run_sim.sh --mode spec007_physics --run-id demo_phy01
+./scripts/run_sim.sh --mode spec007_calibration --run-id demo_cal01
+./scripts/run_sim.sh --mode spec007_all --run-id demo_spec007
 ./scripts/run_sim.sh --mode fmi_gate --run-id demo_fmu
-./scripts/run_sim.sh --mode dyn_step_response --run-id demo_step
-./scripts/run_sim.sh --mode dyn_freq_response --run-id demo_bode
-./scripts/run_sim.sh --mode dyn_output_psd --run-id demo_psd
-./scripts/run_sim.sh --mode dyn_sine_electro_optic --run-id demo_sine_eo
-./scripts/run_sim.sh --mode dyn_all --run-id demo_dyn_all
 ```

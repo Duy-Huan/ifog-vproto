@@ -5,10 +5,10 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-ARCH-001` |
-| **Current Version** | `v3.0.1` |
+| **Current Version** | `v4.0.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
-| **Normative Specification** | [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](../spec/IFOG-SIM-SPEC-006.pdf) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
-| **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) (Code-Audited Interactive 3-Tier + FMI 3.0 Mathematical Block Diagram) |
+| **Normative Specification** | [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md) & [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf) (v7.0); [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
+| **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) (Code-Audited Interactive 3-Tier + FMI 3.0 + SPEC-007 Mathematical Block Diagram) |
 | **Scenarios Companion** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **Governance Authority** | [`AGENT.md`](../AGENT.md) (Rules 1–16) |
 | **Reference Standards** | FMI Standard 3.0.2; IEEE Std 952-2020 (IFOG Test & AVAR); IEEE Std 1666.1-2016 (SystemC-AMS) |
@@ -26,22 +26,23 @@
 | `v2.2.0` | `2026-11-26` | Group C Dynamic Response, Output PSD & Sinusoidal Electro-Optic Probe (`DYN-01`..`DYN-04`, `20/20` PASS) | `tier3_analysis/scenarios_dynamic_probe.py`, `tier3_analysis/sim_runner_cli.py`, `viz/plot_scenarios.py`, `viz/export_report.py`, `examples/full_all_scenarios/`, `tests/`, `docs/`, `skills/` | Added Group C dedicated dynamic & internal electro-optic probe workflows (`DYN-01` Step Response, `DYN-02` Full Bode Magnitude/Phase/Group Delay, `DYN-03` Broadband Output Rate PSD/ASD & Cumulative RMS Noise, `DYN-04` Sinusoidal Input Internal Chain `PD`, `V_fb MIOC`, Sagnac phase, `V_TIA`, ADC blanking); expanded CLI to **27 modes**, **20 official gates/scenarios**, **20 300-DPI PNGs**, **19 interactive Plotly HTML5 charts**, and refreshed `examples/full_all_scenarios/` (`20/20` PASS). |
 | `v3.0.0` | `2026-11-26` | `IFOG-SIM-SPEC-006` Standalone FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`, 44 Formulas, `21/21` PASS) | `spec/IFOG-SIM-SPEC-006.*`, `fmi_wrapper/`, `tier2_sysc_ams/{include,src}/ifog_top_module.*`, `tier2_sysc_ams/CMakeLists.txt`, `CMakeLists.txt`, `tier3_analysis/fmi_master_runner.py`, `tier3_analysis/sim_runner_cli.py`, `viz/`, `tests/`, `skills/ifog-fmi3-cosim-fmu/`, `.github/workflows/` | Upgraded normative spec to `IFOG-SIM-SPEC-006` v6.0 (44/44 verified formulas `EQ-01`–`EQ-44`); wrapped unmodified Tier 2 SystemC/SystemC-AMS core (`IfogTopModule`) into standalone FMI 3.0 Co-Simulation FMU `build/ifog_core.fmu` via vendorized FMI 3.0 C headers, 75-symbol `fmi3_bridge.cpp`, 15-variable `modelDescription.xml.in` (`canBeInstantiatedOnlyOncePerProcess="true"`), and CMake `package_fmu` target; added subprocess-isolated FMPy master orchestrator (`fmi_master_runner.py`, `--mode fmi_gate`, Gate 6: 0 XSD errors, `0.00e+00 rad/s` bit-exact equivalence, `97.42%` deadband reduction, `3.83%` 5-region AVAR overlap), 100.0% C++ coverage across `tier2_sysc_ams/` + `fmi_wrapper/src/` (`2,102/2,102` lines), 100.0% Python coverage, and refreshed `examples/full_all_scenarios/` (`21/21` PASS). |
 | `v3.0.1` | `2026-11-26` | Standardized Explanatory Reports (`.md`/`.html`) & Code-Audited Interactive HTML Architecture Explorer | `viz/architecture_explorer.py`, `viz/report_narratives.py`, `viz/export_report.py`, `docs/IFOG_ARCHITECTURE_EXPLORER.html`, `scripts/build_docs.sh`, `examples/run_example.sh`, `examples/full_4gate_baseline/`, `examples/full_all_scenarios/`, `tests/unit/test_architecture_and_narratives.py`, `.github/workflows/release.yml` | Added code-audited interactive HTML5 mathematical block diagram (`viz/architecture_explorer.py` -> `docs/IFOG_ARCHITECTURE_EXPLORER.html` + per-run `architecture_model.html`) reconciled 1-to-1 with live `IFOG-SIM-SPEC-006` C++/Python source code (`EQ-01`..`EQ-44`, 4 path highlight modes, live parameter strip & audit table); added `viz/report_narratives.py` providing standardized 3-part theoretical foundation, plain-language non-specialist reading guide, and dynamic measured proof for all 21 diagnostic figures in both `report.md` and KaTeX-rendered `report.html`; regenerated both curated examples (`examples/full_4gate_baseline/` & `examples/full_all_scenarios/`) with the standardized `v3.0.1` report format at 100.0% dual coverage. |
+| `v4.0.0` | `2026-11-26` | `IFOG-SIM-SPEC-007` High-Fidelity Predictive Physics, Tunable FMI 3.0 FMU & Inverse Calibration (53 Formulas, `23/23` PASS) | `spec/IFOG-SIM-SPEC-007.*`, `configs/schema_v6.json`, `configs/baseline_1km_spec007.json`, `tier1_offline/`, `tier2_sysc_ams/`, `fmi_wrapper/`, `tier3_analysis/inverse_calibration.py`, `tier3_analysis/scenarios_spec007.py`, `viz/plot_spec007_calibration.py`, `viz/report_narratives.py`, `viz/export_report.py`, `skills/ifog-spec007-physics-calibration/`, `docs/` | Upgraded normative spec to `IFOG-SIM-SPEC-007` v7.0 (**53/53 verified formulas `EQ-01`–`EQ-53`**): added discrete Quadrupole/Octupole coil winding (`PHY-01`: `-47.69%` Shupe reduction), thermo-mechanical elasto-optic stress drift, dynamic $K_{\text{opt}}(t)/V_{\text{eff}}(t)/\Delta\phi_{\text{pol}}(t)/V_\pi(t)$, 6-channel `shupe_lut.bin` v2 (56 B `<7d` with v1 fallback), 2nd-order MIOC electro-acoustic dynamics before $K_{\text{delay}}$, capacitive + resistive PCB crosstalk ($C_{\text{xtalk}}\,dV/dt + G_{\text{xtalk}}V$), Rayleigh/facet back-reflection, **7 live tunable FMI 3.0 parasitic variables (`VR 15..21`)**, `DualRegimeStitcher` quadrature BI subtraction, automated 3-stage bounded `InverseCalibrator` (`CAL-01`: `40–103% -> 0.04–0.91% < 5%` across all 4 validation domains, 10 params recovered `<= 2.18%`), presentation-grade tier-by-tier mathematical compendium across all docs/reports, and **100.0% C++ (`2,329/2,329` lines)** & **100.00% Python (`4,650/4,650` stmts)** coverage. |
 
 ---
 
 ## 1. System Context & Engineering Objectives
 
-`ifog-vproto` is a deterministic, multi-scale virtual prototype and **standalone FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`)** for a **Closed-Loop Interferometric Fiber-Optic Gyroscope (IFOG)** supporting 2-state, 4-state Lefèvre, and **Official 6-State Symmetric modulation** (`IFOG-SIM-SPEC-006` v6.0 / `SPEC-005` v5.0 / `SPEC-004` v4.0), as well as concurrent 3-axis shared-SLD / shared-rail IMU co-simulation. The system bridges **11 orders of magnitude in time scale**—from sub-microsecond electro-optic TIA/MIOC transient dynamics ($\Delta t_{\text{fast}} = \tau/K \approx 153\text{–}306\text{ ns}$) up to 10-hour tactical/navigation-grade Allan Variance stability analysis ($T = 3.6\times 10^4\text{ s}$)—while maintaining IEEE-754 64-bit optical phase fidelity ($< 10^{-15}\text{ rad}$ wrap error) and bit-true fixed-point digital closed-loop execution.
+`ifog-vproto` is a deterministic, multi-scale virtual prototype, **standalone tunable FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`, 22 SI variables)**, and **automated inverse calibration engine** for a **Closed-Loop Interferometric Fiber-Optic Gyroscope (IFOG)** supporting 2-state, 4-state Lefèvre, and **Official 6-State Symmetric modulation** (`IFOG-SIM-SPEC-007` v7.0 / `SPEC-006` v6.0 / `SPEC-005` v5.0 / `SPEC-004` v4.0), as well as concurrent 3-axis shared-SLD / shared-rail IMU co-simulation. The system bridges **11 orders of magnitude in time scale**—from sub-microsecond electro-optic TIA/MIOC transient dynamics ($\Delta t_{\text{fast}} = \tau/K \approx 153\text{–}306\text{ ns}$) up to 10-hour tactical/navigation-grade Allan Variance stability analysis ($T = 3.6\times 10^4\text{ s}$)—while targeting **`< 5%` prediction accuracy against physical IFOG prototypes**.
 
 ### Multi-Scale Time-Domain Separation
 
 | Architecture Tier | Execution Engine | Characteristic Time Step / Horizon | Physical Scope & Outputs |
 | :--- | :--- | :--- | :--- |
-| **Tier 1 (Offline Solvers)** | Python 3.12 + NumPy / SciPy (`tier1_offline/`) | Static spectral ($N_{\text{spec}} \in [64, 128]$) & thermal ($0..10\text{ h}$) | Spectral-sliced Jones polarization (`phys_params.json`) & 1D Crank–Nicolson / FEM thermal Shupe LUT (`shupe_lut.bin`) |
-| **Tier 2 (Fast-Scale Core)** | C++17 `-O3 -fPIC` + SystemC 2.3.4 + SystemC-AMS PoC 2.3.4 (`tier2_sysc_ams/`) | $\Delta t_{\text{fast}} = \tau/K \approx 153\text{–}306\text{ ns}$, $\tau \approx 4.89\ \mu\text{s}$, horizon $0.008..60\text{ s}$ | Single-axis (`IfogTopModule`), concurrent 3-axis IMU (`--imu3axis`), Sagnac/Kerr/Shupe/Faraday/VRE/MIOC envelope, 6-component noise, 5-pole $1/f$ noise, hybrid TIA/DAC LTFs, aperture jitter, 2/4/6-state DSP with anti-windup & real-time BIT/FDIR (`sim_out.bin`, `micro_waveforms.bin`, `dsp_trace.bin`) |
-| **FMI 3.0 Black-Box FMU** | C++17 FMI 3.0 C-API Wrapper (`fmi_wrapper/` -> `build/ifog_core.fmu`) | Macro communication step $H \ge 1\text{ ms}$ (internal $\Delta t_{\text{fast}} = 306\text{ ns}$) | Tool-agnostic FMI 3.0 Co-Simulation FMU (`binaries/x86_64-linux/ifog_core.so`, `modelDescription.xml`, `resources/*`), 75 C-API exports, ZOH inputs/tunable params, anti-aliased `omega_out_avg`, `e_vpi_res`, `bit_status`, bit-exact (`0.00e+00 rad/s`) equivalence with `ifog_sim` |
-| **Tier 3 (Scenarios, FMI & AVAR)** | Python 3.12 + FMPy + SciPy / Concurrent Pools (`tier3_analysis/`) | $\Delta t_{\text{slow}} = 10\text{ ms}$ ($100\text{ Hz}$), horizon $10\text{ h}$ ($3.6\times 10^6$ samples) | 28-mode official CLI runner (`sim_runner_cli.py`), **FMPy Master Orchestrator (`fmi_master_runner.py`, Gate 6)**, Group A (`TD-01`..`TD-06`), Group B (`ENG-01`..`ENG-05`), & Group C (`DYN-01`..`DYN-04`), parallel sweeps, $100\text{ Hz}$ $\mathbf{K}$-matrix, Dual-Regime IEEE Std 952 Overlapping AVAR & 5-region WLS |
-| **Diagnostics & Auto-Reporting** | Python 3.12 + Matplotlib / Plotly (`viz/`, `report/`, `scripts/`) | Post-run automatic execution | 21 300-DPI PNG figures (`plot_scenarios.py`, `plot_avar_5regions.py`, ...), **20 interactive Plotly HTML5 charts** + full Markdown reports + CSV calibration datasets in `report/<run_id>/`, centralized `report/index.{md,html}` |
+| **Tier 1 (Offline Solvers)** | Python 3.12 + NumPy / SciPy (`tier1_offline/`) | Static spectral ($N_{\text{spec}} \in [64, 128]$) & thermal ($0..10\text{ h}$) | Spectral-sliced Jones polarization & Rayleigh/facet coherence (`phys_params.json`), discrete Quadrupole/Octupole coil winding, 1D Crank–Nicolson / FEM thermal Shupe + elasto-optic stress + dynamic $K_{\text{opt}}/V_{\text{eff}}/\phi_{\text{pol}}/V_\pi$ (`shupe_lut.bin` v2, v1 fallback) |
+| **Tier 2 (Fast-Scale Core)** | C++17 `-O3 -fPIC` + SystemC 2.3.4 + SystemC-AMS PoC 2.3.4 (`tier2_sysc_ams/`) | $\Delta t_{\text{fast}} = \tau/K \approx 153\text{–}306\text{ ns}$, $\tau \approx 4.89\ \mu\text{s}$, horizon $0.008..60\text{ s}$ | Single-axis (`IfogTopModule`), 3-axis IMU (`--imu3axis`), MIOC 2nd-order electro-acoustic dynamics, capacitive+resistive crosstalk, Rayleigh/facet back-reflection, $O(1)$ LUT v2 interpolation, 6-component + 5-pole $1/f$ noise, hybrid TIA/DAC LTFs, aperture jitter, 2/4/6-state DSP with anti-windup & BIT/FDIR (`sim_out.bin`, `micro_waveforms.bin`, `dsp_trace.bin`) |
+| **FMI 3.0 Tunable FMU** | C++17 FMI 3.0 C-API Wrapper (`fmi_wrapper/` -> `build/ifog_core.fmu`) | Macro communication step $H \ge 1\text{ ms}$ (internal $\Delta t_{\text{fast}} = 306\text{ ns}$) | Tool-agnostic FMI 3.0 Co-Simulation FMU (`binaries/x86_64-linux/ifog_core.so`, `modelDescription.xml`, `resources/*`), 75 C-API exports, **22 SI variables (`VR 0..14` + 7 live tunable parasitic parameters `VR 15..21`)**, bit-exact (`0.00e+00 rad/s`) equivalence with `ifog_sim` |
+| **Tier 3 (Calibration, FMI & AVAR)** | Python 3.12 + FMPy + SciPy / Concurrent Pools (`tier3_analysis/`) | $\Delta t_{\text{slow}} = 10\text{ ms}$ ($100\text{ Hz}$), horizon $10\text{ h}$ ($3.6\times 10^6$ samples) | 31-mode official CLI runner (`sim_runner_cli.py`), **3-Stage Bounded `InverseCalibrator` (`calibrated_params.json`)**, `DualRegimeStitcher` anti-double-counting BI, FMPy Gate 6, Group A/B/C/D scenarios (`23 / 23`), $100\text{ Hz}$ $\mathbf{K}$-matrix, Dual-Regime IEEE Std 952 Overlapping AVAR & 5-region WLS |
+| **Diagnostics & Auto-Reporting** | Python 3.12 + Matplotlib / Plotly / KaTeX (`viz/`, `report/`, `scripts/`) | Post-run automatic execution | **23 300-DPI PNG figures**, interactive KaTeX+Plotly HTML5 & Markdown reports with **complete tier-by-tier mathematical formulations (`EQ-01`..`EQ-53`)**, embedded code-audited `architecture_model.html`, and centralized `report/index.{md,html}` |
 
 ---
 
@@ -146,7 +147,60 @@ Built as a static library `libifog_core.a` + CLI executable `build/ifog_sim` + u
 
 ---
 
-## 4. Complete 41-Formula White-Box Traceability Matrix (`EQ-01` .. `EQ-41`)
+## 4. Complete Tier-by-Tier Mathematical Formulation Compendium (`EQ-01` .. `EQ-53`)
+
+> **Partner-Ready Reference:** Every mathematical equation executed by `ifog-vproto` is organized below strictly by architectural tier, verified 1-to-1 against live C++/Python source code and individually tested in `tests/formula_verification/` (`53 / 53` PASS).
+
+### 4.1 Tier 1 — Offline Optical, Spectral, Winding & Thermo-Mechanical Solvers (`tier1_offline/`)
+
+1. **Spectral-Sliced Jones Polarization & Lorentz Reciprocity (`EQ-04`, `EQ-05` — `jones_spectral.py`):**
+   $$\mathbf{J}_{\text{CW}}(\omega_k) = \prod_{j=1}^{M} \mathbf{R}(-\theta_j)\,\operatorname{diag}\!\left(e^{-i\Delta\beta(\omega_k)\Delta z_j/2},\,e^{+i\Delta\beta(\omega_k)\Delta z_j/2}\right)\mathbf{R}(\theta_j), \qquad \mathbf{J}_{\text{CCW}}(\omega_k) = \mathbf{J}_{\text{CW}}^{T}(\omega_k)$$
+   $$V = \frac{\left|\sum_k w_k \mathbf{E}_{\text{CW}}^\dagger(\omega_k)\mathbf{E}_{\text{CCW}}(\omega_k)\right|}{\frac{1}{2}\sum_k w_k \bigl(\|\mathbf{E}_{\text{CW}}\|^2 + \|\mathbf{E}_{\text{CCW}}\|^2\bigr)}, \qquad \phi_{\text{pol}} = \arg\!\left(\sum_k w_k \mathbf{E}_{\text{CW}}^\dagger(\omega_k)\mathbf{E}_{\text{CCW}}(\omega_k)\right)$$
+2. **Sagnac Scale Factor, Kerr Bias & Coherence Length (`EQ-07`, `EQ-08`, `EQ-52`):**
+   $$K_{\text{opt},0} = \frac{2\pi L D}{\bar{\lambda} c}, \qquad \Delta\phi_{\text{Kerr}} = \eta_{\text{coh}}\,\frac{2\pi n_2}{\bar{\lambda} A_{\text{eff}}}\,L\,(P_{\text{CW}} - P_{\text{CCW}}), \qquad L_c = \frac{\bar{\lambda}^2}{\Delta\lambda_{\text{FWHM}}}$$
+3. **Discrete Quadrupole / Octupole Coil Winding & Thermo-Mechanical Stress Drift (`EQ-09`, `EQ-45`, `EQ-46` — `shupe_thermal.py`):**
+   $$\Delta\phi_{\text{thermo}}(t) = \Delta\phi_{\text{Shupe}}(t) + \Delta\phi_{\text{stress}}(t), \qquad \Delta\phi_{\text{Shupe}}(t) = \frac{\beta_0}{c}\!\left(\frac{dn}{dT} + n_{\text{eff}}\alpha_f\right)\sum_{i=0}^{N_{\text{turns}}-1} (L - 2z_i)\,\dot{T}(r_i, z_{\text{ax},i}, t)\,\Delta z_i$$
+   $$\Delta\phi_{\text{stress}}(t) = \frac{\beta_0}{c}\left(-\frac{n_{\text{eff}}^3}{2}(p_{11}+2p_{12})\right) E_{\text{fiber}}(\alpha_{\text{bobbin}}-\alpha_f)\sum_{i=0}^{N_{\text{turns}}-1} (L-2z_i)\,\dot{\varepsilon}_{\text{th}}(r_i, t)\,\Delta z_i$$
+4. **Dynamic Thermal Scale Factor, Dynamic Optical Parameters & 6-Channel Binary LUT v2 (`EQ-47`, `EQ-48`, `EQ-49`):**
+   $$K_{\text{opt}}(t) = K_{\text{opt},0}\!\left[1 + (\alpha_{\text{bobbin}} + \alpha_f)\,\Delta\bar{T}(t) - \frac{\Delta\bar{\lambda}(t)}{\bar{\lambda}_0}\right] = K_{\text{opt},0}\bigl(1 + \delta K_{\text{opt}}(t)\bigr)$$
+   $$V_\pi(t) = V_{\pi,0}\bigl(1 + \alpha_{V_\pi}\Delta T_{\text{MIOC}}(t)\bigr), \qquad \text{LUT v2 (`56 B <7d`): } \bigl(t,\;\Delta\phi_{\text{Shupe}},\;\Delta\phi_{\text{stress}},\;\delta K_{\text{opt}},\;V_{\text{eff}},\;\Delta\phi_{\text{pol}},\;V_\pi\bigr)$$
+
+### 4.2 Tier 2 — Fast-Scale SystemC-AMS Optical, AFE, Parasitics & Bit-True DSP Core (`tier2_sysc_ams/`)
+
+1. **Optical Envelope, MIOC 2nd-Order Electro-Acoustic Dynamics & Back-Reflection (`EQ-06`, `EQ-10`–`EQ-13`, `EQ-50`, `EQ-52`):**
+   $$H_{\text{MIOC}}(s) = \frac{\omega_{\text{mioc}}^2}{s^2 + 2\zeta_{\text{mioc}}\omega_{\text{mioc}}s + \omega_{\text{mioc}}^2}, \qquad \phi_{\text{MIOC}}[m] = \frac{\pi(1+\epsilon_{V_\pi})}{V_\pi(t)}\,V_{\text{eff,mioc}}[m] + \gamma_{\text{nl}}\,V_{\text{eff,mioc}}^2[m]$$
+   $$\Delta\phi_{\text{NR}}[m] = K_{\text{opt}}(t)\Omega_{\text{in}}[m] + \Delta\phi_{\text{Shupe}} + \Delta\phi_{\text{stress}} + \Delta\phi_{\text{pol}} + \Delta\phi_{\text{Kerr}} + \Delta\phi_{\text{Faraday}} + \Delta\phi_{\text{VRE}} + \Delta\phi_{\text{back}}[m]$$
+   $$\Delta\phi_{\text{mod}}[m] = \operatorname{wrap}_{2\pi}\!\bigl(\phi_{\text{MIOC}}[m] - \phi_{\text{MIOC}}[m - K_{\text{delay}}]\bigr), \qquad P_{\text{det}}[m] = \frac{P_0}{2}\bigl(1 + \alpha_{\text{RAM}} V_{\text{eff,mioc}}[m]\bigr)\bigl(1 + V_{\text{eff}}(t)\cos(\Delta\phi_{\text{NR}} + \Delta\phi_{\text{mod}})\bigr)$$
+   $$\sigma_{\phi,\text{back}} = \sqrt{2\bigl(R_{\text{facet}} + R_{\text{Rayleigh}}\,L_c\bigr)}$$
+2. **TIA Summing Node, Capacitive + Resistive Crosstalk, 6-Component Noise & Hybrid LTF (`EQ-14`–`EQ-19`, `EQ-51`):**
+   $$I_{\text{in}}[m] = \mathcal{R} P_{\text{det}}[m] + i_{\text{xtalk}}[m] + i_{w}[m], \qquad i_{\text{xtalk}}[m] = G_{\text{xtalk}}\,V_{\text{drv}}[m] + C_{\text{xtalk}}\,\frac{V_{\text{drv}}[m] - V_{\text{drv}}[m-1]}{\Delta t_{\text{fast}}}$$
+   $$H_{\text{TIA}}(s) = \frac{-R_f\,\omega_0^2}{s^2 + 2\zeta\omega_0 s + \omega_0^2}, \qquad V_{\text{out,nl}} = \operatorname{clip}\!\bigl(V_{\text{lin}} + G_2 V_{\text{lin}}^2 + G_3 V_{\text{lin}}^3 + v_{1/f},\;V_{\min},\;V_{\max}\bigr)$$
+   $$\sigma_{V,\text{jit}} = \left|\frac{dV}{dt}\right|\sigma_{t,\text{jit}} \quad (\text{EQ-35}), \qquad \eta_b = \frac{k_{\text{end}} - k_{\text{start}} + 1}{K} \quad (\text{EQ-19})$$
+3. **Bit-True 4-State & Official 6-State Orthogonal DSP, Jury Stability & BIT/FDIR (`EQ-01`–`EQ-03`, `EQ-20`–`EQ-23`, `EQ-31`–`EQ-34`, `EQ-36`–`EQ-39`):**
+   - **4-State Lefèvre:** $e_\Omega = (y_2-y_1)+(y_4-y_3)$, $e_{V_\pi} = (y_3+y_4)-(y_1+y_2)$.
+   - **Official 6-State Symmetric ($\alpha^* = \pi/3$, $-33.3\%$ $V_{\text{peak}}$, $+136.9\text{ dB}$ RAM/xtalk rejection):**
+     $$e_\Omega^{(6)} = (y_4+y_5+y_6)-(y_1+y_2+y_3), \qquad e_{V_\pi}^{(6)} = 2(y_2+y_5)-(y_1+y_3+y_4+y_6), \qquad e_{\text{asym}}^{(6)} = (y_1-y_3)+(y_6-y_4)$$
+   - **Loop-1/2 Updates, Jury Stability & Scale Factor:**
+     $$L_1(z) = \frac{K_{\text{tot},1}}{z^2(z-1)}, \quad 0 < K_{\text{tot},1} < 1, \quad K_{\text{tot},2} \le 0.1\,K_{\text{tot},1}, \qquad \Omega_{\text{out}} = \frac{\Delta\phi_{\text{step}}}{\mathrm{SF}_{\text{CL}}}$$
+
+### 4.3 FMI 3.0 Co-Simulation Wrapper (`fmi_wrapper/` — `build/ifog_core.fmu`, `VR 0..21`)
+
+- **Multi-Rate ZOH Step Alignment & Anti-Aliased Macro-Step Average (`EQ-42`–`EQ-44`):**
+  $$N_{\tau,k} = \left\lfloor \frac{t_k + H}{\tau} \right\rfloor - \left\lfloor \frac{t_k}{\tau} \right\rfloor, \qquad \bar{\Omega}_{\text{out},k} = \frac{1}{N_{\tau,k}}\sum_{j=1}^{N_{\tau,k}} \Omega_{\text{out}}[j], \qquad e_{V_\pi,\text{res}} = 2\pi\epsilon_{V_\pi,\text{eff}}$$
+- **7 Live Tunable Parasitic Parameters (`VR 15..21`):** `C_xtalk_F`, `G_xtalk_S`, `c_pink_coeff`, `R_facet_dB`, `alpha_vpi_ppm_K`, `alpha_bobbin_ppm_K`, and `delta_z_quad_m` (`canBeInstantiatedOnlyOncePerProcess="true"`, `0.00e+00 rad/s` bit-exact equivalence when untuned).
+
+### 4.4 Tier 3 — Dual-Regime AVAR, Anti-Double-Counting BI & 3-Stage Bounded Inverse Calibration (`tier3_analysis/`)
+
+1. **IEEE Std 952-2020 5-Component Overlapping AVAR & Coherent $\mathbf{K}$-Matrix (`EQ-24`–`EQ-30`, `EQ-40`–`EQ-41`):**
+   $$\sigma^2(T_m) = \frac{3Q^2}{T_m^2} + \frac{N^2}{T_m} + \frac{2\ln 2}{\pi}B^2 + \frac{K^2 T_m}{3} + \frac{R^2 T_m^2}{2}$$
+2. **Quadrature Anti-Double-Counting BI Stitching (`EQ-52` — `DualRegimeStitcher`):**
+   $$B_{\text{T3,mech}} = \sqrt{\max\!\left(0,\; B_{\text{total}}^2 - B_{\text{T2,meas}}^2\right)}$$
+3. **3-Stage Bounded Weighted Least-Squares Inverse Calibration & Gauss–Newton 95% CI (`EQ-53` — `InverseCalibrator`):**
+   $$\hat{\boldsymbol{\theta}} = \arg\min_{\boldsymbol{\theta}\in[\boldsymbol{\theta}_{\min},\boldsymbol{\theta}_{\max}]} \sum_{m=1}^{M} w_m\,\left\| \frac{\mathbf{y}_{\text{sim},m}(\boldsymbol{\theta}) - \mathbf{y}_{\text{exp},m}}{\boldsymbol{\sigma}_m} \right\|_2^2, \qquad \operatorname{Cov}(\hat{\boldsymbol{\theta}}) \approx \hat{s}^2 \bigl(\mathbf{J}^T \mathbf{J} + \lambda \mathbf{I}\bigr)^{-1}, \qquad \mathrm{CI}_{95\%} = \hat{\theta}_j \pm 1.96\sqrt{[\operatorname{Cov}]_{jj}}$$
+
+---
+
+## 5. Complete 53-Formula White-Box Traceability Matrix (`EQ-01` .. `EQ-53`)
 
 | Formula ID | Spec Ref | Mathematical Scope | Source Code Binding | CI Formula Test |
 | :--- | :--- | :--- | :--- | :--- |
@@ -191,30 +245,45 @@ Built as a static library `libifog_core.a` + CLI executable `build/ifog_sim` + u
 | `EQ-39` | SPEC-005 §4.4 | Real-time FPGA BIT/FDIR 5-fault classification & SEU soft-recovery | `tier2_sysc_ams/src/digital_dsp_sc.cpp` | `test_formulas_spec005.py::test_eq39_*` |
 | `EQ-40` | SPEC-005 §4.5 | Monte Carlo production yield, 95% Wilson CI & $C_{pk}$ | `tier3_analysis/scenarios_engineering.py` | `test_formulas_spec005.py::test_eq40_*` |
 | `EQ-41` | SPEC-005 §4.5 | $-40..+85^\circ\text{C}$ 2D thermal polynomial & 4-state EKF compensation | `tier3_analysis/scenarios_engineering.py` | `test_formulas_spec005.py::test_eq41_*` |
+| `EQ-42` | SPEC-006 §4.1 | FMI 3.0 multi-rate ZOH alignment ($N_{\tau,k}$) & anti-aliased readout $\bar{\Omega}_{\text{out},k}$ | `tier2_sysc_ams/src/ifog_top_module.cpp` | `test_formulas_spec006.py::test_eq42_*` |
+| `EQ-43` | SPEC-006 §4.2 | FMI 3.0 Loop-2 residual $V_\pi$ phase error & 6-bit `bit_status` | `tier2_sysc_ams/src/ifog_top_module.cpp` | `test_formulas_spec006.py::test_eq43_*` |
+| `EQ-44` | SPEC-006 §4.3 | Black-box FMU vs standalone Tier 2 `< 1e-12 rad/s` equivalence | `fmi_wrapper/src/fmi3_bridge.cpp` | `test_formulas_spec006.py::test_eq44_*` |
+| `EQ-45` | SPEC-007 §2.1 *(draft 40)* | Discrete Quadrupole/Octupole coil winding map & $\Delta\phi_{\text{thermo}}$ | `tier1_offline/shupe_thermal.py` | `test_formulas_spec007.py::test_eq45_*` |
+| `EQ-46` | SPEC-007 §2.1 *(draft 41)* | Thermo-mechanical elasto-optic stress-optic drift $\Delta\phi_{\text{stress}}(t)$ | `tier1_offline/shupe_thermal.py` | `test_formulas_spec007.py::test_eq46_*` |
+| `EQ-47` | SPEC-007 §2.2 *(draft 42)* | Dynamic Sagnac scale factor thermal drift $K_{\text{opt}}(t)$ | `tier1_offline/shupe_thermal.py`, `ifog_math.hpp` | `test_formulas_spec007.py::test_eq47_*` |
+| `EQ-48` | SPEC-007 §2.2 *(draft 43)* | Dynamic optical parameters $V_{\text{eff}}(t), \Delta\phi_{\text{pol}}(t), V_\pi(t)$ | `tier1_offline/shupe_thermal.py`, `optical_envelope_tdf.cpp` | `test_formulas_spec007.py::test_eq48_*` |
+| `EQ-49` | SPEC-007 §2.3 *(draft 44)* | 6-channel `shupe_lut.bin` v2 (`56 B <7d`) & $O(1)$ interp with v1 fallback | `tier1_offline/shupe_thermal.py`, `ifog_config.cpp` | `test_formulas_spec007.py::test_eq49_*` |
+| `EQ-50` | SPEC-007 §2.4 *(draft 45)* | MIOC $\text{LiNbO}_3$ 2nd-order electro-acoustic dynamics before $K_{\text{delay}}$ | `tier2_sysc_ams/include/ifog_math.hpp`, `optical_envelope_tdf.cpp` | `test_formulas_spec007.py::test_eq50_*` |
+| `EQ-51` | SPEC-007 §2.5 *(draft 46)* | Capacitive + resistive PCB crosstalk $G_{\text{xtalk}}V + C_{\text{xtalk}}\,dV/dt$ | `tier2_sysc_ams/include/ifog_math.hpp`, `analog_frontend_tdf.cpp` | `test_formulas_spec007.py::test_eq51_*` |
+| `EQ-52` | SPEC-007 §2.6 *(draft 47)* | Coherent Rayleigh/facet back-reflection $\sigma_{\phi,\text{back}}$ & quadrature BI stitching | `jones_spectral.py`, `dual_regime_avar.py` | `test_formulas_spec007.py::test_eq52_*` |
+| `EQ-53` | SPEC-007 §2.7 *(draft 48)* | 3-Stage bounded Inverse Calibration WLS & Gauss–Newton 95% CI | `tier3_analysis/inverse_calibration.py` | `test_formulas_spec007.py::test_eq53_*` |
 
 ---
 
-## 5. Verification, Coverage & CI/CD Governance Architecture
+## 6. Verification, Coverage & CI/CD Governance Architecture
 
-### 5.1 Quantitative Acceptance Results (Verified Real Simulations)
+### 6.1 Quantitative Acceptance Results (Verified Real Simulations)
 | Acceptance Gate / Metric | Normative Spec Requirement | Verified Result | Status |
 | :--- | :--- | :--- | :---: |
-| **Dual Spec Immutability Lock (Rule 7)** | `SPEC-004.tex` & `SPEC-005.tex` SHA-256 unchanged | Both verified `OK` + compiled PDFs | **PASS** |
-| **Doc–Version Sync (Rule 16)** | `pyproject.toml`, all 3 `docs/*.{md,tex,pdf}`, `README.md`, Git Tag aligned | Verified via `scripts/verify_doc_sync.py` | **PASS** |
-| **C++ Line & Function Coverage** | `100.0%` via `gcovr --fail-under-line 100` | `100.0%` (`1,546/1,546` lines, `109/109` functions) | **PASS** |
-| **Python Line Coverage** | `100.0%` via `pytest-cov` (`fail_under = 100`) | `100.0%` (`2,631/2,631` stmts across `tier1`, `tier3`, `viz`) | **PASS** |
-| **Per-Formula Verification (Rule 3)** | All 41 equations (`EQ-01`..`EQ-41`) independently pass | `41 / 41` PASSED | **PASS** |
+| **Quadruple Spec Lock (Rule 7)** | `SPEC-004/005/006/007` SHA-256 unchanged | All 4 verified `OK` + compiled PDFs | **PASS** |
+| **Doc–Version Sync (Rule 16)** | `pyproject.toml`, all 3 `docs/*.{md,tex,pdf}`, HTML explorer, `README.md`, Git Tag aligned | Verified via `scripts/verify_doc_sync.py` | **PASS** |
+| **C++ Line & Function Coverage** | `100.0%` via `gcovr --fail-under-line 100` (`tier2` + `fmi_wrapper`) | `100.0%` (`2,329/2,329` lines, `211/211` functions) | **PASS** |
+| **Python Line Coverage** | `100.0%` via `pytest-cov` (`fail_under = 100`) | `100.00%` (`4,650/4,650` stmts across `tier1`, `tier3`, `viz`) | **PASS** |
+| **Per-Formula Verification (Rule 3)** | All 53 equations (`EQ-01`..`EQ-53`) independently pass | `53 / 53` PASSED | **PASS** |
 | **Gate 1 — Golden Linear & Flyback** | Static err $< 10^{-9}\text{ rad}$, flybacks $> 1000$, $\epsilon_{V_\pi,\text{eff}} < 10^{-5}$ | `3.10e-16 rad`, `1,666` wraps, `5.84e-14` | **PASS** |
 | **Gate 2 — Deadband & Bunny Ears** | $\ge 90\%$ reduction across $[-0.5, +0.5]^\circ/\text{s}$ | `98.85%` reduction on both metrics | **PASS** |
 | **Gate 3 — $1/f$ Flicker & $\mathbf{K}$-Matrix** | Linear slope $\approx 0$, nonlinear slope $\in [-1.25, -0.75]$, $\mathbf{K}$ repeat $< 2\%$ | `-0.062` linear vs `-0.893` nonlinear, `0.000%` repeat | **PASS** |
 | **Gate 4 — Dual-Regime 5-Region AVAR** | Real $60\text{ s}$ Fast + $10\text{ h}$ Slow, overlap $< 5\%$, WLS $(Q,N,B,K,R)$ within $\pm 10\%$ | Overlap `2.42% < 5%`; all 5 WLS params within $\pm 10\%$ | **PASS** |
 | **Gate 5 — Official 6-State DSP** | Static err $< 10^{-9}\text{ rad}$, $-33.3\%$ $V_{\text{peak}}$, $> 40\text{ dB}$ RAM/xtalk rejection | `1.28e-16 rad`, **`+136.94 dB`** rejection (`7.03e6×`) | **PASS** |
+| **Gate 6 — FMI 3.0 Tunable FMU** | 0 XSD errors, `<1e-12` equiv, live `VR 15..21`, deadband $\ge 90\%$, AVAR $<5\%$ | `0` XSD, `0.00e+00 rad/s`, `97.42%` deadband, `3.83%` AVAR | **PASS** |
 | **Group A — 6 Time-Domain (`TD-01..06`)** | Blanking, Step/Bode BW, $V_\pi$ shock, 700°/s + anti-windup, Shupe, Limit Cycles | `6 / 6` PASSED (BW `2,540 Hz`, Shupe `99.74%`, `7,184` wraps) | **PASS** |
 | **Group B — 5 Engineering (`ENG-01..05`)** | BOM sizing, 3-axis IMU, VRE/Faraday, 5-fault BIT/FDIR, MC $C_{pk}$ + Cal | `5 / 5` PASSED (IMU `+51.6 dB`, BIT $\le 30\ \mu\text{s}$, Yield `97.2%`) | **PASS** |
+| **Group C — 4 Dynamic Probe (`DYN-01..04`)** | Step, 15-pt Bode M/P/GD, Output PSD/ASD, Sine internal electro-optic chain | `4 / 4` PASSED (4s `2,544 Hz`, 6s `1,642 Hz`, THD `-67.5 dB`) | **PASS** |
+| **Group D — `SPEC-007` (`PHY-01`, `CAL-01`)** | Octupole/stress/LUT v2/MIOC+$C_{\text{xtalk}}$ + 3-Stage Inverse Calibration `< 5%` | `2 / 2` PASSED (Oct `-47.69%`, Calib `0.04–0.91%`, 10 params `<= 2.18%`) | **PASS** |
 
-### 5.2 Strict 2-Branch CI/CD & Gated SemVer Release Architecture
+### 6.2 Strict 2-Branch CI/CD & Gated SemVer Release Architecture
 - **Git Policy (Rule 1):** Only `main` and `dev` exist locally and on `origin`. All changes develop on `dev`, pass full CI (`.github/workflows/ci.yml`), and merge `dev -> main` via Pull Request without deleting `dev`.
-- **Release Pipeline (Rules 8 & 16):** Pushing annotated SemVer tag `vX.Y.Z` on `main` triggers `.github/workflows/release.yml`, which verifies SemVer format, `main` ancestry, dual spec SHA-256 locks, **Rule 16 document–version sync (`--expected-tag vX.Y.Z` across all 3 PDFs)**, 100% C++/Python coverage, 41 formulas, and all Gate 1–5 + 11-scenario system simulations before publishing GitHub Release `vX.Y.Z` with all 14 release artifacts.
+- **Release Pipeline (Rules 8 & 16):** Pushing annotated SemVer tag `vX.Y.Z` on `main` triggers `.github/workflows/release.yml`, which verifies SemVer format, `main` ancestry, quadruple spec SHA-256 locks, **Rule 16 document–version sync (`--expected-tag vX.Y.Z` across all 3 PDFs + HTML explorer)**, 100% C++/Python coverage, 53 formulas, and all Gate 1–6 + 17-scenario system simulations before publishing GitHub Release `vX.Y.Z` with all **20 release artifacts**.
 
 ---
 

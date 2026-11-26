@@ -5,9 +5,9 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-SCEN-001` |
-| **Current Version** | `v3.0.1` |
+| **Current Version** | `v4.0.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
-| **Normative Specification** | [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](../spec/IFOG-SIM-SPEC-006.pdf) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
+| **Normative Specification** | [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md) & [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf) (v7.0); [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) |
 | **Governance Authority** | [`AGENT.md`](../AGENT.md) (Rules 1–16) |
@@ -22,12 +22,13 @@
 | `v2.2.0` | `2026-11-26` | Group C Dynamic Response, Output PSD & Electro-Optic Probe (`DYN-01`..`DYN-04`, `20/20` PASS) | `tier3_analysis/scenarios_dynamic_probe.py`, `tier3_analysis/sim_runner_cli.py`, `viz/plot_scenarios.py`, `viz/export_report.py`, `examples/full_all_scenarios/`, `tests/`, `docs/`, `skills/` | Added **Group C (`DYN-01`..`DYN-04`)**: dedicated multi-amplitude & gain-sweep closed-loop Step Response (`dyn_step_response`), full 15-pt Bode Magnitude/Phase/Group Delay Frequency Response (`dyn_freq_response`), broadband Output Rate PSD/ASD & Cumulative RMS Noise (`dyn_output_psd`), and Sinusoidal Angular-Rate Internal Electro-Optic Probe exposing Sagnac phase, $V_{\text{fb,MIOC}}$, total $V_{\text{MIOC}}$, Photodiode $P_{\text{PD}}/I_{\text{PD}}$, TIA $V_{\text{TIA}}$, and ADC blanking zoom (`dyn_sine_electro_optic`); expanded suite to **20 gates/scenarios**, **27 CLI modes**, **20 300-DPI PNGs**, and **19 interactive Plotly HTML5 charts**. |
 | `v3.0.0` | `2026-11-26` | `IFOG-SIM-SPEC-006` Gate 6 — Standalone FMI 3.0 Co-Simulation FMU (`21/21` PASS) | `spec/IFOG-SIM-SPEC-006.*`, `fmi_wrapper/`, `tier2_sysc_ams/{include,src}/ifog_top_module.*`, `tier3_analysis/fmi_master_runner.py`, `tier3_analysis/sim_runner_cli.py`, `viz/plot_scenarios.py`, `viz/export_report.py`, `examples/full_all_scenarios/` | Added **Gate 6 (`--mode fmi_gate`)** validating standalone FMI 3.0 Co-Simulation FMU `build/ifog_core.fmu` via FMPy across four sub-gates: `6A` XML/ZIP compliance (`0` errors), `6B` bit-exact (`0.00e+00 rad/s < 1e-12`) equivalence vs `ifog_sim` (4-state & 6-state), `6C` Slow Rate Ramp deadband sweep (`97.42%` reduction), and `6D` FMU -> Tier 3 Dual-Regime 5-Region AVAR (`3.83% < 5%` overlap); expanded suite to **21 gates/scenarios**, **28 CLI modes**, **21 300-DPI PNGs**, and **20 interactive Plotly HTML5 charts**. |
 | `v3.0.1` | `2026-11-26` | Standardized Explanatory Reports (`.md`/`.html`) & Code-Audited HTML Model Explorer | `viz/architecture_explorer.py`, `viz/report_narratives.py`, `viz/export_report.py`, `docs/IFOG_ARCHITECTURE_EXPLORER.html`, `examples/full_4gate_baseline/`, `examples/full_all_scenarios/` | Standardized all auto-generated Markdown (`report.md`) and KaTeX/Plotly HTML5 (`report.html`) outputs to include an interactive code-audited 3-Tier + FMI 3.0 model diagram (`architecture_model.html`) plus 3-part theoretical foundation, plain-language reading guide (for non-specialists), and live measured proof beneath all 21 diagnostic plots; re-ran and synced both curated examples (`examples/full_4gate_baseline/` & `examples/full_all_scenarios/`). |
+| `v4.0.0` | `2026-11-26` | `IFOG-SIM-SPEC-007` Group D — Predictive Physics (`PHY-01`) & Inverse Calibration (`CAL-01`, `23/23` PASS) | `spec/IFOG-SIM-SPEC-007.*`, `configs/schema_v6.json`, `tier1_offline/shupe_thermal.py`, `tier2_sysc_ams/`, `fmi_wrapper/`, `tier3_analysis/inverse_calibration.py`, `tier3_analysis/scenarios_spec007.py`, `viz/plot_spec007_calibration.py`, `viz/export_report.py`, `examples/full_all_scenarios/` | Added **Group D (`PHY-01`, `CAL-01`, `--mode spec007_all`, `EQ-45`–`EQ-53`)**: verified discrete Quadrupole vs Octupole winding (`-47.69%` Shupe reduction), thermo-mechanical stress drift, 6-channel `shupe_lut.bin` v2, MIOC electro-acoustic ringing + capacitive crosstalk spike (`0.583 V`), live FMI 3.0 `VR 15..21` tunability, and 3-stage bounded `InverseCalibrator` cutting uncalibrated `40–103%` error down to **`0.04–0.91%` (`< 5%`)** with all 10 hidden parameters recovered within `<= 2.18%`; expanded suite to **23 gates/scenarios**, **31 CLI modes**, **23 300-DPI PNGs**, and complete tier-by-tier formulas in `report.{md,html}`. |
 
 ---
 
 ## 1. Official Scenario Taxonomy & Execution Architecture
 
-Under **`IFOG-SIM-SPEC-006` (v6.0)**, `ifog-vproto` organizes its verification suite into a complete **6-Layer Official Simulation Framework (21 Gates & Scenarios)** organized cleanly by engineering domain:
+Under **`IFOG-SIM-SPEC-007` (v7.0)**, `ifog-vproto` organizes its verification suite into a complete **7-Layer Official Simulation Framework (23 Gates & Scenarios)** organized cleanly by engineering domain:
 
 1. **Core Acceptance Gates (`Gate 1` – `Gate 4`):** Baseline linear accuracy & continuous $2\pi$ flyback (`gate1`), Deadband & Bunny Ears mitigation (`gate2`), $1/f$ Flicker PSD & $100\text{ Hz}$ $\mathbf{K}$-matrix (`gate3`), and 60 s Fast-Scale + 10 h Slow-Scale Dual-Regime Overlapping AVAR (`gate4`), combined under `--mode full`.
 2. **Gate 5 — Official 6-State Symmetric DSP Benchmark (`dsp6_compare`):** Head-to-head quantitative validation of the official 6-state symmetric modulation/demodulation law (`EQ-31`–`EQ-34`, $\alpha^* = \pi/3$) against 4-state Lefèvre modulation under identical RAM, capacitive/resistive crosstalk, and MIOC quadratic nonlinearity.
@@ -35,10 +36,11 @@ Under **`IFOG-SIM-SPEC-006` (v6.0)**, `ifog-vproto` organizes its verification s
 4. **Group A — 6 Time-Domain Verification Scenarios (`TD-01` .. `TD-06`, `--mode td_all`):** Exploits Tier 2's micro-trace (`micro_waveforms.bin`, 64 B) and cycle-accurate DSP register logger (`dsp_trace.bin`, 64 B) to validate sub-$\tau$ switching transients, closed-loop step/Bode bandwidth, Loop-2 thermal $V_\pi$ shock, high-rate serrodyne dynamics + anti-windup, real-time Shupe shock + compensation, and quantization limit cycles + PRBS dither.
 5. **Group B — 5 System Engineering & Production Scenarios (`ENG-01` .. `ENG-05`, `--mode eng_all`):** Leverages the `-O3` compiled C++ SystemC-AMS virtual prototype for production hardware sizing (ENOB, aperture jitter, TIA/SLD Pareto), real concurrent 3-axis SystemC-AMS IMU crosstalk (`--imu3axis`), vibration rectification (VRE) + dynamic Faraday/Mu-metal sizing, 5-mode real-time FPGA BIT/FDIR fault injection, and parallel Monte Carlo production yield ($C_{pk}$) + $-40^\circ\text{C}..+85^\circ\text{C}$ virtual thermal calibration.
 6. **Group C — 4 Dynamic Characterization, Output PSD & Internal Electro-Optic Probe Scenarios (`DYN-01` .. `DYN-04`, `--mode dyn_all`):** Dedicated closed-loop control & electro-optic observability workflows: multi-amplitude/gain-sweep Step Response (`dyn_step_response`), full 15-point Bode Magnitude/Phase/Group Delay Frequency Response comparing 4-state & 6-state against half-frame Z-domain theory (`dyn_freq_response`), broadband Output Rate PSD/ASD & Cumulative RMS Noise vs analytical `EQ-15` ARW (`dyn_output_psd`), and Sinusoidal Angular-Rate Excitation (`50 deg/s @ 250 Hz`) probing Sagnac phase $\Delta\phi_S(t)$, feedback phase $\Delta\phi_{\text{fb}}(t)$, MIOC serrodyne voltage $V_{\text{fb,MIOC}}(t)$ & total $V_{\text{MIOC}}(t)$, Photodiode optical power $P_{\text{PD}}(t)$ / photocurrent $I_{\text{PD}}(t)$, TIA output $V_{\text{TIA}}(t)$, and sub-$\tau$ ADC blanking (`dyn_sine_electro_optic`).
+7. **Group D — `SPEC-007` High-Fidelity Predictive Physics & Inverse Calibration (`PHY-01`, `CAL-01`, `--mode spec007_all`, `EQ-45`–`EQ-53`):** Validates discrete Quadrupole vs Octupole coil winding, thermo-mechanical elasto-optic stress, 6-channel `shupe_lut.bin` v2, 2nd-order MIOC electro-acoustic ringing + capacitive crosstalk spike (`PHY-01`), and automated 3-stage bounded `InverseCalibrator` recovering 10 hidden parasitic parameters with Gauss–Newton 95% CI to achieve `< 5%` (`0.04–0.91%`) hardware prediction accuracy across Static AVAR, Slow Rate Ramp, and Thermal Chamber datasets (`CAL-01`).
 
 ```mermaid
 flowchart TB
-    CLI["Unified CLI Entrypoints\n./scripts/run_sim.sh --mode <mode>\n./scripts/run_all_scenarios.sh"]
+    CLI["Unified CLI Entrypoints (31 Modes / 23 Gates & Scenarios)\n./scripts/run_sim.sh --mode <mode>\n./scripts/run_all_scenarios.sh"]
 
     subgraph CORE["Core Gates + Gate 5 + Gate 6 (FMI 3.0 FMU)"]
         G1["gate1..gate4 / full\n(Gates 1–4 + 10 h AVAR)"]
@@ -55,32 +57,36 @@ flowchart TB
     end
 
     subgraph DYNG["Group C — 4 Dynamic & Probe (dyn_all)"]
-        D1["dyn_step_response (DYN-01)\n10 & 100 deg/s + K_tot_1 Sweep"]
-        D2["dyn_freq_response (DYN-02)\nFull Bode Mag, Phase & Group Delay"]
-        D3["dyn_output_psd (DYN-03)\nBroadband Rate PSD, ASD & Cum RMS"]
-        D4["dyn_sine_electro_optic (DYN-04)\nSine Input -> PD, V_fb MIOC, Sagnac, TIA"]
+        D1["dyn_step_response .. dyn_sine_electro_optic\n(DYN-01 .. DYN-04)"]
+    end
+
+    subgraph S07G["Group D — SPEC-007 Physics & Calibration (spec007_all)"]
+        P1["spec007_physics (PHY-01)\nQuad/Oct Winding, LUT v2, MIOC + C_xtalk"]
+        C1["spec007_calibration (CAL-01)\n3-Stage InverseCalibrator (<5% Error)"]
     end
 
     CLI --> CORE
     CLI --> TDG
     CLI --> ENGG
     CLI --> DYNG
+    CLI --> S07G
 
-    CORE --> RPT["Automatic Reporting (viz/export_report.py)\nreport/<run_id>/{report.md, report.html (20 Plotly charts), figures/*.png (21 plots),\nmetrics_summary.json, virtual_calibration_dataset.csv} + report/index.{md,html}"]
+    CORE --> RPT["Automatic Reporting (viz/export_report.py)\nreport/<run_id>/{report.md, report.html (KaTeX + Plotly + EQ-01..53), figures/*.png (23 plots),\ncalibrated_params.json, metrics_summary.json, virtual_calibration_dataset.csv} + report/index.{md,html}"]
     TDG --> RPT
     ENGG --> RPT
     DYNG --> RPT
+    S07G --> RPT
 ```
 
 ---
 
 ## 2. Official CLI Execution Matrix (Individual & Full-Suite Commands)
 
-Every single scenario can be run independently with one CLI command, by category group, or all 21 together via `./scripts/run_all_scenarios.sh` / `./examples/run_example.sh`. All runs automatically build `build/ifog_sim` & package `build/ifog_core.fmu` (if absent) and export complete Markdown (`report.md`), interactive HTML5 Plotly (`report.html`), 300-DPI PNG figures, and JSON summaries under `report/<run_id>/`.
+Every single scenario can be run independently with one CLI command, by category group, or all 23 together via `./scripts/run_all_scenarios.sh` / `./examples/run_example.sh`. All runs automatically build `build/ifog_sim` & package `build/ifog_core.fmu` (if absent) and export complete Markdown (`report.md`), interactive HTML5 Plotly+KaTeX (`report.html`), 300-DPI PNG figures, and JSON summaries under `report/<run_id>/`.
 
 | Scope | Scenario ID | CLI Mode (`--mode`) | Equations | Official Reproducible Command |
 | :--- | :--- | :--- | :--- | :--- |
-| **Complete Suite** | All 21 Gates & Scenarios | `all_scenarios` | `EQ-01`–`EQ-44` | `./scripts/run_all_scenarios.sh --run-id full_all_scenarios --mc-runs 500` |
+| **Complete Suite** | All 23 Gates & Scenarios | `all_scenarios` | `EQ-01`–`EQ-53` | `./scripts/run_all_scenarios.sh --run-id full_all_scenarios --mc-runs 500` |
 | **Core 4 Gates** | Gates 1–4 | `full` (`gate1`..`gate4`) | `EQ-01`–`EQ-30` | `./scripts/run_sim.sh --mode full --run-id core_4gates` |
 | **Gate 5 (6-State)** | `DSP-6` | `dsp6_compare` | `EQ-31`–`EQ-34` | `./scripts/run_sim.sh --mode dsp6_compare --run-id gate5_6state` |
 | **Gate 6 (FMI 3.0 FMU)** | `FMI3-FMU` | `fmi_gate` | `EQ-42`–`EQ-44` | `./scripts/run_sim.sh --mode fmi_gate --run-id gate6_fmi3_fmu` |
@@ -102,9 +108,12 @@ Every single scenario can be run independently with one CLI command, by category
 | **DYN Scenario 2** | `DYN-02` | `dyn_freq_response` | `EQ-22,23,34` | `./scripts/run_sim.sh --mode dyn_freq_response --run-id dyn02` |
 | **DYN Scenario 3** | `DYN-03` | `dyn_output_psd` | `EQ-15,19,26,33` | `./scripts/run_sim.sh --mode dyn_output_psd --run-id dyn03` |
 | **DYN Scenario 4** | `DYN-04` | `dyn_sine_electro_optic` | `EQ-06..19,21,31..34` | `./scripts/run_sim.sh --mode dyn_sine_electro_optic --run-id dyn04` |
+| **Group D (All SPEC-007)** | `PHY-01`, `CAL-01` | `spec007_all` | `EQ-45`–`EQ-53` | `./scripts/run_sim.sh --mode spec007_all --run-id spec007_suite` |
+| **SPEC-007 Physics** | `PHY-01` | `spec007_physics` | `EQ-45`–`EQ-52` | `./scripts/run_sim.sh --mode spec007_physics --run-id phy01` |
+| **SPEC-007 Calibration** | `CAL-01` | `spec007_calibration` | `EQ-52,53` | `./scripts/run_sim.sh --mode spec007_calibration --run-id cal01` |
 
 Additional CLI flags available across modes:
-- `--dsp-mode {2state,4state,6state}`: Override DSP modulation architecture from the command line (or pass `--cfg configs/baseline_1km_6state.json`).
+- `--dsp-mode {2state,4state,6state}`: Override DSP modulation architecture from the command line (or pass `--cfg configs/baseline_1km_6state.json` / `configs/baseline_1km_spec007.json`).
 - `--mc-runs N`: Set Monte Carlo production population size for `eng_mc_yield_cal` / `eng_all` / `all_scenarios` (default `64` in CLI, `500` in `scripts/run_all_scenarios.sh`).
 - `--workers W`: Override parallel worker thread/process pool size.
 
@@ -250,11 +259,30 @@ Implemented in [`tier3_analysis/scenarios_dynamic_probe.py`](../tier3_analysis/s
 
 ---
 
-## 7. Automated Reporting & Deliverable Contract (`report/`)
+## 7. Group D — `IFOG-SIM-SPEC-007` Predictive Physics & Inverse Calibration (`PHY-01`, `CAL-01`)
+
+Implemented in [`tier3_analysis/scenarios_spec007.py`](../tier3_analysis/scenarios_spec007.py), [`tier3_analysis/inverse_calibration.py`](../tier3_analysis/inverse_calibration.py), and [`viz/plot_spec007_calibration.py`](../viz/plot_spec007_calibration.py), Group D validates the predictive physics extensions (`EQ-45`..`EQ-52`) and automated parameter identification engine (`EQ-53`) targeting **`< 5%` hardware prediction accuracy**:
+
+### PHY-01 — Discrete Winding, Elasto-Optic Stress, LUT v2 & MIOC / Capacitive Crosstalk (`--mode spec007_physics`)
+- **Objective:** Quantify turn-by-turn **Quadrupole vs Octupole** thermal Shupe suppression (`EQ-45`), thermo-mechanical elasto-optic stress drift (`EQ-46`), dynamic thermal scale-factor drift $\delta K_{\text{opt}}(t)$ (`EQ-47`), dynamic $V_{\text{eff}}(t)/\Delta\phi_{\text{pol}}(t)/V_\pi(t)$ (`EQ-48`), exact 6-channel `shupe_lut.bin` v2 roundtrip (`EQ-49`), 2nd-order $\text{LiNbO}_3$ MIOC electro-acoustic step ringing (`EQ-50`), and capacitive + resistive PCB crosstalk $C_{\text{xtalk}}\,dV/dt + G_{\text{xtalk}}V$ (`EQ-51`) inside compiled Tier 2 `build/ifog_sim`.
+- **Verified Measured Results:** Octupole reduces peak thermal Shupe phase by **`47.69%`** vs Quadrupole; LUT v2 binary roundtrip max error = **`0.0`**; peak $\delta K_{\text{opt}} = \mathbf{85.59\text{ ppm}}$; capacitive crosstalk + MIOC ringing induces **`0.583 V`** peak TIA transient spike delta (**PASS**).
+
+### CAL-01 — Automated 3-Stage Bounded Inverse Calibration Validation (`--mode spec007_calibration`)
+- **Objective:** Generate realistic synthetic physical-prototype datasets with 10 hidden parasitic parameters (`RIN_dB_Hz`, `c_pink_coeff`, `R_facet_dB`, `K_rrw_deg_h32`, `G_xtalk_S`, `C_xtalk_F`, `delta_z_quad_m`, `diffusivity_m2_per_s`, `alpha_vpi_ppm_K`, `alpha_bobbin_ppm_K`) across Static AVAR, Slow Rate Ramp (Deadband/Bunny Ears), and Thermal Chamber Bias & Scale-Factor sweeps; execute 3-stage bounded `InverseCalibrator` (`EQ-53`) + `DualRegimeStitcher` quadrature BI subtraction (`EQ-52`); export `calibrated_params.json` with Gauss–Newton 95% confidence intervals; and verify `< 5%` prediction accuracy across all 4 validation domains plus real Tier 2 closed-loop cross-validation.
+- **Verified Measured Results:**
+  - **Static AVAR Error:** `40.23%` (uncalibrated baseline) $\to$ **`0.81%`** (calibrated, `< 5%`)
+  - **Slow Rate Ramp Deadband Error:** `102.68%` $\to$ **`0.91%`** (`< 5%`)
+  - **Thermal Chamber Bias Error:** `58.78%` $\to$ **`0.29%`** (`< 5%`)
+  - **Thermal Scale-Factor Error:** `52.30%` $\to$ **`0.04%`** (`< 5%`)
+  - **Hidden Parameter Recovery:** All **10 / 10** parameters recovered within **`<= 2.18%`** (`< 5%`); real Tier 2 closed-loop cross-validation rate error = **`0.034%`** (**PASS**).
+
+---
+
+## 8. Automated Reporting & Deliverable Contract (`report/`)
 
 Every CLI invocation (`./scripts/run_sim.sh --mode <mode>`, `./scripts/run_all_scenarios.sh`, or `./examples/run_example.sh`) automatically produces:
-- `report/<run_id>/report.md`: Structured Markdown report with 20-row executive scorecard, Core Gates 1–5, Group A `TD-01`..`TD-06`, Group B `ENG-01`..`ENG-05`, Group C `DYN-01`..`DYN-04` tables, and all 20 embedded 300-DPI figures.
-- `report/<run_id>/report.html`: Interactive HTML5 report with **19 multi-panel Plotly zoomable charts**, status badges, 20-figure 300-DPI gallery, and collapsible JSON telemetry inspector.
-- `report/<run_id>/figures/*.png`: Up to **20** 300-DPI diagnostic figures (`waveforms`, `bunny_ears`, `psd_flicker`, `avar_5regions`, `dsp6_compare`, `td01`..`td06`, `eng01`..`eng05`, `dyn01`..`dyn04`).
-- `report/<run_id>/virtual_calibration_dataset.csv`: Clean CSV dataset ready for direct embedded calibration / EKF firmware ingestion.
+- `report/<run_id>/report.md`: Structured Markdown report with 23-row executive scorecard, Core Gates 1–6, Group A `TD-01`..`TD-06`, Group B `ENG-01`..`ENG-05`, Group C `DYN-01`..`DYN-04`, Group D `PHY-01`/`CAL-01`, all 23 embedded 300-DPI figures with 3-part theoretical & non-specialist guides, and **Section 12 Complete Tier-by-Tier Mathematical Formulation Compendium (`EQ-01`..`EQ-53`)**.
+- `report/<run_id>/report.html`: Interactive HTML5 report with KaTeX math rendering, sticky quick-navigation bar, embedded code-audited `architecture_model.html`, multi-panel Plotly zoomable charts, complete `#sec-formulas` tier-by-tier mathematical cards, 23-figure 300-DPI gallery, and collapsible JSON telemetry inspector.
+- `report/<run_id>/figures/*.png`: Up to **23** 300-DPI diagnostic figures (`waveforms`, `bunny_ears`, `psd_flicker`, `avar_5regions`, `dsp6_compare`, `fmi_fmu_gate`, `td01`..`td06`, `eng01`..`eng05`, `dyn01`..`dyn04`, `fig_spec007_physics_winding_mioc`, `fig_spec007_calibration_validation`).
+- `report/<run_id>/calibrated_params.json` & `virtual_calibration_dataset.csv`: Clean JSON/CSV calibration artifacts ready for direct embedded firmware / EKF ingestion.
 - `report/index.md` & `report/index.html`: Automatically refreshed centralized index across all simulation runs.

@@ -1,0 +1,217 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[a4paper, margin=2.0cm]{geometry}
+\usepackage{fontspec}
+\usepackage[vietnamese, bidi=basic, provide=*]{babel}
+\babelprovide[import, onchar=ids fonts]{english}
+\babelfont{rm}{Noto Sans}
+\usepackage{enumitem}
+\setlist[itemize]{label=-, topsep=3pt, itemsep=2pt}
+\setlist[enumerate]{topsep=3pt, itemsep=2pt}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+
+\definecolor{primaryblue}{HTML}{1B365D}
+\definecolor{accentteal}{HTML}{0E6251}
+\definecolor{alertred}{HTML}{9B2C2C}
+\definecolor{mutedgray}{HTML}{4A5568}
+\definecolor{rulegray}{HTML}{CBD5E0}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryblue,
+    citecolor=accentteal,
+    urlcolor=primaryblue,
+    pdftitle={IFOG-SIM-SPEC-007 - High-Fidelity Predictive Physics and Inverse Calibration},
+    pdfauthor={Technical Design Specification v7.0}
+}
+
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\setlength{\headheight}{16pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5.5pt}
+\emergencystretch=2em
+\raggedbottom
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{mutedgray}Đặc tả Kỹ thuật Nguyên mẫu Ảo IFOG — Vật lý Dự báo \& Hiệu chuẩn Nghịch}
+\fancyhead[R]{\small\color{mutedgray}\texttt{IFOG-SIM-SPEC-007}}
+\fancyfoot[L]{\small\color{mutedgray}Phiên bản 7.0 --- 53 Công thức (\texttt{EQ-01}--\texttt{EQ-53}), LUT v2, FMI 3.0 Tunable \& \texttt{InverseCalibrator}}
+\fancyfoot[R]{\small\color{mutedgray}Trang \thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\begin{document}
+
+\thispagestyle{plain}
+{\color{primaryblue}\rule{\textwidth}{1.5pt}}
+\vspace{0.3cm}
+
+{\Large\bfseries\color{primaryblue} ĐẶC TẢ KỸ THUẬT NGUYÊN MẪU ẢO IFOG ĐỘ CHÍNH XÁC CAO: VẬT LÝ DỰ BÁO PHẦN CỨNG \& HIỆU CHUẨN NGHỊCH ĐA MỤC TIÊU}
+
+\vspace{0.15cm}
+{\normalsize\color{mutedgray} Phiên bản 7.0 (\texttt{IFOG-SIM-SPEC-007}) --- Nâng cấp từ \texttt{SPEC-006} với Quấn sợi Quadrupole/Octupole, Ứng suất Quang--Đàn hồi, Bảng tra Nhị phân LUT v2, Động học Điện--Âm MIOC, Xuyên âm Điện dung, Phản xạ Rayleigh/Mặt cắt, Tham số FMI 3.0 Chỉnh nóng (\texttt{VR 15..21}) và Bộ Hiệu chuẩn Nghịch (\texttt{< 5\%} sai số)}
+
+\vspace{0.2cm}
+{\color{rulegray}\rule{\textwidth}{0.6pt}}
+\vspace{0.15cm}
+
+\begin{tabular}{@{}l L{4.7cm} l L{5.1cm}@{}}
+\textbf{Mã tài liệu:} & \texttt{IFOG-SIM-SPEC-007} & \textbf{Phiên bản:} & 7.0 (Mở rộng \texttt{SPEC-004/005/006}) \\
+\textbf{Phiên bản PM:} & \texttt{ifog-vproto v4.0.0} & \textbf{Chuẩn tham chiếu:} & FMI 3.0.2; IEEE 952-2020; IEEE 1666.1 \\
+\textbf{Tổng công thức:} & 53 phương trình (\texttt{EQ-01}--\texttt{EQ-53}) & \textbf{Mục tiêu dự báo:} & Sai số $< 5\%$ so với nguyên mẫu thật \\
+\end{tabular}
+
+\vspace{0.15cm}
+{\color{primaryblue}\rule{\textwidth}{1.0pt}}
+\vspace{0.25cm}
+
+\begin{abstract}
+\noindent Tài liệu \texttt{IFOG-SIM-SPEC-007} mở rộng nền tảng đồng mô phỏng 3 tầng và khối FMI 3.0 FMU của \texttt{ifog-vproto} (bảo toàn 100\% toàn bộ 44 công thức \texttt{EQ-01}--\texttt{EQ-44}, tương thích ngược hoàn toàn với \texttt{schema\_v4.json}, \texttt{schema\_v5.json}, \texttt{shupe\_lut.bin} v1, 6 Cổng nghiệm thu và 15 kịch bản \texttt{TD}/\texttt{ENG}/\texttt{DYN}) nhằm thu hẹp khoảng cách giữa mô phỏng datasheet và nguyên mẫu phần cứng IFOG thực tế xuống dưới \textbf{5\% sai số}. Chín phương trình chuẩn hóa mới (\texttt{EQ-45}--\texttt{EQ-53}, tham chiếu chéo bản nháp \texttt{EQ-40}--\texttt{EQ-48}) đặc tả chi tiết mô hình quấn cuộn sợi rời rạc, ứng suất quang--đàn hồi, hệ số tỷ lệ động $K_{\text{opt}}(t)$, định dạng LUT nhị phân v2 56 byte, cộng hưởng điện--âm tinh thể $\text{LiNbO}_3$ MIOC, xuyên âm điện dung--điện trở PCB, nhiễu pha phản xạ Rayleigh/mặt cắt kèm khâu nối chống cộng trùng BI, và bài toán hiệu chuẩn nghịch 3 giai đoạn \texttt{InverseCalibrator}.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.2cm}
+
+\section{Tổng quan Hệ thống \& Ánh xạ Công thức Theo Từng Tầng}
+
+\begin{table}[htbp]
+\centering
+\caption{Bảng đối chiếu 9 phương trình chuẩn hóa mới của \texttt{IFOG-SIM-SPEC-007} (\texttt{EQ-45}--\texttt{EQ-53}).}
+\footnotesize
+\begin{tabular}{@{}l c L{5.4cm} L{4.8cm}@{}}
+\toprule
+\textbf{Mã chuẩn} & \textbf{Nháp} & \textbf{Nội dung Vật lý / Toán học} & \textbf{Liên kết Mã nguồn} \\
+\midrule
+\texttt{EQ-45} & \texttt{EQ-40} & Ánh xạ từng vòng quấn Quadrupole/Octupole $(r_i, z_{\text{ax},i}, \delta z_{\text{quad}})$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-46} & \texttt{EQ-41} & Tổng pha nhiệt--cơ $\Delta\phi_{\text{therm}} = \Delta\phi_{\text{Shupe}} + \Delta\phi_{\text{stress}}$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-47} & \texttt{EQ-42} & Hệ số tỷ lệ Sagnac động $K_{\text{opt}}(t)$ theo nhiệt \& bước sóng & \texttt{shupe\_thermal.py}, \texttt{ifog\_math.hpp} \\
+\texttt{EQ-48} & \texttt{EQ-43} & Độ tương phản $V_{\text{eff}}(t)$, pha phân cực $\Delta\phi_{\text{pol}}(t)$, $V_\pi(t)$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-49} & \texttt{EQ-44} & Bảng tra nhị phân \texttt{shupe\_lut.bin} v2 (56 B \texttt{<7d}) \& v1 fallback & \texttt{shupe\_thermal.py}, \texttt{ifog\_config.cpp} \\
+\texttt{EQ-50} & \texttt{EQ-45} & Động học điện--âm bậc 2 tinh thể $\text{LiNbO}_3$ MIOC \& trễ $K_{\text{delay}}$ & \texttt{ifog\_math.hpp}, \texttt{optical\_envelope\_tdf.cpp} \\
+\texttt{EQ-51} & \texttt{EQ-46} & Dòng xuyên âm điện dung--điện trở $i_{\text{xtalk}}[k]$ tại nút đảo TIA & \texttt{ifog\_math.hpp}, \texttt{analog\_frontend\_tdf.cpp} \\
+\texttt{EQ-52} & \texttt{EQ-47} & Phản xạ Rayleigh/mặt cắt $\sigma_{\phi,\text{back}}$ \& trừ vuông góc BI Tầng 3 & \texttt{optical\_envelope\_tdf.cpp}, \texttt{dual\_regime\_avar.py} \\
+\texttt{EQ-53} & \texttt{EQ-48} & Hàm mục tiêu hiệu chuẩn nghịch đa miền (\texttt{< 5\%} sai số) & \texttt{tier3\_analysis/inverse\_calibration.py} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Đặc tả Toán học Chi tiết (\texttt{EQ-45} -- \texttt{EQ-53})}
+
+\subsection{Tầng 1: Quấn Cuộn Sợi Rời rạc \& Trôi Ứng suất Quang--Đàn hồi (\texttt{EQ-45}, \texttt{EQ-46})}
+
+Mỗi vòng sợi thứ $i \in \{0, \dots, N_{\text{turns}}-1\}$ tại tọa độ chiều dài cung $z_i = (i + \tfrac{1}{2})L / N_{\text{turns}}$ được ánh xạ lên bán kính $r_i$ và tọa độ trục $z_{\text{ax},i}$ theo quy luật đối xứng \textbf{Quadrupole} (4 lớp ABBA) hoặc \textbf{Octupole} (8 lớp ABBA--BAAB khử cả gradient nhiệt bậc 1 và bậc 2), cộng độ lệch chuyển lớp tại bích cuối $\delta z_{\text{flange}}(i)$:
+\begin{equation}
+r_i = \frac{D - d_{\text{coil}}}{2} + \ell(i)\frac{d_{\text{coil}}}{N_{\text{layers}} - 1}, \qquad
+z_{\text{ax},i} = H_{\text{coil}} \cdot \begin{cases} f_{\text{ax}}(i), & \ell(i)\text{ chẵn} \\ 1 - f_{\text{ax}}(i), & \ell(i)\text{ lẻ} \end{cases}
+\tag{EQ-45}
+\end{equation}
+
+Tổng pha không tương hỗ nhiệt--cơ kết hợp hiệu ứng Shupe cổ điển và ứng suất cơ--quang đàn hồi keo đổ potting với hệ số $C_{\text{eo}}\;[\text{Pa}^{-1}]$:
+\begin{align}
+\Delta\phi_{\text{therm}}(t) &= \Delta\phi_{\text{Shupe}}(t) + \Delta\phi_{\text{stress}}(t), \\
+\Delta\phi_{\text{stress}}(t) &= \frac{2\pi}{\bar{\lambda} c}\,C_{\text{eo}} \int_0^L \frac{\partial \sigma_{\text{eff}}(z, t)}{\partial t}\,\big(L - 2z + \delta z_{\text{quad}}(z)\big)\,dz.
+\tag{EQ-46}
+\end{align}
+
+\subsection{Tầng 1: Hệ số Tỷ lệ Động $K_{\text{opt}}(t)$ \& Tham số Quang Biến thiên (\texttt{EQ-47}, \texttt{EQ-48})}
+
+Hệ số tỷ lệ Sagnac biến thiên theo giãn nở ống cuộn $\alpha_{\text{bobbin}}$, trôi bước sóng nguồn SLD $\alpha_\lambda$, công suất hồi quang $P_{\text{back}}(t)$ và hệ số nhiệt chiết suất $\partial n_{\text{eff}}/\partial T$:
+\begin{equation}
+K_{\text{opt}}(t) = K_{\text{opt},0} \left[ 1 + \alpha_{\text{bobbin}}\,\Delta T_{\text{coil}}(t) - \frac{\alpha_{\lambda}\,\Delta T_{\text{SLD}}(t) + \kappa_{\text{back}}\,P_{\text{back}}(t)}{\bar{\lambda}_0} + \frac{1}{n_{\text{eff},0}}\frac{\partial n_{\text{eff}}}{\partial T}\Delta T_{\text{coil}}(t) \right].
+\tag{EQ-47}
+\end{equation}
+
+Đồng thời độ tương phản vân $V_{\text{eff}}(t)$, pha phân cực tĩnh $\Delta\phi_{\text{pol}}(t)$ và điện áp nửa sóng MIOC $V_\pi(t)$ được cập nhật theo nhiệt độ tức thời:
+\begin{equation}
+V_{\text{eff}}(t) = V_{\text{eff},0}\big(1 - \beta_V |\Delta T_{\text{coil}}(t)|\big), \quad
+\Delta\phi_{\text{pol}}(t) = \Delta\phi_{\text{pol},0} + \gamma_{\text{pol}}\,\Delta T_{\text{coil}}(t), \quad
+V_\pi(t) = V_{\pi 0}\big(1 + \alpha_{V_\pi}\Delta T_{\text{MIOC}}(t)\big).
+\tag{EQ-48}
+\end{equation}
+
+\subsection{Biên Tầng 1 $\rightarrow$ Tầng 2: Định dạng Nhị phân \texttt{shupe\_lut.bin} v2 (\texttt{EQ-49})}
+
+Tệp nhị phân \texttt{shupe\_lut.bin} nâng cấp lên \texttt{version = 2} trong khi bộ đọc Python và C++ tự động phát hiện và tương thích ngược hoàn toàn với \texttt{version = 1}:
+\begin{itemize}
+\item \textbf{Header (24 byte, \texttt{<4sIQd}):} \texttt{magic = "SHUP"}, \texttt{version = 2} (hoặc 1), \texttt{n\_samples} (\texttt{uint64}), \texttt{dt\_s} (\texttt{float64}).
+\item \textbf{Record v2 (56 byte, \texttt{<7d}):} $[t_s,\;\Delta\phi_{\text{Shupe}},\;\Delta\phi_{\text{stress}},\;V_{\text{eff}}(t),\;\phi_{\text{pol}}(t),\;V_\pi(t),\;K_{\text{opt}}(t)/K_{\text{opt},0}]$.
+\item \textbf{Nội suy $O(1)$ tại Tầng 2 (\texttt{EQ-49}):} \texttt{OpticalEnvelope\_TDF} nội suy tuyến tính cả 6 kênh tại mỗi bước TDF $t_k = k \Delta t_{\text{fast}}$ với sai số $< 10^{-12}\text{ rad}$.
+\end{itemize}
+
+\subsection{Tầng 2: Động học Điện--Âm MIOC \& Xuyên âm Điện dung--Điện trở (\texttt{EQ-50}, \texttt{EQ-51})}
+
+Đáp ứng pha tinh thể $\text{LiNbO}_3$ MIOC kết hợp tần số cắt điện cực $\omega_{\text{mioc}}$ và cộng hưởng điện--âm bậc 2 $(\omega_{\text{ac}}, \zeta_{\text{ac}}, g_{\text{ac}})$ trước trễ truyền vòng $K_{\text{delay}} = \operatorname{round}(\tau_s f_s)$:
+\begin{equation}
+V_{\text{mioc,eff}}[k] = V_{\text{elec}}[k] + g_{\text{ac}}\big(V_{\text{ac}}[k] - V_{\text{elec}}[k]\big), \qquad
+\Delta\phi_{\text{fb}}[k] = \frac{\pi}{V_\pi(t_k)}\,V_{\text{mioc,eff}}[k - K_{\text{delay}}].
+\tag{EQ-50}
+\end{equation}
+
+Dòng xuyên âm PCB/đóng gói tại nút đảo bộ khuếch đại TIA (\texttt{AnalogFrontEnd\_TDF}) gồm thành phần điện trở rò và điện dung ký sinh:
+\begin{equation}
+i_{\text{xtalk}}[k] = G_{\text{xtalk}}\,V_{\text{dac}}[k] + C_{\text{xtalk}}\,\frac{V_{\text{dac}}[k] - V_{\text{dac}}[k-1]}{\Delta t_{\text{TDF}}}.
+\tag{EQ-51}
+\end{equation}
+Khi $C_{\text{xtalk}} = 0$, phương trình \texttt{EQ-51} rút gọn chính xác về mô hình xuyên âm điện trở của \texttt{SPEC-004}.
+
+\subsection{Tầng 2 \& Tầng 3: Phản xạ Rayleigh/Mặt cắt \& Khâu nối Chống Cộng trùng BI (\texttt{EQ-52})}
+
+Nhiễu pha giao thoa phản xạ kết hợp từ mặt cắt sợi pigtail MIOC ($R_{\text{facet}}$) và tán xạ ngược Rayleigh ($\alpha_R$) trong chiều dài kết hợp $L_c = c / \Delta\nu_{\text{eff}}$:
+\begin{equation}
+\sigma_{\phi,\text{back}} = 2\sqrt{R_{\text{facet}} + \frac{1}{2}\alpha_R\,S_{\text{capture}}\,L_c}, \qquad
+\Delta\phi_{\text{back}}[k] = \sigma_{\phi,\text{back}}\sin\!\big(\theta_{\text{env}}[k]\big),
+\end{equation}
+và tại Tầng 3 (\texttt{DualRegimeStitcher}), thành phần Bias Instability cơ học còn lại được trừ theo tổng bình phương để tránh đếm lặp tại $\tau = 1\text{ s}$:
+\begin{equation}
+B_{\text{T3,mech}} = \sqrt{\max\!\big(0,\; B_{\text{total}}^2 - B_{\text{T2,meas}}^2\big)}.
+\tag{EQ-52}
+\end{equation}
+
+\subsection{Tầng 3: Bài toán Hiệu chuẩn Nghịch Đa Mục tiêu (\texttt{EQ-53})}
+
+Cho vector tham số ẩn $\boldsymbol{\theta} = [C_{\text{xtalk}}, G_{\text{xtalk}}, c_{1/f}, R_{\text{facet}}, \alpha_{\text{th,pot}}, \delta z_{\text{quad}}, \alpha_{V_\pi}, \alpha_{\text{bobbin}}]^T$ (cùng $\eta_{\text{PD}}$ và $\delta_{\text{DAC}}$), bộ \texttt{InverseCalibrator} giải tối ưu có ràng buộc biên:
+\begin{equation}
+\min_{\boldsymbol{\theta} \in \mathcal{B}}\;
+w_{\text{avar}}\!\left\|\log_{10}\frac{\sigma_{\text{sim}}(\tau; \boldsymbol{\theta})}{\sigma_{\text{meas}}(\tau)}\right\|_2^2
++ w_{\text{db}}\!\left\|\frac{\Omega_{\text{out,sim}}(\Omega_{\text{in}}; \boldsymbol{\theta}) - \Omega_{\text{out,meas}}(\Omega_{\text{in}})}{\Omega_{\text{norm}}}\right\|_2^2
++ w_{\text{th}}\!\left\|\frac{\Omega_{\text{bias,sim}}(T(t); \boldsymbol{\theta}) - \Omega_{\text{bias,meas}}(T(t))}{\Omega_{\text{th,norm}}}\right\|_2^2.
+\tag{EQ-53}
+\end{equation}
+
+\section{Bảng Biến Tham số Hiệu chuẩn Chỉnh nóng FMI 3.0 (\texttt{VR 15}--\texttt{VR 21})}
+
+\begin{table}[htbp]
+\centering
+\caption{7 tham số hiệu chuẩn \texttt{SPEC-007} mở rộng trong \texttt{fmi\_wrapper/modelDescription.xml.in}.}
+\footnotesize
+\begin{tabular}{@{}c l c c c r L{4.6cm}@{}}
+\toprule
+\textbf{VR} & \textbf{Tên biến} & \textbf{Kiểu} & \textbf{Causality} & \textbf{Variability} & \textbf{Start} & \textbf{Mô tả kỹ thuật} \\
+\midrule
+15 & \texttt{C\_xtalk\_F} & Float64 & parameter & tunable & \texttt{2.0e-12} & Tụ xuyên âm PCB $C_{\text{xtalk}}$ [F] \\
+16 & \texttt{G\_xtalk\_S} & Float64 & parameter & tunable & \texttt{1.0e-8} & Điện dẫn rò $G_{\text{xtalk}}$ [S] \\
+17 & \texttt{c\_pink\_coeff} & Float64 & parameter & tunable & \texttt{1.0} & Hệ số khuếch đại nhiễu $1/f$ \\
+18 & \texttt{R\_facet\_dB} & Float64 & parameter & tunable & \texttt{-200.0} & Phản xạ mặt cắt MIOC [dB] \\
+19 & \texttt{alpha\_vpi\_ppm\_K} & Float64 & parameter & tunable & \texttt{0.0} & Hệ số nhiệt $V_\pi$ [ppm/K] \\
+20 & \texttt{alpha\_bobbin\_ppm\_K} & Float64 & parameter & tunable & \texttt{0.0} & Giãn nở ống cuộn [ppm/K] \\
+21 & \texttt{delta\_z\_quad\_m} & Float64 & parameter & tunable & \texttt{0.002} & Sai lệch quấn $\delta z_{\text{quad}}$ [m] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Tiêu chí Nghiệm thu Chính thức (\texttt{PHY-01} \& \texttt{CAL-01})}
+\begin{enumerate}
+\item Toàn bộ \textbf{53/53 công thức} (\texttt{EQ-01}--\texttt{EQ-53}) vượt qua kiểm chứng độc lập trong CI (\texttt{scripts/verify\_formulas\_ci.py}).
+\item Độ phủ mã nguồn đạt \textbf{100.0\%} ở cả C++ (\texttt{gcovr}) và Python (\texttt{pytest-cov}).
+\item Kịch bản \texttt{PHY-01}: sai số roundtrip LUT v2 $< 10^{-15}\text{ rad}$, cuộn Octupole giảm trôi nhiệt--cơ rõ rệt so với Quadrupole, xuất hiện gai xuyên âm tụ \& gợn điện--âm MIOC trên $V_{\text{TIA}}(t)$, bảo toàn vuông góc BI chính xác.
+\item Kịch bản \texttt{CAL-01}: rút sai số dự báo trên cả 3 miền (AVAR tĩnh, Vùng chết/Tai thỏ, Trôi nhiệt) từ mức chưa hiệu chuẩn ($> 40\%$) xuống \textbf{$< 5\%$}, khôi phục toàn bộ 10 tham số ẩn với sai số $< 5\%$ và kiểm chứng vòng kín C++ Tầng 2 sai số $< 5\%$.
+\end{enumerate}
+
+\end{document}

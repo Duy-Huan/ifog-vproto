@@ -9,6 +9,8 @@
   "tau_s": 4.8967209175088724e-06,
   "f_eigen_Hz": 102109.14782016347,
   "delta_nu_eff_Hz": 7513884342653.131,
+  "L_coherence_m": 3.9898465870469355e-05,
+  "sigma_phi_back_rad": 0.0,
   "delta_phi_kerr_rad": -2.107907328860016e-06,
   "n_spec": 64,
   "m_segments": 200

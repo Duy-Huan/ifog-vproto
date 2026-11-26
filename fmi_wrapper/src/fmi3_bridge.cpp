@@ -40,6 +40,13 @@ constexpr fmi3ValueReference VR_EN_PINK_NOISE = 11u;
 constexpr fmi3ValueReference VR_EN_VPI_LOOP = 12u;
 constexpr fmi3ValueReference VR_SEED = 13u;
 constexpr fmi3ValueReference VR_OMEGA_OUT_AVG = 14u;
+constexpr fmi3ValueReference VR_C_XTALK_F = 15u;
+constexpr fmi3ValueReference VR_G_XTALK_S = 16u;
+constexpr fmi3ValueReference VR_C_PINK_COEFF = 17u;
+constexpr fmi3ValueReference VR_R_FACET_DB = 18u;
+constexpr fmi3ValueReference VR_ALPHA_VPI_PPM_K = 19u;
+constexpr fmi3ValueReference VR_ALPHA_BOBBIN_PPM_K = 20u;
+constexpr fmi3ValueReference VR_DELTA_Z_QUAD_M = 21u;
 
 // Accellera SystemC 2.3.4 uses a process-global sc_simcontext singleton
 // (canBeInstantiatedOnlyOncePerProcess="true" in modelDescription.xml).
@@ -126,6 +133,16 @@ struct FmuInstance {
     bool en_pink_noise = false;
     bool en_vpi_loop = true;
     int32_t seed = 42004;
+
+    // SPEC-007 tunable calibration parameter shadow state (VR 15..21)
+    bool spec007_tuned = false;
+    double C_xtalk_F = 2.0e-12;
+    double G_xtalk_S = 1.0e-8;
+    double c_pink_coeff = 1.0;
+    double R_facet_dB = -200.0;
+    double alpha_vpi_ppm_K = 0.0;
+    double alpha_bobbin_ppm_K = 0.0;
+    double delta_z_quad_m = 0.002;
 
     ifog::FmiOutputSnapshot outputs{};
 
@@ -258,6 +275,13 @@ FMI3_Export fmi3Instance fmi3InstantiateCoSimulation(
     inst->en_pink_noise = inst->cfg.en_pink_noise;
     inst->en_vpi_loop = inst->cfg.en_vpi_loop;
     inst->seed = static_cast<int32_t>(inst->cfg.seed);
+    inst->C_xtalk_F = inst->cfg.spec007.en_spec007_physics ? inst->cfg.spec007.C_xtalk_F : inst->cfg.C_xtalk_F;
+    inst->G_xtalk_S = inst->cfg.spec007.en_spec007_physics ? inst->cfg.spec007.G_xtalk_S : inst->cfg.k_xtalk_A_per_V;
+    inst->c_pink_coeff = 1.0;
+    inst->R_facet_dB = inst->cfg.spec007.R_facet_dB;
+    inst->alpha_vpi_ppm_K = inst->cfg.spec007.alpha_vpi_ppm_K;
+    inst->alpha_bobbin_ppm_K = inst->cfg.spec007.alpha_bobbin_ppm_K;
+    inst->delta_z_quad_m = 0.002;
 
     inst->log(fmi3OK, "logEvents", "Instantiated ifog_core FMI 3.0 Co-Simulation FMU from " + res_dir_str);
     return inst.release();
@@ -336,6 +360,16 @@ FMI3_Export fmi3Status fmi3ExitInitializationMode(fmi3Instance instance) {
     inst->top->prepare_macro_step(
         inst->omega_in, inst->shupe_phase_in, inst->eps_vpi, inst->k_xtalk, inst->enable_dither
     );
+    inst->top->set_spec007_tunable_params(
+        inst->spec007_tuned,
+        inst->C_xtalk_F,
+        inst->G_xtalk_S,
+        inst->c_pink_coeff,
+        inst->R_facet_dB,
+        inst->alpha_vpi_ppm_K,
+        inst->alpha_bobbin_ppm_K,
+        inst->delta_z_quad_m
+    );
 
     // Complete SystemC elaboration and static SystemC-AMS TDF cluster scheduling
     sc_core::sc_start(sc_core::SC_ZERO_TIME);
@@ -367,6 +401,16 @@ FMI3_Export fmi3Status fmi3DoStep(
     write_bound_input_signals(inst);
     inst->top->prepare_macro_step(
         inst->omega_in, inst->shupe_phase_in, inst->eps_vpi, inst->k_xtalk, inst->enable_dither
+    );
+    inst->top->set_spec007_tunable_params(
+        inst->spec007_tuned,
+        inst->C_xtalk_F,
+        inst->G_xtalk_S,
+        inst->c_pink_coeff,
+        inst->R_facet_dB,
+        inst->alpha_vpi_ppm_K,
+        inst->alpha_bobbin_ppm_K,
+        inst->delta_z_quad_m
     );
 
     // Advance IEEE 1666.1 SystemC-AMS kernel by exact communicationStepSize
@@ -414,6 +458,36 @@ FMI3_Export fmi3Status fmi3SetFloat64(
                 break;
             case VR_K_XTALK:
                 inst->k_xtalk = values[i];
+                inst->G_xtalk_S = values[i];
+                break;
+            case VR_C_XTALK_F:
+                inst->C_xtalk_F = values[i];
+                inst->spec007_tuned = true;
+                break;
+            case VR_G_XTALK_S:
+                inst->G_xtalk_S = values[i];
+                inst->k_xtalk = values[i];
+                inst->spec007_tuned = true;
+                break;
+            case VR_C_PINK_COEFF:
+                inst->c_pink_coeff = values[i];
+                inst->spec007_tuned = true;
+                break;
+            case VR_R_FACET_DB:
+                inst->R_facet_dB = values[i];
+                inst->spec007_tuned = true;
+                break;
+            case VR_ALPHA_VPI_PPM_K:
+                inst->alpha_vpi_ppm_K = values[i];
+                inst->spec007_tuned = true;
+                break;
+            case VR_ALPHA_BOBBIN_PPM_K:
+                inst->alpha_bobbin_ppm_K = values[i];
+                inst->spec007_tuned = true;
+                break;
+            case VR_DELTA_Z_QUAD_M:
+                inst->delta_z_quad_m = values[i];
+                inst->spec007_tuned = true;
                 break;
             default:
                 inst->log(fmi3Error, "logStatusError", "Invalid Float64 valueReference in fmi3SetFloat64");
@@ -459,6 +533,27 @@ FMI3_Export fmi3Status fmi3GetFloat64(
                 break;
             case VR_OMEGA_OUT_AVG:
                 values[i] = inst->outputs.omega_out_avg_rad_per_s;
+                break;
+            case VR_C_XTALK_F:
+                values[i] = inst->C_xtalk_F;
+                break;
+            case VR_G_XTALK_S:
+                values[i] = inst->G_xtalk_S;
+                break;
+            case VR_C_PINK_COEFF:
+                values[i] = inst->c_pink_coeff;
+                break;
+            case VR_R_FACET_DB:
+                values[i] = inst->R_facet_dB;
+                break;
+            case VR_ALPHA_VPI_PPM_K:
+                values[i] = inst->alpha_vpi_ppm_K;
+                break;
+            case VR_ALPHA_BOBBIN_PPM_K:
+                values[i] = inst->alpha_bobbin_ppm_K;
+                break;
+            case VR_DELTA_Z_QUAD_M:
+                values[i] = inst->delta_z_quad_m;
                 break;
             default:
                 inst->log(fmi3Error, "logStatusError", "Invalid Float64 valueReference in fmi3GetFloat64");

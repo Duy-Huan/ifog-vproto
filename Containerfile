@@ -5,18 +5,18 @@
 # + standalone FMI 3.0 Co-Simulation FMU (build/ifog_core.fmu).
 #
 # Build:
-#   docker build -t ifog-vproto:3.0.1 .
-#   podman build -f Containerfile -t ifog-vproto:3.0.1 .
+#   docker build -t ifog-vproto:4.0.0 .
+#   podman build -f Containerfile -t ifog-vproto:4.0.0 .
 #
 # Run:
-#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:3.0.1 \
+#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:4.0.0 \
 #     ./scripts/run_all_scenarios.sh --run-id docker_all_scenarios
 
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="ifog-vproto" \
-      org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype + FMI 3.0 FMU (IFOG-SIM-SPEC-006)" \
-      org.opencontainers.image.version="3.0.1" \
+      org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype + Predictive Physics, Inverse Calibration & FMI 3.0 FMU (IFOG-SIM-SPEC-007)" \
+      org.opencontainers.image.version="4.0.0" \
       org.opencontainers.image.source="https://github.com/Duy-Huan/ifog-vproto"
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -59,6 +59,6 @@ RUN chmod +x scripts/*.sh scripts/*.py examples/*.sh 2>/dev/null || true \
     && cmake --build build --target package_fmu \
     && ./build/ifog_cpp_tests \
     && python3 -c "from fmpy.validation import validate_fmu; probs = validate_fmu('build/ifog_core.fmu'); assert not probs, probs" \
-    && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256
+    && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 spec/IFOG-SIM-SPEC-007.sha256
 
 CMD ["bash"]

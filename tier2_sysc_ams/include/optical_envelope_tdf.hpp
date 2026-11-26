@@ -3,12 +3,13 @@
 
 #include <systemc-ams.h>
 #include <vector>
+#include "ifog_math.hpp"
 #include "ifog_types.hpp"
 #include "micro_trace.hpp"
 
 namespace ifog {
 
-// OpticalEnvelope_TDF: 64-bit optical interferometer envelope model (EQ-06..EQ-13, EQ-36..EQ-39)
+// OpticalEnvelope_TDF: 64-bit optical interferometer envelope model (EQ-06..EQ-13, EQ-36..EQ-39, EQ-47..EQ-52)
 // Rate = K micro-samples per transit time tau; internal K-sample ring buffer models coil delay tau.
 SCA_TDF_MODULE(OpticalEnvelope_TDF) {
 public:
@@ -40,6 +41,11 @@ private:
     uint64_t sample_idx_;
     int ring_pos_;
     std::vector<double> phi_mioc_ring_;
+    MiocDynamicsFilter mioc_dyn_;
+    FastRng back_rng_;
+    double ou_phi_;
+    double ou_sigma_step_;
+    double theta_env_;
     MicroTraceCollector* micro_trace_;
     const ExternalDriveState* ext_drive_;
 };

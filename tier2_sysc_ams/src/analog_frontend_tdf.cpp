@@ -20,8 +20,16 @@ AnalogFrontEnd_TDF::AnalogFrontEnd_TDF(
       cfg_(cfg),
       dt_fast_(cfg.tau_s / static_cast<double>(cfg.K_oversample)),
       B_fast_Hz_(1.0 / (2.0 * dt_fast_)),
-      c_xtalk_eff_(cfg.ablation.en_xtalk ? cfg.C_xtalk_F : 0.0),
-      k_xtalk_eff_(cfg.ablation.en_xtalk ? cfg.k_xtalk_A_per_V : 0.0),
+      c_xtalk_eff_(
+          cfg.ablation.en_xtalk
+              ? (cfg.spec007.en_spec007_physics ? cfg.spec007.C_xtalk_F : cfg.C_xtalk_F)
+              : 0.0
+      ),
+      k_xtalk_eff_(
+          cfg.ablation.en_xtalk
+              ? (cfg.spec007.en_spec007_physics ? cfg.spec007.G_xtalk_S : cfg.k_xtalk_A_per_V)
+              : 0.0
+      ),
       omega0_(compute_tia_omega0(cfg.f_gbw_Hz, cfg.R_f_ohm, cfg.C_tot_F, cfg.C_f_F)),
       zeta_(compute_tia_zeta(cfg.f_gbw_Hz, cfg.R_f_ohm, cfg.C_tot_F, cfg.C_f_F)),
       use_sca_ltf_((omega0_ * dt_fast_) <= 0.2),
@@ -36,6 +44,8 @@ AnalogFrontEnd_TDF::AnalogFrontEnd_TDF(
       rng_(cfg.seed ^ 0xA24BAED4963EE407ULL),
       cluster_idx_(0),
       clip_count_(0),
+      v_drv_prev_(0.0),
+      has_v_drv_prev_(false),
       micro_trace_(micro_trace),
       ext_drive_(ext_drive) {
     // Precompute P_det-independent terms of EQ-15 (dark + thermal + op-amp white + capacitive gain)
@@ -86,13 +96,21 @@ void AnalogFrontEnd_TDF::processing() {
     const double t_cluster = static_cast<double>(cluster_idx_) * cfg_.tau_s;
     const bool log_micro = (micro_trace_ != nullptr) && micro_trace_->active_at(t_cluster);
 
-    const double n_pink_tia = pink_tia_in.read();
+    const bool live_spec007 = (ext_drive_ != nullptr && ext_drive_->use_spec007_live);
+    const double pink_scale = live_spec007 ? ext_drive_->c_pink_coeff_live : 1.0;
+    const double n_pink_tia = pink_tia_in.read() * pink_scale;
     const double n_pink_xtalk = pink_xtalk_in.read();
-    const double k_xtalk_base =
-        (ext_drive_ != nullptr && ext_drive_->use_live_params && cfg_.ablation.en_xtalk)
-            ? ext_drive_->k_xtalk_live_A_per_V
-            : k_xtalk_eff_;
+
+    double k_xtalk_base = k_xtalk_eff_;
+    double c_xtalk_base = c_xtalk_eff_;
+    if (ext_drive_ != nullptr && ext_drive_->use_live_params && cfg_.ablation.en_xtalk) {
+        k_xtalk_base = live_spec007 ? ext_drive_->G_xtalk_S_live : ext_drive_->k_xtalk_live_A_per_V;
+        if (live_spec007) {
+            c_xtalk_base = ext_drive_->C_xtalk_F_live;
+        }
+    }
     const double k_xtalk_mod = k_xtalk_base * (1.0 + n_pink_xtalk);
+    const bool use_eq51_diff = cfg_.spec007.en_spec007_physics || live_spec007;
     const bool adc_sat_fault =
         (cfg_.fault_type == FaultType::AdcSaturation) &&
         is_fault_active(t_cluster, cfg_.fault_inject_time_s, cfg_.fault_duration_s);
@@ -110,11 +128,15 @@ void AnalogFrontEnd_TDF::processing() {
             i_white = std::sqrt(var_i) * rng_.normal01();
         }
 
-        // EQ-14: Total inverting-node TIA input current
-        const double i_in = cfg_.responsivity_A_per_W * p_det
-            + c_xtalk_eff_ * dv_dt
-            + k_xtalk_mod * v_drv
-            + i_white;
+        // EQ-14 & EQ-51: Total inverting-node TIA input current with capacitive + resistive crosstalk
+        const double v_prev = has_v_drv_prev_ ? v_drv_prev_ : v_drv;
+        const double i_xtalk = use_eq51_diff
+            ? compute_capacitive_crosstalk_A(v_drv, v_prev, dt_fast_, k_xtalk_mod, c_xtalk_base)
+            : (c_xtalk_base * dv_dt + k_xtalk_mod * v_drv);
+        v_drv_prev_ = v_drv;
+        has_v_drv_prev_ = true;
+
+        const double i_in = cfg_.responsivity_A_per_W * p_det + i_xtalk + i_white;
 
         // EQ-16: Second-order TIA transient response
         double v_tia = cfg_.R_f_ohm * i_in;

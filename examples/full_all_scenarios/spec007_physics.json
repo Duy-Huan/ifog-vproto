@@ -1,0 +1,17 @@
+{
+  "scenario_id": "PHY-01",
+  "spec_id": "IFOG-SIM-SPEC-007",
+  "lut_version": 2,
+  "lut_roundtrip_err_rad": 0.0,
+  "quadrupole_peak_therm_deg_per_h": 0.555762493352887,
+  "octupole_peak_therm_deg_per_h": 0.29073588903115705,
+  "octupole_drift_reduction_pct": 47.68702593131786,
+  "k_opt_thermal_drift_ppm": 85.59065698676704,
+  "v_pi_final_V": 3.0062990331122945,
+  "v_tia_cap_spike_diff_rms_V": 0.5831134296334406,
+  "p_det_mioc_acoustic_diff_rms_W": 2.199336503963354e-06,
+  "sigma_phi_back_rad": 0.0035565595773115358,
+  "b_t3_mech_deg_per_h": 0.004,
+  "bi_quadrature_conservation_err_rad_s": 0.0,
+  "passed": true
+}

@@ -236,14 +236,53 @@ def fit_5region_wls(
     }
 
 
+def compute_residual_tier3_bi(b_total_rad_s: float, b_t2_meas_rad_s: float) -> float:
+    """Compute residual Tier-3 mechanical Bias Instability preventing double-counting (EQ-52).
+
+        B_T3,mech = sqrt(max(0, B_total^2 - B_T2,meas^2))
+    """
+    return math.sqrt(max(0.0, (b_total_rad_s ** 2) - (b_t2_meas_rad_s ** 2)))
+
+
+class DualRegimeStitcher:
+    """SPEC-007 Dual-Regime AVAR Stitcher with anti-double-counting back-reflection BI subtraction."""
+
+    def __init__(self, splice_t_s: float = 1.0) -> None:
+        self.splice_t_s = float(splice_t_s)
+
+    @staticmethod
+    def residual_mechanical_bi(b_total_rad_s: float, b_t2_meas_rad_s: float) -> float:
+        """Return residual Tier-3 BI after subtracting Tier-2 back-reflection BI in quadrature (EQ-52)."""
+        return compute_residual_tier3_bi(b_total_rad_s, b_t2_meas_rad_s)
+
+    def stitch(
+        self,
+        taus_fast: np.ndarray,
+        adev_fast: np.ndarray,
+        taus_slow: np.ndarray,
+        adev_slow: np.ndarray,
+    ) -> dict[str, Any]:
+        """Verify [0.1, 5.0] s overlap continuity and merge Fast (< splice_t_s) + Slow (>= splice_t_s)."""
+        overlap = check_overlap_continuity(taus_fast, adev_fast, taus_slow, adev_slow)
+        taus_merged, adev_merged = merge_dual_regime_avar(
+            taus_fast, adev_fast, taus_slow, adev_slow, splice_t_s=self.splice_t_s
+        )
+        return {
+            "taus_merged": taus_merged,
+            "adev_merged": adev_merged,
+            "overlap_check": overlap,
+        }
+
+
 def synthesize_slow_scale_series(
     cfg: dict[str, Any],
     phys_params: dict[str, Any],
     n_fast_rad_per_rt_s: float,
     k_matrix: dict[str, Any] | None = None,
     shupe_lut: tuple[np.ndarray, np.ndarray] | None = None,
+    b_t2_meas_rad_s: float = 0.0,
 ) -> tuple[np.ndarray, float, dict[str, float]]:
-    """Synthesize slow-scale rate series Omega_slow[i] over configured hours at f_dec (EQ-28)."""
+    """Synthesize slow-scale rate series Omega_slow[i] over configured hours at f_dec (EQ-28, EQ-52)."""
     ss = cfg["slow_scale"]
     f_dec = float(ss["f_dec_Hz"])
     dt_slow = 1.0 / f_dec
@@ -258,7 +297,7 @@ def synthesize_slow_scale_series(
     # 1. White ARW term calibrated directly from Fast-Scale N_hat (EQ-28 term 1)
     omega_arw = (n_fast_rad_per_rt_s / math.sqrt(dt_slow)) * rng.standard_normal(n_slow)
 
-    # 2. Electronic 1/f leakage term K * n_{1/f}[i] + configured BI floor (EQ-28 term 2)
+    # 2. Electronic 1/f leakage + residual mechanical BI (EQ-28 term 2, EQ-52 anti-double-counting)
     b_cfg_rad_s = float(ss["B_flicker_deg_per_h"]) * DEG_H_TO_RAD_S
     if k_matrix is not None:
         k_vec = np.asarray(k_matrix["K_node_unit_vector"], dtype=np.float64)
@@ -271,9 +310,11 @@ def synthesize_slow_scale_series(
             dtype=np.float64,
         )
         # Combined RMS electronic leakage BI scale (rad/s)
-        b_elec_rad_s = float(np.hypot(b_cfg_rad_s, np.linalg.norm(k_vec * sig_nodes)))
+        b_total_rad_s = float(np.hypot(b_cfg_rad_s, np.linalg.norm(k_vec * sig_nodes)))
     else:
-        b_elec_rad_s = b_cfg_rad_s
+        b_total_rad_s = b_cfg_rad_s
+
+    b_elec_rad_s = compute_residual_tier3_bi(b_total_rad_s, b_t2_meas_rad_s)
 
     omega_pink = generate_calibrated_pink_series(
         n_samples=n_slow, dt_s=dt_slow, B_rad_per_s=b_elec_rad_s, rng=rng

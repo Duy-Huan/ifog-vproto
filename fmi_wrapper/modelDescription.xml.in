@@ -3,7 +3,7 @@
   fmiVersion="3.0"
   modelName="ifog_core"
   instantiationToken="@IFOG_FMI_INSTANTIATION_TOKEN@"
-  description="Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-006 — IEEE 1666.1 SystemC/SystemC-AMS Co-Simulation FMU)"
+  description="Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-007 / SPEC-006 — IEEE 1666.1 SystemC/SystemC-AMS Co-Simulation FMU)"
   author="ifog-vproto engineering"
   version="@IFOG_PROJECT_VERSION@"
   generationTool="ifog-vproto CMake FMI 3.0 Packager"
@@ -21,6 +21,9 @@
     <Unit name="s">
       <BaseUnit s="1"/>
     </Unit>
+    <Unit name="m">
+      <BaseUnit m="1"/>
+    </Unit>
     <Unit name="rad">
       <BaseUnit rad="1"/>
     </Unit>
@@ -32,6 +35,18 @@
     </Unit>
     <Unit name="A/V">
       <BaseUnit kg="-1" m="-2" s="3" A="2"/>
+    </Unit>
+    <Unit name="S">
+      <BaseUnit kg="-1" m="-2" s="3" A="2"/>
+    </Unit>
+    <Unit name="F">
+      <BaseUnit kg="-1" m="-2" s="4" A="2"/>
+    </Unit>
+    <Unit name="dB">
+      <BaseUnit/>
+    </Unit>
+    <Unit name="ppm/K">
+      <BaseUnit K="-1" factor="1e-6"/>
     </Unit>
   </UnitDefinitions>
 
@@ -58,6 +73,13 @@
     <Boolean name="en_vpi_loop" valueReference="12" causality="parameter" variability="fixed" start="true" description="Enable Loop-2 V_pi closed-loop gain tracking"/>
     <Int32 name="seed" valueReference="13" causality="parameter" variability="fixed" start="42004" description="Deterministic PRNG and LFSR seed matching baseline_1km.json"/>
     <Float64 name="omega_out_avg" valueReference="14" causality="output" variability="continuous" initial="calculated" unit="rad/s" description="Anti-aliased macro-step interval-averaged angular rate output (EQ-42)"/>
+    <Float64 name="C_xtalk_F" valueReference="15" causality="parameter" variability="tunable" unit="F" start="2.0e-12" description="SPEC-007 capacitive PCB/package DAC-to-TIA crosstalk capacitance C_xtalk (EQ-51)"/>
+    <Float64 name="G_xtalk_S" valueReference="16" causality="parameter" variability="tunable" unit="S" start="1.0e-8" description="SPEC-007 resistive DAC-to-TIA leakage conductance G_xtalk (EQ-51)"/>
+    <Float64 name="c_pink_coeff" valueReference="17" causality="parameter" variability="tunable" unit="1" start="1.0" description="SPEC-007 tunable 1/f flicker noise amplitude scale multiplier c_pink_coeff (EQ-53)"/>
+    <Float64 name="R_facet_dB" valueReference="18" causality="parameter" variability="tunable" unit="dB" start="-200.0" description="SPEC-007 residual MIOC pigtail facet power reflectivity R_facet [dB] (EQ-52)"/>
+    <Float64 name="alpha_vpi_ppm_K" valueReference="19" causality="parameter" variability="tunable" unit="ppm/K" start="0.0" description="SPEC-007 MIOC half-wave voltage thermal coefficient alpha_Vpi [ppm/K] (EQ-48)"/>
+    <Float64 name="alpha_bobbin_ppm_K" valueReference="20" causality="parameter" variability="tunable" unit="ppm/K" start="0.0" description="SPEC-007 fiber bobbin thermal expansion coefficient alpha_bobbin [ppm/K] (EQ-47)"/>
+    <Float64 name="delta_z_quad_m" valueReference="21" causality="parameter" variability="tunable" unit="m" start="0.002" description="SPEC-007 quadrupole/octupole winding asymmetry residual delta_z_quad [m] (EQ-45)"/>
   </ModelVariables>
 
   <ModelStructure>

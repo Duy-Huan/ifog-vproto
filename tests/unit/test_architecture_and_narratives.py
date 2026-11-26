@@ -161,17 +161,45 @@ def _full_mock_summary() -> dict:
                 "pd_demod_to_phi_err_corr": 0.996,
             },
         },
+        "spec007_scenarios": {
+            "PHY-01": {
+                "octupole_drift_reduction_pct": 47.7,
+                "quadrupole_peak_therm_deg_per_h": 0.556,
+                "octupole_peak_therm_deg_per_h": 0.291,
+                "lut_roundtrip_err_rad": 0.0,
+                "k_opt_thermal_drift_ppm": 85.6,
+                "v_tia_cap_spike_diff_rms_V": 0.583,
+                "sigma_phi_back_rad": 3.56e-3,
+                "bi_quadrature_conservation_err_rad_s": 0.0,
+                "passed": True,
+            },
+            "CAL-01": {
+                "error_before_pct": {
+                    "avar_nrmse_pct": 40.2,
+                    "deadband_nrmse_pct": 102.7,
+                    "thermal_bias_nrmse_pct": 58.8,
+                },
+                "error_after_pct": {
+                    "avar_nrmse_pct": 0.81,
+                    "deadband_nrmse_pct": 0.91,
+                    "thermal_bias_nrmse_pct": 0.29,
+                },
+                "max_param_recovery_err_pct": 2.18,
+                "tier2_closed_loop_rate_err_pct": 0.034,
+                "passed": True,
+            },
+        },
     }
 
 
 def test_architecture_explorer_rendering_live_banners_and_cli(tmp_path: Path) -> None:
     """Exercise all render paths, live banner chips (PASS/FAIL/INFO/empty), and CLI."""
     assert len(ARCHITECTURE_NODES) == 12
-    assert len(CODE_AUDIT_ROWS) == 8
+    assert len(CODE_AUDIT_ROWS) == 10
 
     # Standalone without summary
-    standalone_html = render_architecture_explorer_html(version="3.0.1")
-    assert "SPEC-006 v3.0.1" in standalone_html
+    standalone_html = render_architecture_explorer_html(version="4.0.0")
+    assert "SPEC-007 v4.0.0" in standalone_html
     assert "AnalogFrontEnd_TDF" in standalone_html
     assert "ifog_core.fmu" in standalone_html
     assert "<div class='live-banner'>" not in standalone_html
@@ -183,7 +211,7 @@ def test_architecture_explorer_rendering_live_banners_and_cli(tmp_path: Path) ->
     # Full summary with PASS + back link
     full_sum = _full_mock_summary()
     with_back = render_architecture_explorer_html(
-        version="3.0.1", summary=full_sum, back_report_href="report.html"
+        version="4.0.0", summary=full_sum, back_report_href="report.html"
     )
     assert "chip-pass" in with_back
     assert "Quay lại Báo cáo" in with_back
@@ -198,23 +226,23 @@ def test_architecture_explorer_rendering_live_banners_and_cli(tmp_path: Path) ->
     )
 
     # write_architecture_explorer & CLI with and without --summary-json
-    out1 = write_architecture_explorer(tmp_path / "sub" / "arch.html", version="3.0.1")
+    out1 = write_architecture_explorer(tmp_path / "sub" / "arch.html", version="4.0.0")
     assert out1.exists() and out1.stat().st_size > 10_000
 
     sum_path = tmp_path / "metrics_summary.json"
     sum_path.write_text(json.dumps(full_sum), encoding="utf-8")
     out2 = tmp_path / "arch_cli.html"
-    assert arch_main(["--out", str(out2), "--version", "3.0.1", "--summary-json", str(sum_path)]) == 0
+    assert arch_main(["--out", str(out2), "--version", "4.0.0", "--summary-json", str(sum_path)]) == 0
     assert "unit_full" in out2.read_text(encoding="utf-8")
 
     out3 = tmp_path / "arch_cli_plain.html"
-    assert arch_main(["--out", str(out3), "--version", "3.0.1"]) == 0
+    assert arch_main(["--out", str(out3), "--version", "4.0.0"]) == 0
     assert out3.exists()
 
 
 def test_report_narratives_all_21_figures_and_fallbacks() -> None:
-    """Cover every single one of the 21 figure stems, sim_summary fallback, unknown stem, and inline formatter."""
-    assert len(FIGURE_GUIDES) == 21
+    """Cover every single one of the 23 figure stems, sim_summary fallback, unknown stem, and inline formatter."""
+    assert len(FIGURE_GUIDES) == 23
     full_sum = _full_mock_summary()
 
     for stem in FIGURE_GUIDES:

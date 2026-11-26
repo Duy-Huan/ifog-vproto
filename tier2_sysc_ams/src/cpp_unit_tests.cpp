@@ -337,6 +337,62 @@ static void test_config_and_cli_validation() {
     }
     expect_throws([&]() { load_ifog_config(tmp_dir + "/min_cfg.json", "/nonexistent_phys.json"); });
 
+    // SPEC-007 EQ-47..EQ-52 C++ math & LUT v2 unit tests
+    {
+        const double k_dyn = compute_dynamic_k_opt(1.352, 20.0, 5.0, 12.0, 35.0, 1.55e-6, 1.5e-9, 1e-6, 1.468, 1e-5);
+        CHECK(k_dyn > 1.352);
+
+        // EQ-51 capacitive crosstalk & C_xtalk=0 reduction
+        const double i_cap = compute_capacitive_crosstalk_A(1.5, 0.0, 3.0e-7, 1.5e-8, 5.0e-12);
+        const double i_res = compute_capacitive_crosstalk_A(1.5, 0.0, 3.0e-7, 1.5e-8, 0.0);
+        expect_near(i_res, 2.25e-8, 1e-18, "eq51_zero_cap_reduction");
+        expect_near(i_cap - i_res, 5.0e-12 * (1.5 / 3.0e-7), 1e-18, "eq51_cap_spike");
+
+        // EQ-52 backscatter sigma (finite & -200 dB silent floor)
+        CHECK(compute_backscatter_sigma_rad(-60.0, 4.5e-5, 1.5e-3, 7.51e12) > 1e-3);
+        expect_near(compute_backscatter_sigma_rad(-200.0, 0.0, 0.0, 7.51e12), 0.0, 1e-18, "eq52_zero");
+
+        // EQ-50 MiocDynamicsFilter: inactive passthrough, elec-only, acoustic-only, combined
+        MiocDynamicsFilter mf_idle;
+        expect_near(step_mioc_dynamics(mf_idle, 1.25), 1.25, 1e-15, "mioc_idle");
+        MiocDynamicsFilter mf_elec;
+        mf_elec.configure(10e6, 0.0, 0.1, 0.0, 3e-7, 0.0);
+        CHECK(mf_elec.active() && step_mioc_dynamics(mf_elec, 1.0) > 0.0);
+        MiocDynamicsFilter mf_ac;
+        mf_ac.configure(0.0, 3.5e6, 0.08, 0.05, 3e-7, 0.0);
+        CHECK(mf_ac.active() && step_mioc_dynamics(mf_ac, 1.0) > 0.0);
+
+        // EQ-49 LUT v2 write, read, and O(1) interpolation (empty, before start, mid, after end)
+        std::vector<ShupeLutRecordV2> empty_v2;
+        expect_near(interpolate_shupe_v2(empty_v2, 5.0).k_opt_scale_rel_t, 1.0, 1e-15, "lut_v2_empty");
+        {
+            std::ofstream v2f(tmp_dir + "/good_v2.bin", std::ios::binary);
+            const char magic[4] = {'S', 'H', 'U', 'P'};
+            uint32_t ver = 2u;
+            uint64_t n = 2u;
+            double dt = 10.0;
+            v2f.write(magic, 4);
+            v2f.write(reinterpret_cast<const char*>(&ver), sizeof(ver));
+            v2f.write(reinterpret_cast<const char*>(&n), sizeof(n));
+            v2f.write(reinterpret_cast<const char*>(&dt), sizeof(dt));
+            ShupeLutRecordV2 r0{0.0, 1e-7, 2e-8, 0.999, 1e-8, 3.0, 1.0};
+            ShupeLutRecordV2 r1{10.0, 3e-7, 6e-8, 0.997, 3e-8, 3.02, 1.0001};
+            v2f.write(reinterpret_cast<const char*>(&r0), sizeof(r0));
+            v2f.write(reinterpret_cast<const char*>(&r1), sizeof(r1));
+        }
+        uint32_t det_ver = 0u;
+        auto v2_loaded = load_shupe_lut_v2(tmp_dir + "/good_v2.bin", &det_ver);
+        CHECK(det_ver == 2u && v2_loaded.size() == 2u);
+        expect_near(interpolate_shupe_v2(v2_loaded, -1.0).v_pi_V_t, 3.0, 1e-15, "lut_v2_lo");
+        expect_near(interpolate_shupe_v2(v2_loaded, 5.0).delta_phi_stress_rad, 4e-8, 1e-15, "lut_v2_mid");
+        expect_near(interpolate_shupe_v2(v2_loaded, 20.0).k_opt_scale_rel_t, 1.0001, 1e-15, "lut_v2_hi");
+
+        // SPEC-007 fail-closed validation guard in validate_ifog_config
+        IfogConfig bad_sp7;
+        bad_sp7.spec007.R_facet_dB = 5.0;
+        expect_throws([&]() { validate_ifog_config(bad_sp7); });
+    }
+
     std::filesystem::remove_all(tmp_dir);
 }
 

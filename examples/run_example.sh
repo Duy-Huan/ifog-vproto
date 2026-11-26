@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # Reproducibly run the COMPLETE IFOG Virtual Prototype Official Scenario Suite
-# (IFOG-SIM-SPEC-006: Gates 1..4 + Gate 5 6-State DSP + Gate 6 FMI 3.0 FMU + TD-01..06 + ENG-01..05 + DYN-01..04, MC=500)
+# (IFOG-SIM-SPEC-007: Gates 1..4 + Gate 5 6-State DSP + Gate 6 FMI 3.0 FMU + TD-01..06 + ENG-01..05 + DYN-01..04 + PHY-01 + CAL-01, MC=500)
 # on any Linux host (after scripts/setup_env.sh) or inside Docker/Podman,
-# automatically generating report.md, interactive Plotly report.html (20 charts), all 21 300-DPI PNG plots,
-# virtual_calibration_dataset.csv, and report/index.{md,html}.
+# automatically generating report.md, interactive Plotly+KaTeX report.html (with complete tier-by-tier formulas EQ-01..EQ-53),
+# all 23 300-DPI PNG plots, calibrated_params.json, virtual_calibration_dataset.csv, and report/index.{md,html}.
 #
 # Usage:
 #   ./examples/run_example.sh                # runs all scenarios -> report/full_all_scenarios/
@@ -71,5 +71,17 @@ if [ "${SYNC_EXAMPLE}" -eq 1 ]; then
             cp "${REPO_ROOT}/data/full_all_scenarios/${jf}" "${DST}/"
         fi
     done
+    if [ -f "${REPO_ROOT}/data/full_all_scenarios/spec007_all_summary.json" ]; then
+        cp "${REPO_ROOT}/data/full_all_scenarios/spec007_all_summary.json" "${DST}/spec007_summary.json"
+    fi
+    if [ -f "${REPO_ROOT}/data/full_all_scenarios/phy01_spec007_physics/spec007_physics_summary.json" ]; then
+        cp "${REPO_ROOT}/data/full_all_scenarios/phy01_spec007_physics/spec007_physics_summary.json" "${DST}/spec007_physics.json"
+    fi
+    if [ -f "${REPO_ROOT}/data/full_all_scenarios/cal01_spec007_calibration/spec007_calibration_summary.json" ]; then
+        cp "${REPO_ROOT}/data/full_all_scenarios/cal01_spec007_calibration/spec007_calibration_summary.json" "${DST}/spec007_calibration.json"
+    fi
+    if [ -f "${REPO_ROOT}/data/full_all_scenarios/cal01_spec007_calibration/calibrated_params.json" ]; then
+        cp "${REPO_ROOT}/data/full_all_scenarios/cal01_spec007_calibration/calibrated_params.json" "${DST}/calibrated_params.json"
+    fi
     echo "[run_example] Synchronized complete all-scenarios curated example into ${DST}"
 fi

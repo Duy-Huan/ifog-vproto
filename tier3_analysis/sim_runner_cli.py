@@ -42,6 +42,11 @@ from tier3_analysis.scenarios_engineering import (
     run_eng_vre_faraday,
 )
 from tier3_analysis.fmi_master_runner import DEFAULT_FMU, run_fmi_gate_suite
+from tier3_analysis.scenarios_spec007 import (
+    run_all_spec007_scenarios,
+    run_spec007_calibration,
+    run_spec007_physics,
+)
 from tier3_analysis.scenarios_time_domain import (
     run_all_time_domain_scenarios,
     run_dsp6_comparison,
@@ -87,6 +92,9 @@ ALL_MODES = (
     "dyn_output_psd",
     "dyn_sine_electro_optic",
     "dyn_all",
+    "spec007_physics",
+    "spec007_calibration",
+    "spec007_all",
     "all_scenarios",
 )
 
@@ -578,6 +586,12 @@ def run_simulation_workflow(
         run_dyn_sine_electro_optic(resolved_bin, cfg, run_dir)
     elif mode == "dyn_all":
         run_all_dynamic_probe_scenarios(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "spec007_physics":
+        run_spec007_physics(resolved_bin, cfg, run_dir / "phy01_spec007_physics")
+    elif mode == "spec007_calibration":
+        run_spec007_calibration(resolved_bin, cfg, run_dir / "cal01_spec007_calibration")
+    elif mode == "spec007_all":
+        run_all_spec007_scenarios(resolved_bin, cfg, run_dir)
     elif mode == "full":
         run_gate1_stage(resolved_bin, cfg, run_dir)
         run_gate2_stage(resolved_bin, cfg_p, Path(sweep_path), run_dir, workers=workers)
@@ -622,6 +636,7 @@ def run_simulation_workflow(
         run_all_time_domain_scenarios(resolved_bin, cfg, run_dir, workers=workers)
         run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
         run_all_dynamic_probe_scenarios(resolved_bin, cfg, run_dir, workers=workers)
+        run_all_spec007_scenarios(resolved_bin, cfg, run_dir)
 
     summary = export_run_report(
         run_dir,

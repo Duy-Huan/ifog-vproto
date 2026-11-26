@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [4.0.0] - 2026-11-26
+
+### Added
+- **Owner-Authorized Normative Specification Upgrade — `IFOG-SIM-SPEC-007` (v7.0):**
+  - Authored checksum-locked [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md), [`spec/IFOG-SIM-SPEC-007.tex`](../spec/IFOG-SIM-SPEC-007.tex), 3-pass LuaLaTeX compiled [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf), and [`spec/IFOG-SIM-SPEC-007.sha256`](../spec/IFOG-SIM-SPEC-007.sha256) (preserving `SPEC-004`, `SPEC-005`, and `SPEC-006` 100% untouched under Quadruple Spec Lock), introducing 9 new canonical equations **`EQ-45`..`EQ-53`** (cross-referenced to draft `EQ-40`..`EQ-48`) targeting **`< 5%` hardware prediction accuracy**.
+  - Added backward-compatible [`configs/schema_v6.json`](../configs/schema_v6.json) (supporting `"4.0"`, `"5.0"`, `"6.0"`) and reference predictive-physics configuration [`configs/baseline_1km_spec007.json`](../configs/baseline_1km_spec007.json).
+- **Tier 1 High-Fidelity Coil Winding, Thermo-Mechanical Stress & Multi-Column LUT v2 (`tier1_offline/`):**
+  - Added discrete turn-by-turn **Quadrupole / Octupole** winding coordinate mapping (`build_winding_map`, `EQ-45`), thermo-mechanical elasto-optic stress drift (`elasto_optic_stress_integral`, `EQ-46`), dynamic thermal scale-factor drift $K_{\text{opt}}(t)$ (`compute_dynamic_k_opt_rel`, `EQ-47`), dynamic $V_{\text{eff}}(t)/\Delta\phi_{\text{pol}}(t)/V_\pi(t)$ (`compute_dynamic_optical_params`, `EQ-48`), and 6-channel binary `shupe_lut.bin` v2 (`24 B` header + `56 B <7d` records, `EQ-49`) with seamless v1 fallback.
+  - Extended `jones_spectral.py` with source coherence length $L_c$ and Rayleigh/facet back-reflection phase noise $\sigma_{\phi,\text{back}}$ (`EQ-52`).
+- **Tier 2 Predictive Parasitic Physics & Live Tunable FMI 3.0 FMU (`tier2_sysc_ams/`, `fmi_wrapper/`):**
+  - Implemented 2nd-order $\text{LiNbO}_3$ MIOC electro-acoustic step dynamics (`MiocDynamicsFilter` / `step_mioc_dynamics` before $K_{\text{delay}}$, `EQ-50`), capacitive + resistive PCB crosstalk $i_{\text{xtalk}}[k] = G_{\text{xtalk}}V_{\text{drv}}[k] + C_{\text{xtalk}}(V_{\text{drv}}[k]-V_{\text{drv}}[k-1])/\Delta t_{\text{fast}}$ (`EQ-51`), coherent Rayleigh/facet back-reflection phase noise (`EQ-52`), and $O(1)$ 6-channel LUT v2 interpolation (`ShupeLutRecordV2`, `static_assert == 56 B`, with automatic v1 fallback).
+  - Expanded `fmi_wrapper/modelDescription.xml.in` and `fmi3_bridge.cpp` from 15 to **22 SI variables** by adding 7 live tunable parasitic parameters (`VR 15..21`: `C_xtalk_F`, `G_xtalk_S`, `c_pink_coeff`, `R_facet_dB`, `alpha_vpi_ppm_K`, `alpha_bobbin_ppm_K`, `delta_z_quad_m`) while preserving `0.00e+00 rad/s` bit-exact Gate 6 backward compatibility.
+- **Tier 3 Anti-Double-Counting BI Stitching & Automated 3-Stage Bounded Inverse Calibration (`tier3_analysis/`, `viz/`):**
+  - Added `DualRegimeStitcher` / `compute_residual_tier3_bi` enforcing quadrature subtraction $B_{\text{T3,mech}} = \sqrt{\max(0, B_{\text{total}}^2 - B_{\text{T2,meas}}^2)}$ (`EQ-52`).
+  - Added `tier3_analysis/inverse_calibration.py` (`InverseCalibrator`, `EQ-53`): 3-stage bounded Trust-Region Reflective optimizer (Stage A Static AVAR, Stage B Slow Rate Ramp, Stage C Thermal Chamber) with Gauss–Newton covariance & 95% confidence intervals (`calibrated_params.json`).
+  - Added `tier3_analysis/scenarios_spec007.py` (`PHY-01` & `CAL-01`), `viz/plot_spec007_calibration.py` (2 new 300-DPI figures), `tests/formula_verification/test_formulas_spec007.py` (`EQ-45`..`EQ-53`), `tests/unit/test_spec007_unit.py`, `tests/system/test_spec007_system.py`, and project skill `skills/ifog-spec007-physics-calibration/SKILL.md` (10 skills total).
+- **Presentation-Grade Tier-by-Tier Mathematical Compendium (`EQ-01`..`EQ-53`):**
+  - Added complete, cleanly formatted tier-by-tier equation compendia (Tier 1, Tier 2, FMI 3.0 Wrapper, Tier 3) directly into `docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}`, `viz/report_narratives.py` (`TIER_FORMULA_COMPENDIUM`), `viz/export_report.py` (Section 12 in `report.md` & KaTeX `#sec-formulas` in `report.html`), and `viz/architecture_explorer.py` (`docs/IFOG_ARCHITECTURE_EXPLORER.html`).
+
+### Changed
+- Expanded CLI runner to **31 modes** (`spec007_physics`, `spec007_calibration`, `spec007_all` + included in `all_scenarios`), CI formula matrix to **53 / 53 equations (`EQ-01`..`EQ-53`)**, curated `examples/full_all_scenarios/` to **23 / 23 PASS** (`23` 300-DPI PNGs + `calibrated_params.json`), C++ coverage to **100.0%** (`2,329/2,329` lines, `211/211` functions), Python coverage to **100.00%** (`4,650/4,650` statements), and GitHub Release bundle to **20 verified assets**.
+- Synchronized `pyproject.toml`, `Containerfile`, `Dockerfile`, `compose.yaml`, `AGENT.md`, `README.md`, `skills/`, `.github/workflows/{ci,release}.yml`, and all `docs/*.{md,tex,pdf}` to `v4.0.0` per Rule 16.
+
 ## [3.0.1] - 2026-11-26
 
 ### Added

@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(IFOG_ENABLE_COVERAGE "Enable GCC gcov instrumentation for 100% coverage verification" OFF)
 
 get_filename_component(IFOG_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
-set(IFOG_PROJECT_VERSION "3.0.0")
+set(IFOG_PROJECT_VERSION "4.0.0")
 set(IFOG_FMI_INSTANTIATION_TOKEN "{6e9c4b1a-7f20-4f06-9a5c-000000000006}")
 
 # Locate SystemC 2.3.4 (SYSTEMC_HOME, portable ifog-env prefix, or distro libsystemc-dev)

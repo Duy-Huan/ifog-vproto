@@ -20,35 +20,36 @@ from typing import Any
 # against tier1_offline/, tier2_sysc_ams/, fmi_wrapper/, and tier3_analysis/.
 ARCHITECTURE_NODES: dict[str, dict[str, Any]] = {
     "overview": {
-        "badge": "Tổng quan Kiến trúc (SPEC-006)",
+        "badge": "Tổng quan Kiến trúc (SPEC-007)",
         "badge_class": "badge-slate",
-        "title": "Nguyên lý Liên kết 3 Tầng & Đóng gói FMI 3.0 FMU",
-        "source_ref": "AGENT.md | spec/IFOG-SIM-SPEC-006.md | EQ-01..EQ-44",
+        "title": "Nguyên lý Liên kết 3 Tầng, FMI 3.0 FMU & Hiệu chuẩn Nghịch",
+        "source_ref": "AGENT.md | spec/IFOG-SIM-SPEC-007.md | EQ-01..EQ-53",
         "intuition": (
             "Một con quay sợi quang (IFOG) chứa đồng thời ba thang thời gian cách nhau hàng tỷ lần: "
             "(1) ánh sáng truyền trong cuộn sợi 1 km mất ~4.9 µs, (2) mạch điện tử tương tự & DSP chạy ở nhịp ~3.27 MHz, "
-            "và (3) trôi thiên lệch (bias drift) phải đo trong 10 giờ. Mô hình tách bài toán thành 3 Tầng liên kết chặt chẽ "
-            "(cùng lớp vỏ FMI 3.0 FMU chuẩn công nghiệp) để chạy nhanh nhưng vẫn bảo toàn chính xác 100% vật lý và mật độ nhiễu."
+            "và (3) trôi thiên lệch (bias drift) phải đo trong 10 giờ. Chuẩn IFOG-SIM-SPEC-007 bổ sung vật lý dự báo độ chính xác cao "
+            "(quấn Quadrupole/Octupole, ứng suất quang–đàn hồi, LUT v2 6 kênh, cộng hưởng âm học MIOC, xuyên âm điện dung, phản xạ Rayleigh) "
+            "và bộ Hiệu chuẩn Nghịch Đa Mục tiêu (InverseCalibrator) rút sai số dự báo phần cứng xuống < 5%."
         ),
         "math_title": "Ba Phương trình Bảo toàn tại các Biên Hệ thống",
         "math_blocks": [
             (
-                "1. Đồng bộ lưới thời gian sợi quang (Biên Tầng 1 → Tầng 2, EQ-06):",
-                r"$$\tau = \frac{n_{\text{eff}} L}{c} \approx 4.897\;\mu\text{s},\qquad \Delta t_{\text{fast}} = \frac{\tau}{K},\qquad f_{\text{fast}} = \frac{K}{\tau} \approx 3.267\;\text{MHz}\;(K=16)$$",
+                "1. Đồng bộ lưới thời gian sợi quang & LUT v2 6 kênh (Biên Tầng 1 → Tầng 2, EQ-06 & EQ-49):",
+                r"$$\tau = \frac{n_{\text{eff}} L}{c} \approx 4.897\;\mu\text{s},\qquad \Delta t_{\text{fast}} = \frac{\tau}{K},\qquad \text{LUT v2 } (56\;\text{B}):\;[t,\Delta\phi_{\text{Shupe}},\Delta\phi_{\text{stress}},V, \phi_{\text{pol}},V_\pi, K_{\text{opt,rel}}]$$",
             ),
             (
-                "2. Đồng bộ đa tốc độ FMI 3.0 & chống gập phổ (Biên Tầng 2 ↔ FMU, EQ-42):",
-                r"$$N_{\tau,k} = \operatorname{round}\!\left(\frac{H_k}{\tau}\right),\qquad \bar{\Omega}_{\text{out},k} = \frac{1}{N_{\tau,k}}\sum_{n=n_k}^{n_k+N_{\tau,k}-1}\Omega_{\text{out}}[n]$$",
+                "2. Đồng bộ đa tốc độ FMI 3.0 & tham số hiệu chuẩn chỉnh nóng (Biên Tầng 2 ↔ FMU, EQ-42..44):",
+                r"$$N_{\tau,k} = \operatorname{round}\!\left(\frac{H_k}{\tau}\right),\qquad \bar{\Omega}_{\text{out},k} = \frac{1}{N_{\tau,k}}\sum_{n=n_k}^{n_k+N_{\tau,k}-1}\Omega_{\text{out}}[n],\qquad \text{VR } 0..21\;(10\;\text{tunable})$$",
             ),
             (
-                "3. Khâu nối hai miền AVAR không đếm lặp nhiễu (Biên Tầng 2 → Tầng 3, EQ-24 & EQ-30):",
-                r"$$\max_{T_m \in [0.1,\,5]\,\text{s}} \frac{|\sigma_{\text{fast}}(T_m) - \sigma_{\text{slow}}(T_m)|}{\sigma_{\text{slow}}(T_m)} < 5\%,\quad \sigma^2(T) = \frac{3Q^2}{T^2} + \frac{N^2}{T} + \frac{2\ln 2}{\pi}B^2 + \frac{K^2 T}{3} + \frac{R^2 T^2}{2}$$",
+                "3. Khâu nối AVAR chống cộng trùng BI & Hiệu chuẩn Nghịch (Biên Tầng 2 → Tầng 3, EQ-24, EQ-52, EQ-53):",
+                r"$$B_{\text{T3,mech}} = \sqrt{\max(0, B_{\text{total}}^2 - B_{\text{T2,meas}}^2)},\qquad \min_{\boldsymbol{\theta}\in\mathcal{B}}\left(w_{\text{avar}}\|\log_{10}\tfrac{\sigma_{\text{sim}}}{\sigma_{\text{meas}}}\|_2^2 + w_{\text{db}}\|\tfrac{\Delta\Omega_{\text{db}}}{\Omega_0}\|_2^2 + w_{\text{th}}\|\tfrac{\Delta\Omega_{\text{th}}}{\Omega_{\text{th}}}\|_2^2\right)$$",
             ),
         ],
         "checks": [
             "Bấm vào bất kỳ khối nào trên sơ đồ bên trái để xem giải thích dễ hiểu cho người không chuyên, công thức thực tế đang chạy trong source code, và tiêu chí chứng minh V&V.",
             "Dùng thanh chế độ ở góc trên để làm nổi bật riêng: Vòng phản hồi & Deadband, Chuỗi nhiễu & AVAR, hoặc Lớp vỏ FMI 3.0 FMU.",
-            "Toàn bộ 44 công thức (EQ-01..EQ-44) được kiểm chứng tự động 100% trong CI/CD (scripts/verify_formulas_ci.py).",
+            "Toàn bộ 53 công thức (EQ-01..EQ-53, gồm SPEC-004/005/006/007) được kiểm chứng tự động 100% trong CI/CD (scripts/verify_formulas_ci.py).",
         ],
     },
     "1a": {
@@ -379,15 +380,27 @@ CODE_AUDIT_ROWS: tuple[tuple[str, str, str, str], ...] = (
     ),
     (
         "EQ-42..44",
-        "FMI 3.0 Co-Sim FMU Wrapper",
+        "FMI 3.0 Co-Sim FMU Wrapper (VR 0..21)",
         "fmi_wrapper/src/fmi3_bridge.cpp & ifog_top_module.cpp",
-        "75 ký hiệu C-API FMI 3.0, 15 biến SI (omega_out vr=3 tương đương 0.00 rad/s vs ifog_sim; omega_out_avg vr=14 chống aliasing cho AVAR; e_vpi_res; bit_status 6-bit).",
+        "75 ký hiệu C-API FMI 3.0, 22 biến SI (VR 0..14 gốc + VR 15..21 tham số hiệu chuẩn SPEC-007 chỉnh nóng: C_xtalk_F, G_xtalk_S, c_pink_coeff, R_facet_dB, alpha_vpi, alpha_bobbin, delta_z_quad).",
     ),
     (
         "EQ-24..30, 40..41",
         "Tier 3 Dual-Regime AVAR & Scenarios",
         "tier3_analysis/dual_regime_avar.py & scenarios_*.py",
-        "Overlapping AVAR O(N) 5 vùng IEEE Std 952 (Q, N, B, K, R), chồng lấp Fast/Slow < 5%, WLS ≤ 10%, ma trận K 100 Hz, Monte Carlo Yield C_pk & hiệu chuẩn nhiệt -40..+85 °C.",
+        "Overlapping AVAR O(N) 5 vùng IEEE Std 952 (Q, N, B, K, R), chống cộng trùng BI (DualRegimeStitcher EQ-52), chồng lấp Fast/Slow < 5%, ma trận K 100 Hz, Monte Carlo Yield C_pk & bù nhiệt -40..+85 °C.",
+    ),
+    (
+        "EQ-45..49",
+        "SPEC-007 Winding, Elasto-Optic Stress & LUT v2",
+        "tier1_offline/shupe_thermal.py & tier2_sysc_ams/src/ifog_config.cpp",
+        "Ánh xạ quấn rời rạc Quadrupole/Octupole (r_i, z_ax,i), tích phân ứng suất quang–đàn hồi C_eo, hệ số động K_opt(t)/V_eff(t)/V_pi(t), tệp nhị phân shupe_lut.bin v2 (56 B <7d) nội suy O(1) tương thích ngược v1.",
+    ),
+    (
+        "EQ-50..53",
+        "SPEC-007 MIOC Acoustic, C_xtalk, Backscatter & Inverse Cal",
+        "tier2_sysc_ams/src/{optical_envelope,analog_frontend}_tdf.cpp & tier3_analysis/inverse_calibration.py",
+        "Động học điện–âm LiNbO3 MIOC bậc 2, xuyên âm tụ C_xtalk·dV/dt + G_xtalk·V, phản xạ Rayleigh/facet OU, và bộ Hiệu chuẩn Nghịch 3 giai đoạn (InverseCalibrator) rút sai số từ >40% xuống <1%.",
     ),
 )
 
@@ -427,11 +440,11 @@ def _format_live_banner(summary: dict[str, Any] | None) -> str:
 
 
 def render_architecture_explorer_html(
-    version: str = "3.0.1",
+    version: str = "4.0.0",
     summary: dict[str, Any] | None = None,
     back_report_href: str | None = None,
 ) -> str:
-    """Render the self-contained interactive HTML5 IFOG-SIM-SPEC-006 Architecture Explorer."""
+    """Render the self-contained interactive HTML5 IFOG-SIM-SPEC-007 Architecture Explorer."""
     nodes_json = json.dumps(ARCHITECTURE_NODES, ensure_ascii=False)
     live_banner_html = _format_live_banner(summary)
     back_link_html = (
@@ -454,7 +467,7 @@ def render_architecture_explorer_html(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kiến trúc &amp; Dòng chảy Toán học Mô phỏng Vòng kín IFOG (SPEC-006 v{html.escape(version)})</title>
+  <title>Kiến trúc &amp; Dòng chảy Toán học Mô phỏng Vòng kín IFOG (SPEC-007 v{html.escape(version)})</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
