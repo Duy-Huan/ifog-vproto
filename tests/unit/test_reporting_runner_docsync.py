@@ -487,7 +487,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
     assert len(ms["gate_statuses"]) == 4
     assert all(g["status"] == "PASS" for g in ms["gate_statuses"])
 
-    # Complete SPEC-005 All-Scenarios curated example (Gates 1-5 + 6 TD + 5 ENG = 16 PASS, 16 300-DPI PNGs)
+    # Complete SPEC-005 All-Scenarios curated example (Gates 1-5 + 6 TD + 5 ENG + 4 DYN = 20 PASS, 20 300-DPI PNGs)
     ex_all = REPO_ROOT / "examples" / "full_all_scenarios"
     for fname in (
         "README.md",
@@ -516,6 +516,10 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "eng03_vre_faraday.json",
         "eng04_fault_bit.json",
         "eng05_mc_yield_cal.json",
+        "dyn01_step_response.json",
+        "dyn02_freq_response.json",
+        "dyn03_output_psd.json",
+        "dyn04_sine_electro_optic.json",
         "figures/waveforms.png",
         "figures/bunny_ears.png",
         "figures/psd_flicker.png",
@@ -532,15 +536,20 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "figures/eng03_vre_faraday.png",
         "figures/eng04_fault_bit.png",
         "figures/eng05_mc_yield_cal.png",
+        "figures/dyn01_step_response.png",
+        "figures/dyn02_freq_response.png",
+        "figures/dyn03_output_psd.png",
+        "figures/dyn04_sine_electro_optic.png",
     ):
         fp = ex_all / fname
         assert fp.exists() and fp.stat().st_size > 100, f"Missing all-scenarios example deliverable: {fname}"
 
     ms_all = json.loads((ex_all / "metrics_summary.json").read_text(encoding="utf-8"))
     assert ms_all["report_meta"]["overall_status"] == "PASS"
-    assert len(ms_all["gate_statuses"]) == 16
+    assert len(ms_all["gate_statuses"]) == 20
     assert all(g["status"] == "PASS" for g in ms_all["gate_statuses"])
     html_all = (ex_all / "report.html").read_text(encoding="utf-8")
     assert "Interactive Telemetry — Core Acceptance Gates" in html_all
     assert "Interactive Telemetry — Group A: 6 Time-Domain Scenarios" in html_all
     assert "Interactive Telemetry — Group B: 5 System Engineering Scenarios" in html_all
+    assert "Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe" in html_all

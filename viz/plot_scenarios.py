@@ -333,3 +333,263 @@ def plot_eng_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
         generated.append(out)
 
     return generated
+
+
+def plot_dyn_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
+    """Generate 300-DPI plots for Group C Dynamic Response, Output PSD & Electro-Optic Probe (DYN-01..DYN-04)."""
+    rdir = Path(run_dir)
+    fdir = Path(fig_dir)
+    fdir.mkdir(parents=True, exist_ok=True)
+    generated: list[Path] = []
+
+    d1 = _load_json(rdir / "dyn01_step_response.json")
+    if d1 is not None:
+        out = fdir / "dyn01_step_response.png"
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(11.5, 7.6), dpi=300)
+        c10_4 = d1["cases"]["step10_4state"]
+        c10_6 = d1["cases"]["step10_6state"]
+        c100_4 = d1["cases"]["step100_4state"]
+        c100_6 = d1["cases"]["step100_6state"]
+        ck15 = d1["cases"]["step10_6state_k015"]
+        ck45 = d1["cases"]["step10_6state_k045"]
+
+        # Panel A: Normalized Step Response (0->10 & 0->100 deg/s, 4-State vs 6-State)
+        ax1.plot(c100_6["trace"]["t_ms"], np.array(c100_6["trace"]["omega_in_deg_per_s"]) / 100.0, "k--", lw=1.1, label="Command $\\Omega_{\\mathrm{in}}$")
+        ax1.plot(c10_4["trace"]["t_ms"], np.array(c10_4["trace"]["omega_out_deg_per_s"]) / 10.0, color="#1B365D", lw=1.5, label=f"10 deg/s 4s ($t_r={c10_4['rise_time_10_90_ms']:.2f}$ ms)")
+        ax1.plot(c10_6["trace"]["t_ms"], np.array(c10_6["trace"]["omega_out_deg_per_s"]) / 10.0, color="#0E6251", lw=1.5, label=f"10 deg/s 6s ($t_r={c10_6['rise_time_10_90_ms']:.2f}$ ms)")
+        ax1.plot(c100_4["trace"]["t_ms"], np.array(c100_4["trace"]["omega_out_deg_per_s"]) / 100.0, ":", color="#2B6CB0", lw=1.6, label=f"100 deg/s 4s ($t_r={c100_4['rise_time_10_90_ms']:.2f}$ ms)")
+        ax1.plot(c100_6["trace"]["t_ms"], np.array(c100_6["trace"]["omega_out_deg_per_s"]) / 100.0, "-.", color="#C53030", lw=1.5, label=f"100 deg/s 6s ($t_r={c100_6['rise_time_10_90_ms']:.2f}$ ms)")
+        ax1.set_xlim(-0.2, 1.5)
+        ax1.set_xlabel("Time Relative to Step [ms]")
+        ax1.set_ylabel("Normalized Rate $\\Omega_{\\mathrm{out}} / \\Omega_{\\mathrm{step}}$")
+        ax1.set_title("DYN-01A: Closed-Loop Step Response (4-State vs 6-State)")
+        ax1.grid(True, alpha=0.3)
+        ax1.legend(fontsize=7.5, loc="lower right")
+
+        # Panel B: Loop-1 Gain Trade-off (K_tot_1 = 0.15, 0.25, 0.45 in 6-State)
+        ax2.plot(c10_6["trace"]["t_ms"], c10_6["trace"]["omega_in_deg_per_s"], "k--", lw=1.1, label="Step 10 deg/s")
+        ax2.plot(ck15["trace"]["t_ms"], ck15["trace"]["omega_out_deg_per_s"], color="#B7791F", lw=1.5, label=f"$K_{{\\mathrm{{tot}},1}}=0.15$ ($t_r={ck15['rise_time_10_90_ms']:.2f}$ ms)")
+        ax2.plot(c10_6["trace"]["t_ms"], c10_6["trace"]["omega_out_deg_per_s"], color="#0E6251", lw=1.6, label=f"$K_{{\\mathrm{{tot}},1}}=0.25$ ($t_r={c10_6['rise_time_10_90_ms']:.2f}$ ms)")
+        ax2.plot(ck45["trace"]["t_ms"], ck45["trace"]["omega_out_deg_per_s"], color="#1B365D", lw=1.5, label=f"$K_{{\\mathrm{{tot}},1}}=0.45$ ($t_r={ck45['rise_time_10_90_ms']:.2f}$ ms)")
+        ax2.set_xlim(-0.2, 1.8)
+        ax2.set_xlabel("Time Relative to Step [ms]")
+        ax2.set_ylabel("Output Rate $\\Omega_{\\mathrm{out}}$ [deg/s]")
+        ax2.set_title("DYN-01B: Official 6-State Loop-1 Gain Sweep ($K_{\\mathrm{tot},1}$)")
+        ax2.grid(True, alpha=0.3)
+        ax2.legend(fontsize=8, loc="lower right")
+
+        # Panel C: Sagnac Phase vs Closed-Loop Feedback Step (100 deg/s 6-State)
+        t_c = c100_6["trace"]["t_ms"]
+        ax3.plot(t_c, c100_6["trace"]["phi_sagnac_rad"], "k--", lw=1.2, label="Sagnac Phase $\\Delta\\phi_S(t)$ [rad]")
+        ax3.plot(t_c, c100_6["trace"]["delta_phi_step_rad"], color="#0E6251", lw=1.6, label="Feedback Phase $\\Delta\\phi_{\\mathrm{step}}(t)$ [rad]")
+        ax3.set_xlim(-0.2, 1.5)
+        ax3.set_xlabel("Time Relative to Step [ms]")
+        ax3.set_ylabel("Optical Phase [rad]")
+        ax3.set_title("DYN-01C: Sagnac vs Closed-Loop Feedback Phase (0->100 deg/s)")
+        ax3.grid(True, alpha=0.3)
+        ax3.legend(fontsize=8, loc="lower right")
+
+        # Panel D: Tracking Error Convergence (Log Magnitude)
+        for lbl, c_obj, col in (
+            ("10 deg/s (6-State)", c10_6, "#0E6251"),
+            ("100 deg/s (4-State)", c100_4, "#1B365D"),
+            ("100 deg/s (6-State)", c100_6, "#C53030"),
+        ):
+            tt = np.array(c_obj["trace"]["t_ms"])
+            ee = np.maximum(np.abs(c_obj["trace"]["tracking_err_deg_per_s"]), 1.0e-6)
+            m = tt >= 0.0
+            ax4.semilogy(tt[m], ee[m], color=col, lw=1.4, label=lbl)
+        ax4.set_xlim(0.0, 2.0)
+        ax4.set_xlabel("Time After Step [ms]")
+        ax4.set_ylabel("$|\\Omega_{\\mathrm{out}} - \\Omega_{\\mathrm{in}}|$ [deg/s]")
+        ax4.set_title("DYN-01D: Closed-Loop Step Tracking Error Convergence")
+        ax4.grid(True, which="both", alpha=0.3)
+        ax4.legend(fontsize=8)
+
+        fig.tight_layout()
+        fig.savefig(out, dpi=300)
+        plt.close(fig)
+        generated.append(out)
+
+    d2 = _load_json(rdir / "dyn02_freq_response.json")
+    if d2 is not None:
+        out = fdir / "dyn02_freq_response.png"
+        fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(9.6, 8.6), sharex=True, dpi=300)
+        m4, m6 = d2["four_state"], d2["six_state"]
+        f4, f6 = m4["freqs_Hz"], m6["freqs_Hz"]
+
+        ax1.semilogx(f4, m4["mag_dB"], "o-", color="#1B365D", lw=1.6, ms=4.5, label=f"4-State Meas (BW={m4['bw_3db_measured_Hz']:.0f} Hz)")
+        ax1.semilogx(f4, m4["theory_mag_dB"], "--", color="#1B365D", alpha=0.65, lw=1.2, label="4-State Analytical Z-Domain")
+        ax1.semilogx(f6, m6["mag_dB"], "s-", color="#0E6251", lw=1.6, ms=4.5, label=f"6-State Meas (BW={m6['bw_3db_measured_Hz']:.0f} Hz)")
+        ax1.semilogx(f6, m6["theory_mag_dB"], "--", color="#0E6251", alpha=0.65, lw=1.2, label="6-State Analytical Z-Domain")
+        ax1.axhline(-3.0, color="#C53030", ls=":", lw=1.2, label="-3 dB Bandwidth")
+        ax1.set_ylabel("Magnitude $|H(f)|$ [dB]")
+        ax1.set_title(f"DYN-02: Closed-Loop Bode Frequency Response (4-State vs Official 6-State, BW Ratio = {d2['bw_ratio_4state_to_6state']:.2f}x)")
+        ax1.grid(True, which="both", alpha=0.3)
+        ax1.legend(fontsize=8, ncol=2, loc="lower left")
+
+        ax2.semilogx(f4, m4["phase_deg"], "o-", color="#1B365D", lw=1.6, ms=4.5, label="4-State Meas Phase")
+        ax2.semilogx(f4, m4["theory_phase_deg"], "--", color="#1B365D", alpha=0.65, lw=1.2, label="4-State Analytical")
+        ax2.semilogx(f6, m6["phase_deg"], "s-", color="#0E6251", lw=1.6, ms=4.5, label="6-State Meas Phase")
+        ax2.semilogx(f6, m6["theory_phase_deg"], "--", color="#0E6251", alpha=0.65, lw=1.2, label="6-State Analytical")
+        ax2.axhline(-45.0, color="#718096", ls=":", lw=1.0, label="-45 deg Reference")
+        ax2.set_ylabel("Unwrapped Phase $\\angle H(f)$ [deg]")
+        ax2.grid(True, which="both", alpha=0.3)
+        ax2.legend(fontsize=8, ncol=2, loc="lower left")
+
+        ax3.semilogx(f4, m4["group_delay_us"], "o-", color="#1B365D", lw=1.5, ms=4.2, label=f"4-State ($\\tau_{{g,0}}={m4['low_freq_group_delay_us']:.1f}\\;\\mu$s)")
+        ax3.semilogx(f4, m4["theory_group_delay_us"], "--", color="#1B365D", alpha=0.65, lw=1.1, label="4-State Theory")
+        ax3.semilogx(f6, m6["group_delay_us"], "s-", color="#0E6251", lw=1.5, ms=4.2, label=f"6-State ($\\tau_{{g,0}}={m6['low_freq_group_delay_us']:.1f}\\;\\mu$s)")
+        ax3.semilogx(f6, m6["theory_group_delay_us"], "--", color="#0E6251", alpha=0.65, lw=1.1, label="6-State Theory")
+        ax3.set_xlabel("Input Rate Frequency $f$ [Hz]")
+        ax3.set_ylabel("Group Delay $\\tau_g(f)$ [$\\mu$s]")
+        ax3.grid(True, which="both", alpha=0.3)
+        ax3.legend(fontsize=8, ncol=2, loc="upper right")
+
+        fig.tight_layout()
+        fig.savefig(out, dpi=300)
+        plt.close(fig)
+        generated.append(out)
+
+    d3 = _load_json(rdir / "dyn03_output_psd.json")
+    if d3 is not None:
+        out = fdir / "dyn03_output_psd.png"
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.5, 4.4), dpi=300)
+        reg = d3["regimes"]
+        wl, f4, f6 = reg["white_linear"], reg["full_4state"], reg["full_6state"]
+        arw_ref = d3["analytical_white_ref"]
+
+        ax1.loglog(f4["freqs_Hz"], f4["psd_deg2_h2_per_Hz"], color="#C53030", lw=1.5, label="Full Impairments (4-State)")
+        ax1.loglog(f6["freqs_Hz"], f6["psd_deg2_h2_per_Hz"], color="#0E6251", lw=1.5, label=f"Full Impairments (6-State, -{d3['low_freq_6state_suppression_dB']:.1f} dB LF)")
+        ax1.loglog(wl["freqs_Hz"], wl["psd_deg2_h2_per_Hz"], color="#1B365D", lw=1.3, alpha=0.85, label="White-Noise Linear Floor")
+        ax1.axhline(
+            arw_ref["psd_white_deg2_h2_per_Hz"],
+            color="#2D3748",
+            ls="--",
+            lw=1.2,
+            label=f"Analytical EQ-15 ARW ({arw_ref['arw_analytical_deg_per_rt_h']:.5f} deg/$\\sqrt{{\\mathrm{{h}}}}$)",
+        )
+        ax1.set_xlabel("Frequency $f$ [Hz]")
+        ax1.set_ylabel("Output Rate PSD $S_\\Omega(f)$ [(deg/h)$^2$/Hz]")
+        ax1.set_title("DYN-03A: Broadband Output Angular-Rate PSD")
+        ax1.grid(True, which="both", alpha=0.3)
+        ax1.legend(fontsize=7.5, loc="lower left")
+
+        ax2.loglog(f4["freqs_Hz"], f4["asd_deg_h_per_rtHz"], color="#C53030", lw=1.4, label="ASD 4-State [deg/h/$\\sqrt{\\mathrm{Hz}}$]")
+        ax2.loglog(f6["freqs_Hz"], f6["asd_deg_h_per_rtHz"], color="#0E6251", lw=1.4, label="ASD 6-State [deg/h/$\\sqrt{\\mathrm{Hz}}$]")
+        ax2.set_ylim(min(f6["asd_deg_h_per_rtHz"]) * 0.4, max(f4["asd_deg_h_per_rtHz"]) * 4.5)
+        ax2_r = ax2.twinx()
+        ax2_r.semilogx(f4["freqs_Hz"], f4["cum_rms_deg_per_h"], "--", color="#9B2C2C", lw=1.3, label="Cum. RMS 4-State [deg/h]")
+        ax2_r.semilogx(f6["freqs_Hz"], f6["cum_rms_deg_per_h"], "--", color="#2B6CB0", lw=1.3, label="Cum. RMS 6-State [deg/h]")
+        ax2_r.set_ylim(-50.0, max(f4["cum_rms_deg_per_h"]) * 1.25)
+        ax2.set_xlabel("Frequency $f$ [Hz]")
+        ax2.set_ylabel("Output Rate ASD [deg/h/$\\sqrt{\\mathrm{Hz}}$]")
+        ax2_r.set_ylabel("Cumulative Integrated RMS Noise [deg/h]")
+        ax2.set_title("DYN-03B: Amplitude Spectral Density & Cumulative RMS Noise")
+        ax2.grid(True, which="both", alpha=0.3)
+        h1, l1 = ax2.get_legend_handles_labels()
+        h2, l2 = ax2_r.get_legend_handles_labels()
+        ax2.legend(h1 + h2, l1 + l2, fontsize=7.5, loc="upper left")
+
+        fig.tight_layout()
+        fig.savefig(out, dpi=300)
+        plt.close(fig)
+        generated.append(out)
+
+    d4 = _load_json(rdir / "dyn04_sine_electro_optic.json")
+    if d4 is not None:
+        out = fdir / "dyn04_sine_electro_optic.png"
+        fig, axes = plt.subplots(3, 2, figsize=(12.2, 9.6), dpi=300)
+        mac = d4["macro_trace"]
+        zm = d4["micro_zoom"]
+        t_ms = mac["t_ms"]
+
+        # Panel 1: Sinusoidal Input vs Output Angular Rate
+        ax = axes[0, 0]
+        ax.plot(t_ms, mac["omega_in_deg_per_s"], "k--", lw=1.2, label="Input $\\Omega_{\\mathrm{in}}(t)$")
+        ax.plot(t_ms, mac["omega_out_deg_per_s"], color="#0E6251", lw=1.5, label="Output $\\Omega_{\\mathrm{out}}(t)$")
+        ax.set_xlabel("Time [ms]")
+        ax.set_ylabel("Angular Rate [deg/s]")
+        ax.set_title(f"DYN-04A: Sine Rate ({d4['sine_amp_deg_per_s']:.0f} deg/s @ {d4['sine_freq_Hz']:.0f} Hz, THD={d4['output_thd_dB']:.1f} dB, SFDR={d4['output_sfdr_dB']:.1f} dB)")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=8)
+
+        # Panel 2: Sagnac Phase vs Closed-Loop Feedback Phase & Residual Error
+        ax = axes[0, 1]
+        ax.plot(t_ms, mac["phi_sagnac_rad"], "k--", lw=1.2, label="Sagnac $\\Delta\\phi_S(t)$ [rad]")
+        ax.plot(t_ms, mac["phi_feedback_rad"], color="#1B365D", lw=1.4, label="Feedback $\\Delta\\phi_{\\mathrm{fb}}(t)$ [rad]")
+        ax.set_ylim(-1.45, 1.85)
+        ax_r = ax.twinx()
+        ax_r.plot(t_ms, mac["phi_err_mrad"], color="#C53030", lw=1.1, alpha=0.85, label="Residual $\\Delta\\phi_{\\mathrm{err}}(t)$ [mrad]")
+        ax_r.set_ylim(-280.0, 360.0)
+        ax.set_xlabel("Time [ms]")
+        ax.set_ylabel("Sagnac & Feedback Phase [rad]")
+        ax_r.set_ylabel("Residual Phase Error [mrad]", color="#C53030")
+        ax.set_title(f"DYN-04B: Sagnac Phase ($\\pm${d4['peak_phi_sagnac_rad']:.3f} rad) & Residual Error")
+        ax.grid(True, alpha=0.3)
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax_r.get_legend_handles_labels()
+        ax.legend(h1 + h2, l1 + l2, fontsize=7.5, ncol=2, loc="upper center")
+
+        # Panel 3: MIOC Feedback Voltage V_fb_MIOC(t) & Total V_MIOC(t) (1 full cycle 0..4 ms showing zero-crossing reversal)
+        ax = axes[1, 0]
+        ax.plot(t_ms, mac["v_mioc_total_V"], color="#CBD5E0", lw=0.8, label="Total $V_{\\mathrm{MIOC}}(t)$ (Bias+FB)")
+        ax.plot(t_ms, mac["v_fb_mioc_V"], color="#1B365D", lw=1.1, label="Serrodyne $V_{\\mathrm{fb,MIOC}}(t)$")
+        ax.set_xlim(0.0, 4.0)
+        ax.set_ylim(-5.6, 6.2)
+        ax.set_xlabel("Time [ms] (1 Full Reversal Cycle)")
+        ax.set_ylabel("MIOC Voltage [V]")
+        ax.set_title(f"DYN-04C: MIOC Serrodyne Feedback $V_{{\\mathrm{{fb,MIOC}}}}(t)$ ({d4['flyback_count']} 2$\\pi$ Resets)")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=8, ncol=2, loc="upper center")
+
+        # Panel 4: Macro Photodiode Optical Power P_PD(t) & Frame-Demodulated PD Signal
+        ax = axes[1, 1]
+        ax.plot(t_ms, mac["p_pd_uW"], color="#2B6CB0", lw=0.8, alpha=0.65, label="$P_{\\mathrm{PD}}(t)$ [$\\mu$W]")
+        ax.set_ylim(min(mac["p_pd_uW"]) * 0.85, max(mac["p_pd_uW"]) * 1.25)
+        ax_r = ax.twinx()
+        ax_r.plot(mac["frame_t_ms"], mac["p_pd_demod_uW"], color="#C53030", lw=1.5, label="Demodulated $\\Delta P_{\\mathrm{PD}}(t)$ [$\\mu$W]")
+        p_dem_abs = max(abs(min(mac["p_pd_demod_uW"])), abs(max(mac["p_pd_demod_uW"])))
+        ax_r.set_ylim(-p_dem_abs * 1.35, p_dem_abs * 1.65)
+        ax.set_xlabel("Time [ms]")
+        ax.set_ylabel("PD Optical Power $P_{\\mathrm{PD}}$ [$\\mu$W]")
+        ax_r.set_ylabel("Demodulated $\\Delta P_{\\mathrm{PD}}$ [$\\mu$W]", color="#C53030")
+        ax.set_title(f"DYN-04D: Photodiode Output ($r(\\Delta P_{{\\mathrm{{PD}}}}, \\Delta\\phi_{{\\mathrm{{err}}}}) = {d4['pd_demod_to_phi_err_corr']:.4f}$)")
+        ax.grid(True, alpha=0.3)
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax_r.get_legend_handles_labels()
+        ax.legend(h1 + h2, l1 + l2, fontsize=7.5, ncol=2, loc="upper center")
+
+        # Panel 5: Sub-tau Micro Zoom — Total V_MIOC(t) & Pure Serrodyne V_fb_MIOC(t)
+        ax = axes[2, 0]
+        ax.plot(zm["t_us"], zm["v_mioc_total_V"], color="#1B365D", lw=1.3, label="Total $V_{\\mathrm{MIOC}}(t)$ [V]")
+        ax.plot(zm["t_us"], zm["v_fb_mioc_V"], "--", color="#C53030", lw=1.3, label="Pure $V_{\\mathrm{fb,MIOC}}(t)$ [V]")
+        ax.set_xlabel(f"Sub-$\\tau$ Zoom Time Offset from {zm['t_origin_ms']:.2f} ms [$\\mu$s]")
+        ax.set_ylabel("MIOC Drive Voltage [V]")
+        ax.set_title("DYN-04E: Sub-$\\tau$ Zoom — 6-State Bias + Serrodyne Ramp at Peak Rate")
+        ax.grid(True, alpha=0.3)
+        ax.legend(fontsize=8)
+
+        # Panel 6: Sub-tau Micro Zoom — Photodiode Power P_PD(t), TIA V_TIA(t) & ADC Blanking
+        ax = axes[2, 1]
+        ax.plot(zm["t_us"], zm["p_pd_uW"], color="#0E6251", lw=1.4, label="$P_{\\mathrm{PD}}(t)$ [$\\mu$W]")
+        ax_r = ax.twinx()
+        ax_r.plot(zm["t_us"], zm["v_tia_V"], "--", color="#B7791F", lw=1.2, label="$V_{\\mathrm{TIA}}(t)$ [V]")
+        blank = np.array(zm["in_blanking"]) > 0
+        ax.fill_between(zm["t_us"], 0, max(zm["p_pd_uW"]) * 1.05, where=blank, color="#A0AEC0", alpha=0.18, label="ADC Blanking Window")
+        ax.set_xlabel(f"Sub-$\\tau$ Zoom Time Offset from {zm['t_origin_ms']:.2f} ms [$\\mu$s]")
+        ax.set_ylabel("PD Optical Power [$\\mu$W]", color="#0E6251")
+        ax_r.set_ylabel("TIA Output Voltage [V]", color="#B7791F")
+        ax.set_title("DYN-04F: Sub-$\\tau$ Zoom — PD Power, TIA Output & ADC Blanking")
+        ax.grid(True, alpha=0.3)
+        h1, l1 = ax.get_legend_handles_labels()
+        h2, l2 = ax_r.get_legend_handles_labels()
+        ax.legend(h1 + h2, l1 + l2, fontsize=7.5, loc="upper right")
+
+        fig.tight_layout()
+        fig.savefig(out, dpi=300)
+        plt.close(fig)
+        generated.append(out)
+
+    return generated
+

@@ -3,12 +3,12 @@
 | Field | Value |
 | :--- | :--- |
 | **Specification** | `IFOG-SIM-SPEC-005` (v5.0) |
-| **Software Version** | `v2.1.0` |
+| **Software Version** | `v2.2.0` |
 | **Run Mode** | `all_scenarios` |
-| **Generated (UTC)** | `2026-11-25T16:39:18Z` |
+| **Generated (UTC)** | `2026-11-26T01:47:13Z` |
 | **Overall Status** | **PASS** |
-| **Data Directory** | `data/full_all_scenarios` |
-| **Report Directory** | `report/full_all_scenarios` |
+| **Data Directory** | `/home/antigravity/Duy-Huan/ifog-vproto/data/full_all_scenarios` |
+| **Report Directory** | `/home/antigravity/Duy-Huan/ifog-vproto/report/full_all_scenarios` |
 
 ## 1. Executive Gate & Run Status
 
@@ -30,6 +30,10 @@
 | ENG-03 — Vibration Rectification Error (VRE) & Magnetic Faraday Sensitivity / Mu-Metal Sizing | **PASS** | VRE=-3.486e-01 deg/h/g^2, Faraday=0.183 deg/h/G, Mu-metal=25.3 dB |
 | ENG-04 — Fault Injection & Real-Time FPGA BIT/FDIR Verification (5 Fault Modes) | **PASS** | 5/5 faults detected, max TTA=30.0 us, SEU FDIR recovered=True |
 | ENG-05 — Monte Carlo Production Yield (C_pk) & -40..+85 C Virtual Thermal Calibration | **PASS** | MC Yield=97.2% (N=500, Cpk=0.60), Cal Poly red=100.0% |
+| DYN-01 — Closed-Loop Step Response (10 & 100 deg/s, 4-State vs 6-State & K_tot_1 Sweep) | **PASS** | 10 deg/s 6s t_r=0.206 ms, 100 deg/s 6s t_r=0.294 ms, OS=0.00%, max SS err=0.0000% |
+| DYN-02 — Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay | **PASS** | 4s BW=2544 Hz (gd=65.2 us), 6s BW=1642 Hz (gd=103.3 us), ratio=1.55x |
+| DYN-03 — Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise | **PASS** | ARW=0.0004 deg/rt-h (ratio=0.97), 6s LF supp=29.2 dB, HF rolloff=-13.5 dB |
+| DYN-04 — Sinusoidal Rate Input & Full Electro-Optic Signal Chain (PD, V_fb MIOC, Sagnac Phase, TIA) | **PASS** | Gain=0.9889, Phase=-9.36 deg, THD=-67.5 dB, SFDR=43.6 dB, phi_S=1.180 rad, wraps=391, r(PD,phi_err)=0.9960 |
 
 ## 2. Tier 1 Offline Optical & Thermal Parameters
 
@@ -136,7 +140,42 @@
 - **Virtual Thermal Calibration CSV:** [`virtual_calibration_dataset.csv`](virtual_calibration_dataset.csv) (`21` operating points across `-40..+85 C`)
 - **Thermal Drift Compensation:** Raw RMS `326.33 deg/h` -> 2D Poly `0.0504 deg/h` (**`99.98%`**) | 4-State EKF `0.1704 deg/h` (**`99.95%`**)
 
-## 10. Diagnostic Figures (300-DPI)
+## 10. Group C — Closed-Loop Dynamic Response, Output PSD & Electro-Optic Probe (`DYN-01`..`DYN-04`)
+
+| Scenario ID | Characterization Scope | Key Quantitative Metrics | Status |
+| :--- | :--- | :--- | :---: |
+| `DYN-01` | Closed-Loop Step Response (10 & 100 deg/s, 4-State vs 6-State & K_tot_1 Sweep) | 10 deg/s 6s t_r=0.206 ms, 100 deg/s 6s t_r=0.294 ms, OS=0.00%, max SS err=0.0000% | **PASS** |
+| `DYN-02` | Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay | 4s BW=2544 Hz (gd=65.2 us), 6s BW=1642 Hz (gd=103.3 us), ratio=1.55x | **PASS** |
+| `DYN-03` | Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise | ARW=0.0004 deg/rt-h (ratio=0.97), 6s LF supp=29.2 dB, HF rolloff=-13.5 dB | **PASS** |
+| `DYN-04` | Sinusoidal Rate Input & Full Electro-Optic Signal Chain (PD, V_fb MIOC, Sagnac Phase, TIA) | Gain=0.9889, Phase=-9.36 deg, THD=-67.5 dB, SFDR=43.6 dB, phi_S=1.180 rad, wraps=391, r(PD,phi_err)=0.9960 | **PASS** |
+
+### DYN-01 — Closed-Loop Step Response Comparison Table
+
+| Step Case | DSP Mode | $K_{\text{tot},1}$ | Target [deg/s] | $t_d$ (50%) [ms] | $t_r$ (10–90%) [ms] | $t_s$ (2%) [ms] | Overshoot [%] | Steady-State Err [%] |
+| :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `step10_4state` | `4state` | `0.25` | `10` | `0.043` | `0.137` | `0.234` | `0.01` | `0.0000` |
+| `step10_6state` | `6state` | `0.25` | `10` | `0.092` | `0.206` | `0.381` | `0.01` | `0.0000` |
+| `step100_4state` | `4state` | `0.25` | `100` | `0.121` | `0.215` | `0.332` | `0.01` | `0.0000` |
+| `step100_6state` | `6state` | `0.25` | `100` | `0.151` | `0.294` | `0.498` | `0.00` | `0.0000` |
+| `step10_6state_k015` | `6state` | `0.15` | `10` | `0.121` | `0.382` | `0.704` | `0.00` | `0.0000` |
+| `step10_6state_k045` | `6state` | `0.45` | `10` | `0.033` | `0.118` | `0.175` | `0.02` | `0.0000` |
+
+### DYN-04 — Sinusoidal Input (`50 deg/s @ 250 Hz`) Internal Electro-Optic Signal Chain
+
+| Internal Physical Node | Measured Value | Units |
+| :--- | ---: | :--- |
+| Input Sagnac Phase Peak $\Delta\phi_{S,\max}$ | `1.1800` | rad |
+| Dynamic Residual Phase Error Peak $\Delta\phi_{\text{err},\max}$ | `216.19` | mrad |
+| MIOC Serrodyne Feedback Voltage Peak $|V_{\text{fb,MIOC}}|$ | `2.999` | V (391 wraps) |
+| Total MIOC Drive Voltage Peak $|V_{\text{MIOC}}|$ | `4.960` | V |
+| Photodiode Optical Power Range $P_{\text{PD}}$ | `[11.50, 37.35]` | uW |
+| Photodiode Photocurrent Peak $I_{\text{PD},\max}$ | `35.48` | uA |
+| TIA Output Voltage Peak $V_{\text{TIA},\max}$ | `1.777` | V |
+| Output Rate Tracking Gain / Phase Lag | `0.9889` / `-9.36 deg` | — |
+| Output Spectral Purity (THD / SFDR) | `-67.45` / `43.63` | dB |
+| Correlation $r(\Delta P_{\text{PD,demod}}, \Delta\phi_{\text{err}})$ | `0.9960` | — |
+
+## 11. Diagnostic Figures (300-DPI)
 
 ### Waveforms
 ![Waveforms](figures/waveforms.png)
@@ -185,3 +224,15 @@
 
 ### Eng05 Mc Yield Cal
 ![Eng05 Mc Yield Cal](figures/eng05_mc_yield_cal.png)
+
+### Dyn01 Step Response
+![Dyn01 Step Response](figures/dyn01_step_response.png)
+
+### Dyn02 Freq Response
+![Dyn02 Freq Response](figures/dyn02_freq_response.png)
+
+### Dyn03 Output Psd
+![Dyn03 Output Psd](figures/dyn03_output_psd.png)
+
+### Dyn04 Sine Electro Optic
+![Dyn04 Sine Electro Optic](figures/dyn04_sine_electro_optic.png)

@@ -25,7 +25,12 @@ from tier3_analysis.binary_io import compute_welch_psd, read_sim_records
 from viz.plot_avar_5regions import plot_avar_5regions
 from viz.plot_bunny_ears import plot_bunny_ears
 from viz.plot_psd_flicker import plot_psd_flicker
-from viz.plot_scenarios import plot_dsp6_compare, plot_eng_scenarios, plot_td_scenarios
+from viz.plot_scenarios import (
+    plot_dsp6_compare,
+    plot_dyn_scenarios,
+    plot_eng_scenarios,
+    plot_td_scenarios,
+)
 from viz.plot_waveforms import plot_waveforms
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -134,6 +139,15 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
             }
         )
 
+    for sc_id, sc in summary.get("dyn_scenarios", {}).items():
+        rows.append(
+            {
+                "gate": f"{sc_id} — {sc.get('title', sc_id)}",
+                "status": "PASS" if bool(sc.get("pass", False)) else "FAIL",
+                "detail": _summarize_scenario_detail(sc_id, sc),
+            }
+        )
+
     if not rows and summary.get("sim_summary") is not None:
         ss = summary["sim_summary"]
         detail = (
@@ -148,7 +162,7 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
-    """Build concise quantitative KPI summary string for TD-01..06 & ENG-01..05 rows."""
+    """Build concise quantitative KPI summary string for TD-01..06, ENG-01..05 & DYN-01..04 rows."""
     if sc_id == "TD-01":
         return f"t_s={sc['tia_ts_0p1pct_ns']:.1f} ns, k*_opt={sc['k_start_optimal_0p5pct']}, clean_err={sc['clean_window_max_err_pct']:.3f}%, ARW x{sc['arw_blanking_penalty_factor']:.3f}"
     if sc_id == "TD-02":
@@ -170,7 +184,19 @@ def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
     if sc_id == "ENG-04":
         max_tta = max(c["time_to_alert_us"] for c in sc["cases"])
         return f"5/5 faults detected, max TTA={max_tta:.1f} us, SEU FDIR recovered={sc['cases'][-1]['fdir_recovered']}"
-    return f"MC Yield={sc['monte_carlo']['yield_pct']:.1f}% (N={sc['monte_carlo']['n_runs']}, Cpk={sc['monte_carlo']['cpk_bias_1degh']:.2f}), Cal Poly red={sc['virtual_calibration']['poly_reduction_pct']:.1f}%"
+    if sc_id == "ENG-05":
+        return f"MC Yield={sc['monte_carlo']['yield_pct']:.1f}% (N={sc['monte_carlo']['n_runs']}, Cpk={sc['monte_carlo']['cpk_bias_1degh']:.2f}), Cal Poly red={sc['virtual_calibration']['poly_reduction_pct']:.1f}%"
+    if sc_id == "DYN-01":
+        c10_6 = sc["cases"]["step10_6state"]
+        c100_6 = sc["cases"]["step100_6state"]
+        return f"10 deg/s 6s t_r={c10_6['rise_time_10_90_ms']:.3f} ms, 100 deg/s 6s t_r={c100_6['rise_time_10_90_ms']:.3f} ms, OS={c100_6['overshoot_pct']:.2f}%, max SS err={sc['max_steady_state_err_pct']:.4f}%"
+    if sc_id == "DYN-02":
+        m4, m6 = sc["four_state"], sc["six_state"]
+        return f"4s BW={m4['bw_3db_measured_Hz']:.0f} Hz (gd={m4['low_freq_group_delay_us']:.1f} us), 6s BW={m6['bw_3db_measured_Hz']:.0f} Hz (gd={m6['low_freq_group_delay_us']:.1f} us), ratio={sc['bw_ratio_4state_to_6state']:.2f}x"
+    if sc_id == "DYN-03":
+        wl = sc["regimes"]["white_linear"]
+        return f"ARW={wl['measured_arw_deg_per_rt_h']:.4f} deg/rt-h (ratio={sc['arw_white_meas_to_theory_ratio']:.2f}), 6s LF supp={sc['low_freq_6state_suppression_dB']:.1f} dB, HF rolloff={wl['hf_rolloff_dB']:.1f} dB"
+    return f"Gain={sc['sine_tracking_gain']:.4f}, Phase={sc['sine_phase_lag_deg']:.2f} deg, THD={sc['output_thd_dB']:.1f} dB, SFDR={sc['output_sfdr_dB']:.1f} dB, phi_S={sc['peak_phi_sagnac_rad']:.3f} rad, wraps={sc['flyback_count']}, r(PD,phi_err)={sc['pd_demod_to_phi_err_corr']:.4f}"
 
 
 def _overall_status(gate_rows: list[dict[str, str]]) -> str:
@@ -422,8 +448,65 @@ def _build_markdown_report(
                 ]
             )
 
+    dyn_sc = summary.get("dyn_scenarios", {})
+    if dyn_sc:
+        lines.extend(
+            [
+                "## 10. Group C — Closed-Loop Dynamic Response, Output PSD & Electro-Optic Probe (`DYN-01`..`DYN-04`)",
+                "",
+                "| Scenario ID | Characterization Scope | Key Quantitative Metrics | Status |",
+                "| :--- | :--- | :--- | :---: |",
+            ]
+        )
+        for sc_id, sc in dyn_sc.items():
+            st = "PASS" if bool(sc.get("pass", False)) else "FAIL"
+            lines.append(
+                f"| `{sc_id}` | {sc.get('title', sc_id)} | {_summarize_scenario_detail(sc_id, sc)} | **{st}** |"
+            )
+        lines.append("")
+
+        d1 = dyn_sc.get("DYN-01")
+        if d1 is not None:
+            lines.extend(
+                [
+                    "### DYN-01 — Closed-Loop Step Response Comparison Table",
+                    "",
+                    "| Step Case | DSP Mode | $K_{\\text{tot},1}$ | Target [deg/s] | $t_d$ (50%) [ms] | $t_r$ (10–90%) [ms] | $t_s$ (2%) [ms] | Overshoot [%] | Steady-State Err [%] |",
+                    "| :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |",
+                ]
+            )
+            for c in d1["cases"].values():
+                lines.append(
+                    f"| `{c['label']}` | `{c['dsp_mode']}` | `{c['K_tot_1']:.2f}` | `{c['target_deg_per_s']:.0f}` "
+                    f"| `{c['delay_time_50_ms']:.3f}` | `{c['rise_time_10_90_ms']:.3f}` | `{c['settling_time_2pct_ms']:.3f}` "
+                    f"| `{c['overshoot_pct']:.2f}` | `{c['steady_state_err_pct']:.4f}` |"
+                )
+            lines.append("")
+
+        d4 = dyn_sc.get("DYN-04")
+        if d4 is not None:
+            lines.extend(
+                [
+                    "### DYN-04 — Sinusoidal Input (`50 deg/s @ 250 Hz`) Internal Electro-Optic Signal Chain",
+                    "",
+                    "| Internal Physical Node | Measured Value | Units |",
+                    "| :--- | ---: | :--- |",
+                    f"| Input Sagnac Phase Peak $\\Delta\\phi_{{S,\\max}}$ | `{d4['peak_phi_sagnac_rad']:.4f}` | rad |",
+                    f"| Dynamic Residual Phase Error Peak $\\Delta\\phi_{{\\text{{err}},\\max}}$ | `{d4['peak_phi_err_mrad']:.2f}` | mrad |",
+                    f"| MIOC Serrodyne Feedback Voltage Peak $|V_{{\\text{{fb,MIOC}}}}|$ | `{d4['v_fb_mioc_peak_V']:.3f}` | V ({d4['flyback_count']} wraps) |",
+                    f"| Total MIOC Drive Voltage Peak $|V_{{\\text{{MIOC}}}}|$ | `{d4['v_mioc_total_peak_V']:.3f}` | V |",
+                    f"| Photodiode Optical Power Range $P_{{\\text{{PD}}}}$ | `[{d4['p_pd_min_uW']:.2f}, {d4['p_pd_max_uW']:.2f}]` | uW |",
+                    f"| Photodiode Photocurrent Peak $I_{{\\text{{PD}},\\max}}$ | `{d4['i_pd_max_uA']:.2f}` | uA |",
+                    f"| TIA Output Voltage Peak $V_{{\\text{{TIA}},\\max}}$ | `{d4['v_tia_max_V']:.3f}` | V |",
+                    f"| Output Rate Tracking Gain / Phase Lag | `{d4['sine_tracking_gain']:.4f}` / `{d4['sine_phase_lag_deg']:.2f} deg` | — |",
+                    f"| Output Spectral Purity (THD / SFDR) | `{d4['output_thd_dB']:.2f}` / `{d4['output_sfdr_dB']:.2f}` | dB |",
+                    f"| Correlation $r(\\Delta P_{{\\text{{PD,demod}}}}, \\Delta\\phi_{{\\text{{err}}}})$ | `{d4['pd_demod_to_phi_err_corr']:.4f}` | — |",
+                    "",
+                ]
+            )
+
     if fig_rel_paths:
-        lines.extend(["## 10. Diagnostic Figures (300-DPI)", ""])
+        lines.extend(["## 11. Diagnostic Figures (300-DPI)", ""])
         for rel in fig_rel_paths:
             title = Path(rel).stem.replace("_", " ").title()
             lines.append(f"### {title}")
@@ -692,6 +775,118 @@ def _build_plotly_sections(rdir: Path, summary: dict[str, Any]) -> str:
     if eng_divs:
         sections.append("<h2>Interactive Telemetry — Group B: 5 System Engineering Scenarios (ENG-01..ENG-05)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in eng_divs))
 
+    # 4. Group C — 4 Dynamic Response, Output PSD & Electro-Optic Probe Scenarios (DYN-01..DYN-04)
+    dyn_sc = summary.get("dyn_scenarios", {})
+    dyn_divs: list[str] = []
+    if "DYN-01" in dyn_sc:
+        d = dyn_sc["DYN-01"]
+        c10_4 = d["cases"]["step10_4state"]
+        c10_6 = d["cases"]["step10_6state"]
+        c100_6 = d["cases"]["step100_6state"]
+        ck15 = d["cases"]["step10_6state_k015"]
+        ck45 = d["cases"]["step10_6state_k045"]
+        fig = make_subplots(
+            rows=1,
+            cols=2,
+            subplot_titles=("Closed-Loop Step (10 deg/s, 4s vs 6s & K_tot_1 Sweep)", "Sagnac vs Feedback Phase (0->100 deg/s, 6-State)"),
+        )
+        fig.add_trace(go.Scatter(x=c10_6["trace"]["t_ms"], y=c10_6["trace"]["omega_in_deg_per_s"], mode="lines", name="Command 10 deg/s", line={"color": "#2D3748", "dash": "dash"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=c10_4["trace"]["t_ms"], y=c10_4["trace"]["omega_out_deg_per_s"], mode="lines", name="4-State (K=0.25)", line={"color": "#1B365D"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=c10_6["trace"]["t_ms"], y=c10_6["trace"]["omega_out_deg_per_s"], mode="lines", name="6-State (K=0.25)", line={"color": "#0E6251"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=ck15["trace"]["t_ms"], y=ck15["trace"]["omega_out_deg_per_s"], mode="lines", name="6-State (K=0.15)", line={"color": "#B7791F", "dash": "dot"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=ck45["trace"]["t_ms"], y=ck45["trace"]["omega_out_deg_per_s"], mode="lines", name="6-State (K=0.45)", line={"color": "#2B6CB0", "dash": "dashdot"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=c100_6["trace"]["t_ms"], y=c100_6["trace"]["phi_sagnac_rad"], mode="lines", name="Sagnac Phase [rad]", line={"color": "#2D3748", "dash": "dash"}), row=1, col=2)
+        fig.add_trace(go.Scatter(x=c100_6["trace"]["t_ms"], y=c100_6["trace"]["delta_phi_step_rad"], mode="lines", name="Feedback Phase [rad]", line={"color": "#0E6251"}), row=1, col=2)
+        fig.update_xaxes(title_text="Time Relative to Step [ms]", range=[-0.2, 1.8], row=1, col=1)
+        fig.update_yaxes(title_text="Rate [deg/s]", row=1, col=1)
+        fig.update_xaxes(title_text="Time Relative to Step [ms]", range=[-0.2, 1.5], row=1, col=2)
+        fig.update_yaxes(title_text="Optical Phase [rad]", row=1, col=2)
+        fig.update_layout(title="DYN-01 — Closed-Loop Step Response & Loop-1 Gain Trade-Off")
+        dyn_divs.append(_plotly_div(fig, 400))
+
+    if "DYN-02" in dyn_sc:
+        d = dyn_sc["DYN-02"]
+        m4, m6 = d["four_state"], d["six_state"]
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            subplot_titles=(
+                f"Bode Magnitude [dB] (4s BW={m4['bw_3db_measured_Hz']:.0f} Hz, 6s BW={m6['bw_3db_measured_Hz']:.0f} Hz)",
+                f"Unwrapped Bode Phase [deg] (4s gd={m4['low_freq_group_delay_us']:.1f} us, 6s gd={m6['low_freq_group_delay_us']:.1f} us)",
+            ),
+        )
+        fig.add_trace(go.Scatter(x=m4["freqs_Hz"], y=m4["mag_dB"], mode="lines+markers", name="4-State Meas", line={"color": "#1B365D"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=m4["freqs_Hz"], y=m4["theory_mag_dB"], mode="lines", name="4-State Theory", line={"color": "#1B365D", "dash": "dash"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=m6["freqs_Hz"], y=m6["mag_dB"], mode="lines+markers", name="6-State Meas", line={"color": "#0E6251"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=m6["freqs_Hz"], y=m6["theory_mag_dB"], mode="lines", name="6-State Theory", line={"color": "#0E6251", "dash": "dash"}), row=1, col=1)
+        fig.add_hline(y=-3.0, line_dash="dot", line_color="#9B2C2C", row=1, col=1)
+        fig.add_trace(go.Scatter(x=m4["freqs_Hz"], y=m4["phase_deg"], mode="lines+markers", name="4-State Phase", line={"color": "#1B365D"}, showlegend=False), row=2, col=1)
+        fig.add_trace(go.Scatter(x=m4["freqs_Hz"], y=m4["theory_phase_deg"], mode="lines", name="4-State Phase Theory", line={"color": "#1B365D", "dash": "dash"}, showlegend=False), row=2, col=1)
+        fig.add_trace(go.Scatter(x=m6["freqs_Hz"], y=m6["phase_deg"], mode="lines+markers", name="6-State Phase", line={"color": "#0E6251"}, showlegend=False), row=2, col=1)
+        fig.add_trace(go.Scatter(x=m6["freqs_Hz"], y=m6["theory_phase_deg"], mode="lines", name="6-State Phase Theory", line={"color": "#0E6251", "dash": "dash"}, showlegend=False), row=2, col=1)
+        fig.update_xaxes(type="log", row=1, col=1)
+        fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=2, col=1)
+        fig.update_yaxes(title_text="Magnitude [dB]", row=1, col=1)
+        fig.update_yaxes(title_text="Phase [deg]", row=2, col=1)
+        fig.update_layout(title="DYN-02 — Full Closed-Loop Frequency Response (Bode Magnitude & Phase)")
+        dyn_divs.append(_plotly_div(fig, 520))
+
+    if "DYN-03" in dyn_sc:
+        d = dyn_sc["DYN-03"]
+        reg = d["regimes"]
+        wl, f4, f6 = reg["white_linear"], reg["full_4state"], reg["full_6state"]
+        arw_psd = d["analytical_white_ref"]["psd_white_deg2_h2_per_Hz"]
+        fig = make_subplots(rows=1, cols=2, subplot_titles=("Broadband Output Rate PSD [(deg/h)^2/Hz]", "Cumulative Integrated RMS Noise [deg/h]"))
+        fig.add_trace(go.Scatter(x=f4["freqs_Hz"], y=f4["psd_deg2_h2_per_Hz"], mode="lines", name="Full Impairments (4-State)", line={"color": "#9B2C2C"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=f6["freqs_Hz"], y=f6["psd_deg2_h2_per_Hz"], mode="lines", name="Full Impairments (6-State)", line={"color": "#0E6251"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=wl["freqs_Hz"], y=wl["psd_deg2_h2_per_Hz"], mode="lines", name="White Linear Floor", line={"color": "#1B365D"}), row=1, col=1)
+        fig.add_hline(y=arw_psd, line_dash="dash", line_color="#2D3748", row=1, col=1)
+        fig.add_trace(go.Scatter(x=f4["freqs_Hz"], y=f4["cum_rms_deg_per_h"], mode="lines", name="Cum RMS 4-State", line={"color": "#9B2C2C", "dash": "dash"}), row=1, col=2)
+        fig.add_trace(go.Scatter(x=f6["freqs_Hz"], y=f6["cum_rms_deg_per_h"], mode="lines", name="Cum RMS 6-State", line={"color": "#0E6251", "dash": "dash"}), row=1, col=2)
+        fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=1, col=1)
+        fig.update_yaxes(type="log", title_text="PSD [(deg/h)^2/Hz]", row=1, col=1)
+        fig.update_xaxes(type="log", title_text="Frequency [Hz]", row=1, col=2)
+        fig.update_yaxes(title_text="Cumulative RMS [deg/h]", row=1, col=2)
+        fig.update_layout(title=f"DYN-03 — Output Angular-Rate PSD & Cumulative Noise (6-State LF Suppression = +{d['low_freq_6state_suppression_dB']:.1f} dB)")
+        dyn_divs.append(_plotly_div(fig, 400))
+
+    if "DYN-04" in dyn_sc:
+        d = dyn_sc["DYN-04"]
+        mac = d["macro_trace"]
+        zm = d["micro_zoom"]
+        fig = make_subplots(
+            rows=2,
+            cols=2,
+            subplot_titles=(
+                f"Rate Tracking & Sagnac Phase (50 deg/s @ 250 Hz, THD={d['output_thd_dB']:.1f} dB)",
+                f"MIOC Serrodyne Feedback V_fb_MIOC ({d['flyback_count']} 2pi Resets)",
+                f"Macro Photodiode Power & Demodulated Delta_P_PD (r={d['pd_demod_to_phi_err_corr']:.4f})",
+                "Sub-tau Zoom: Photodiode P_PD [uW] & TIA Output V_TIA [V]",
+            ),
+        )
+        fig.add_trace(go.Scatter(x=mac["t_ms"], y=mac["omega_in_deg_per_s"], mode="lines", name="Omega_in [deg/s]", line={"color": "#2D3748", "dash": "dash"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=mac["t_ms"], y=mac["omega_out_deg_per_s"], mode="lines", name="Omega_out [deg/s]", line={"color": "#0E6251"}), row=1, col=1)
+        fig.add_trace(go.Scatter(x=mac["t_ms"], y=mac["v_mioc_total_V"], mode="lines", name="Total V_MIOC [V]", line={"color": "#CBD5E0"}), row=1, col=2)
+        fig.add_trace(go.Scatter(x=mac["t_ms"], y=mac["v_fb_mioc_V"], mode="lines", name="V_fb_MIOC [V]", line={"color": "#1B365D"}), row=1, col=2)
+        fig.add_trace(go.Scatter(x=mac["t_ms"], y=mac["p_pd_uW"], mode="lines", name="P_PD [uW]", line={"color": "#2B6CB0"}), row=2, col=1)
+        fig.add_trace(go.Scatter(x=mac["frame_t_ms"], y=mac["p_pd_demod_uW"], mode="lines", name="Demod Delta_P_PD [uW]", line={"color": "#9B2C2C"}), row=2, col=1)
+        fig.add_trace(go.Scatter(x=zm["t_us"], y=zm["p_pd_uW"], mode="lines", name="Zoom P_PD [uW]", line={"color": "#0E6251"}), row=2, col=2)
+        fig.add_trace(go.Scatter(x=zm["t_us"], y=[v * 20.0 for v in zm["v_tia_V"]], mode="lines", name="Zoom 20*V_TIA [scaled]", line={"color": "#B7791F", "dash": "dash"}), row=2, col=2)
+        fig.update_xaxes(title_text="Time [ms]", row=1, col=1)
+        fig.update_yaxes(title_text="Rate [deg/s]", row=1, col=1)
+        fig.update_xaxes(title_text="Time [ms]", row=1, col=2)
+        fig.update_yaxes(title_text="MIOC Voltage [V]", row=1, col=2)
+        fig.update_xaxes(title_text="Time [ms]", row=2, col=1)
+        fig.update_yaxes(title_text="Optical Power [uW]", row=2, col=1)
+        fig.update_xaxes(title_text="Sub-tau Zoom Offset [us]", row=2, col=2)
+        fig.update_yaxes(title_text="P_PD [uW] / 20*V_TIA", row=2, col=2)
+        fig.update_layout(title="DYN-04 — Sinusoidal Input Internal Electro-Optic Chain (Sagnac, V_fb MIOC, PD & TIA)")
+        dyn_divs.append(_plotly_div(fig, 580))
+
+    if dyn_divs:
+        sections.append("<h2>Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe (DYN-01..DYN-04)</h2>" + "".join(f"<div class='plot-card'>{d}</div>" for d in dyn_divs))
+
     return "".join(sections)
 
 
@@ -905,8 +1100,15 @@ def export_run_report(
         ("ENG-04", "eng04_fault_bit.json"),
         ("ENG-05", "eng05_mc_yield_cal.json"),
     )
+    dyn_files = (
+        ("DYN-01", "dyn01_step_response.json"),
+        ("DYN-02", "dyn02_freq_response.json"),
+        ("DYN-03", "dyn03_output_psd.json"),
+        ("DYN-04", "dyn04_sine_electro_optic.json"),
+    )
     td_loaded = {k: v for k, fname in td_files if (v := _load_optional_json(rdir / fname)) is not None}
     eng_loaded = {k: v for k, fname in eng_files if (v := _load_optional_json(rdir / fname)) is not None}
+    dyn_loaded = {k: v for k, fname in dyn_files if (v := _load_optional_json(rdir / fname)) is not None}
     dsp6_loaded = _load_optional_json(rdir / "dsp6_compare.json")
 
     summary: dict[str, Any] = {
@@ -924,6 +1126,7 @@ def export_run_report(
         "dsp6_compare": dsp6_loaded,
         "td_scenarios": td_loaded,
         "eng_scenarios": eng_loaded,
+        "dyn_scenarios": dyn_loaded,
         "generated_artifacts": [],
     }
 
@@ -972,6 +1175,10 @@ def export_run_report(
             fig_rel_paths.append(f"figures/{p.name}")
 
         for p in plot_eng_scenarios(rdir, fig_dir):
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append(f"figures/{p.name}")
+
+        for p in plot_dyn_scenarios(rdir, fig_dir):
             summary["generated_artifacts"].append(str(p))
             fig_rel_paths.append(f"figures/{p.name}")
 

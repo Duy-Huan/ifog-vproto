@@ -5,7 +5,7 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-SCEN-001` |
-| **Current Version** | `v2.1.0` |
+| **Current Version** | `v2.2.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) & [`spec/IFOG-SIM-SPEC-005.pdf`](../spec/IFOG-SIM-SPEC-005.pdf) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
@@ -16,69 +16,66 @@
 
 | Version | Release Date | Milestone / Gate | Affected Modules / Scope | Detailed Summary of Changes |
 | :--- | :--- | :--- | :--- | :--- |
-| `v2.0.0` | `2026-11-25` | `IFOG-SIM-SPEC-005` Official 6-State DSP & 11 Official Scenarios | `spec/IFOG-SIM-SPEC-005.*`, `configs/schema_v5.json`, `configs/baseline_1km_6state.json`, `tier2_sysc_ams/` (`digital_dsp_sc`, `imu_3axis`, `optical_envelope_tdf`, `analog_frontend_tdf`, `adc_dac_bridge`), `tier3_analysis/scenarios_time_domain.py`, `tier3_analysis/scenarios_engineering.py`, `tier3_analysis/sim_runner_cli.py`, `viz/plot_scenarios.py`, `viz/export_report.py`, `scripts/run_all_scenarios.sh` | Initial release of the Official Simulation Scenarios & 6-State Symmetric DSP specification manual covering Gate 5 (`EQ-31`–`EQ-34`), 6 Time-Domain scenarios (`TD-01`..`TD-06`), 5 System Engineering & Production scenarios (`ENG-01`..`ENG-05`, `EQ-35`–`EQ-41`), unified individual & batch CLI orchestration, and verified real-simulation benchmarks. |
+| `v2.0.0` | `2026-11-25` | `IFOG-SIM-SPEC-005` Official 6-State DSP & 11 Official Scenarios | `spec/IFOG-SIM-SPEC-005.*`, `configs/schema_v5.json`, `configs/baseline_1km_6state.json`, `tier2_sysc_ams/`, `tier3_analysis/scenarios_*.py`, `tier3_analysis/sim_runner_cli.py`, `viz/plot_scenarios.py`, `viz/export_report.py`, `scripts/run_all_scenarios.sh` | Initial release of the Official Simulation Scenarios & 6-State Symmetric DSP specification manual covering Gate 5 (`EQ-31`–`EQ-34`), 6 Time-Domain scenarios (`TD-01`..`TD-06`), 5 System Engineering & Production scenarios (`ENG-01`..`ENG-05`, `EQ-35`–`EQ-41`), unified individual & batch CLI orchestration, and verified real-simulation benchmarks. |
 | `v2.1.0` | `2026-11-25` | Full All-Scenarios Curated Example (`16/16` PASS) & 15-Chart Interactive Plotly HTML | `viz/export_report.py`, `examples/run_example.sh`, `examples/full_all_scenarios/`, `scripts/run_all_scenarios.sh`, `scripts/container_run.sh` | Added complete interactive Plotly HTML5 plotting (15 interactive charts) + full Markdown Gate 5 / TD / ENG tables in `viz/export_report.py`; upgraded `examples/run_example.sh`, `scripts/run_all_scenarios.sh`, and `scripts/container_run.sh example` to execute ALL 16 gates & scenarios (`MC=500`) by default and committed the full real output bundle in `examples/full_all_scenarios/`. |
+| `v2.2.0` | `2026-11-26` | Group C Dynamic Response, Output PSD & Electro-Optic Probe (`DYN-01`..`DYN-04`, `20/20` PASS) | `tier3_analysis/scenarios_dynamic_probe.py`, `tier3_analysis/sim_runner_cli.py`, `viz/plot_scenarios.py`, `viz/export_report.py`, `examples/full_all_scenarios/`, `tests/`, `docs/`, `skills/` | Added **Group C (`DYN-01`..`DYN-04`)**: dedicated multi-amplitude & gain-sweep closed-loop Step Response (`dyn_step_response`), full 15-pt Bode Magnitude/Phase/Group Delay Frequency Response (`dyn_freq_response`), broadband Output Rate PSD/ASD & Cumulative RMS Noise (`dyn_output_psd`), and Sinusoidal Angular-Rate Internal Electro-Optic Probe exposing Sagnac phase, $V_{\text{fb,MIOC}}$, total $V_{\text{MIOC}}$, Photodiode $P_{\text{PD}}/I_{\text{PD}}$, TIA $V_{\text{TIA}}$, and ADC blanking zoom (`dyn_sine_electro_optic`); expanded suite to **20 gates/scenarios**, **27 CLI modes**, **20 300-DPI PNGs**, and **19 interactive Plotly HTML5 charts**. |
 
 ---
 
 ## 1. Official Scenario Taxonomy & Execution Architecture
 
-Under **`IFOG-SIM-SPEC-005` (v5.0)**, `ifog-vproto` elevates its verification suite from the 4 foundational SPEC-004 acceptance gates to a complete **4-Layer Official Simulation Framework** organized cleanly by engineering domain:
+Under **`IFOG-SIM-SPEC-005` (v5.0)**, `ifog-vproto` organizes its verification suite into a complete **5-Layer Official Simulation Framework (20 Gates & Scenarios)** organized cleanly by engineering domain:
 
 1. **Core Acceptance Gates (`Gate 1` – `Gate 4`):** Baseline linear accuracy & continuous $2\pi$ flyback (`gate1`), Deadband & Bunny Ears mitigation (`gate2`), $1/f$ Flicker PSD & $100\text{ Hz}$ $\mathbf{K}$-matrix (`gate3`), and 60 s Fast-Scale + 10 h Slow-Scale Dual-Regime Overlapping AVAR (`gate4`), combined under `--mode full`.
 2. **Gate 5 — Official 6-State Symmetric DSP Benchmark (`dsp6_compare`):** Head-to-head quantitative validation of the official 6-state symmetric modulation/demodulation law (`EQ-31`–`EQ-34`, $\alpha^* = \pi/3$) against 4-state Lefèvre modulation under identical RAM, capacitive/resistive crosstalk, and MIOC quadratic nonlinearity.
-3. **Group A — 6 Time-Domain Verification Scenarios (`TD-01` .. `TD-06`, `--mode td_all`):** Exploits Tier 2's micro-trace (`micro_waveforms.bin`, 64 B) and cycle-accurate DSP register logger (`dsp_trace.bin`, 64 B) without modifying the underlying physical core to validate sub-$\tau$ switching transients, closed-loop step/Bode bandwidth, Loop-2 thermal $V_\pi$ shock, high-rate serrodyne dynamics + anti-windup, real-time Shupe shock + compensation, and quantization limit cycles + PRBS dither.
+3. **Group A — 6 Time-Domain Verification Scenarios (`TD-01` .. `TD-06`, `--mode td_all`):** Exploits Tier 2's micro-trace (`micro_waveforms.bin`, 64 B) and cycle-accurate DSP register logger (`dsp_trace.bin`, 64 B) to validate sub-$\tau$ switching transients, closed-loop step/Bode bandwidth, Loop-2 thermal $V_\pi$ shock, high-rate serrodyne dynamics + anti-windup, real-time Shupe shock + compensation, and quantization limit cycles + PRBS dither.
 4. **Group B — 5 System Engineering & Production Scenarios (`ENG-01` .. `ENG-05`, `--mode eng_all`):** Leverages the `-O3` compiled C++ SystemC-AMS virtual prototype for production hardware sizing (ENOB, aperture jitter, TIA/SLD Pareto), real concurrent 3-axis SystemC-AMS IMU crosstalk (`--imu3axis`), vibration rectification (VRE) + dynamic Faraday/Mu-metal sizing, 5-mode real-time FPGA BIT/FDIR fault injection, and parallel Monte Carlo production yield ($C_{pk}$) + $-40^\circ\text{C}..+85^\circ\text{C}$ virtual thermal calibration.
+5. **Group C — 4 Dynamic Characterization, Output PSD & Internal Electro-Optic Probe Scenarios (`DYN-01` .. `DYN-04`, `--mode dyn_all`):** Dedicated closed-loop control & electro-optic observability workflows: multi-amplitude/gain-sweep Step Response (`dyn_step_response`), full 15-point Bode Magnitude/Phase/Group Delay Frequency Response comparing 4-state & 6-state against half-frame Z-domain theory (`dyn_freq_response`), broadband Output Rate PSD/ASD & Cumulative RMS Noise vs analytical `EQ-15` ARW (`dyn_output_psd`), and Sinusoidal Angular-Rate Excitation (`50 deg/s @ 250 Hz`) probing Sagnac phase $\Delta\phi_S(t)$, feedback phase $\Delta\phi_{\text{fb}}(t)$, MIOC serrodyne voltage $V_{\text{fb,MIOC}}(t)$ & total $V_{\text{MIOC}}(t)$, Photodiode optical power $P_{\text{PD}}(t)$ / photocurrent $I_{\text{PD}}(t)$, TIA output $V_{\text{TIA}}(t)$, and sub-$\tau$ ADC blanking (`dyn_sine_electro_optic`).
 
 ```mermaid
 flowchart TB
     CLI["Unified CLI Entrypoints\n./scripts/run_sim.sh --mode <mode>\n./scripts/run_all_scenarios.sh"]
 
-    subgraph CORE["Core Gates (SPEC-004)"]
+    subgraph CORE["Core Gates + Gate 5"]
         G1["gate1..gate4 / full\n(Gates 1–4 + 10 h AVAR)"]
+        DSP6["dsp6_compare\n(Gate 5: 6-State EQ-31..34)"]
     end
 
-    subgraph G5["Gate 5 — Official 6-State DSP"]
-        DSP6["dsp6_compare\n(4-state vs 6-state EQ-31..34)"]
+    subgraph TDG["Group A — 6 Time-Domain (td_all)"]
+        TD1["td_blanking .. td_limit_cycles\n(TD-01 .. TD-06)"]
     end
 
-    subgraph TDG["Group A — 6 Time-Domain Scenarios (td_all)"]
-        TD1["td_blanking (TD-01)\nSub-tau & ADC Blanking"]
-        TD2["td_step_sine (TD-02)\nStep & -3 dB Bode BW"]
-        TD3["td_vpi_shock (TD-03)\nLoop-2 +5% V_pi Shock"]
-        TD4["td_high_rate (TD-04)\n300–700 deg/s & Anti-Windup"]
-        TD5["td_shupe_shock (TD-05)\nReal-Time Shupe & Filter"]
-        TD6["td_limit_cycles (TD-06)\nIdle Tones & PRBS Dither"]
+    subgraph ENGG["Group B — 5 System Eng. (eng_all)"]
+        E1["eng_hw_sizing .. eng_mc_yield_cal\n(ENG-01 .. ENG-05)"]
     end
 
-    subgraph ENGG["Group B — 5 System Engineering Scenarios (eng_all)"]
-        E1["eng_hw_sizing (ENG-01)\nENOB / Jitter / TIA-SLD"]
-        E2["eng_imu_3axis (ENG-02)\n3-Axis Shared-SLD IMU"]
-        E3["eng_vre_faraday (ENG-03)\nVRE & Faraday / Mu-Metal"]
-        E4["eng_fault_bit (ENG-04)\n5 Faults & FPGA BIT/FDIR"]
-        E5["eng_mc_yield_cal (ENG-05)\nMC Yield C_pk & -40..+85C Cal"]
+    subgraph DYNG["Group C — 4 Dynamic & Probe (dyn_all)"]
+        D1["dyn_step_response (DYN-01)\n10 & 100 deg/s + K_tot_1 Sweep"]
+        D2["dyn_freq_response (DYN-02)\nFull Bode Mag, Phase & Group Delay"]
+        D3["dyn_output_psd (DYN-03)\nBroadband Rate PSD, ASD & Cum RMS"]
+        D4["dyn_sine_electro_optic (DYN-04)\nSine Input -> PD, V_fb MIOC, Sagnac, TIA"]
     end
 
     CLI --> CORE
-    CLI --> G5
     CLI --> TDG
     CLI --> ENGG
+    CLI --> DYNG
 
-    CORE --> RPT["Automatic Reporting (viz/export_report.py)\nreport/<run_id>/{report.md, report.html, figures/*.png,\nmetrics_summary.json, virtual_calibration_dataset.csv}\n+ report/index.{md,html}"]
-    G5 --> RPT
+    CORE --> RPT["Automatic Reporting (viz/export_report.py)\nreport/<run_id>/{report.md, report.html (19 Plotly charts), figures/*.png (20 plots),\nmetrics_summary.json, virtual_calibration_dataset.csv} + report/index.{md,html}"]
     TDG --> RPT
     ENGG --> RPT
+    DYNG --> RPT
 ```
 
 ---
 
 ## 2. Official CLI Execution Matrix (Individual & Full-Suite Commands)
 
-Every single scenario can be run independently with one CLI command, by category group, or all together via `./scripts/run_all_scenarios.sh`. All runs automatically build `build/ifog_sim` (if absent) and export complete Markdown (`report.md`), interactive HTML (`report.html`), 300-DPI PNG figures, and JSON summaries under `report/<run_id>/`.
+Every single scenario can be run independently with one CLI command, by category group, or all 20 together via `./scripts/run_all_scenarios.sh` / `./examples/run_example.sh`. All runs automatically build `build/ifog_sim` (if absent) and export complete Markdown (`report.md`), interactive HTML5 Plotly (`report.html`), 300-DPI PNG figures, and JSON summaries under `report/<run_id>/`.
 
 | Scope | Scenario ID | CLI Mode (`--mode`) | Equations | Official Reproducible Command |
 | :--- | :--- | :--- | :--- | :--- |
-| **Complete Suite** | All Gates + 11 Scenarios | `all_scenarios` | `EQ-01`–`EQ-41` | `./scripts/run_all_scenarios.sh --run-id full_spec005 --mc-runs 500` |
+| **Complete Suite** | All 20 Gates & Scenarios | `all_scenarios` | `EQ-01`–`EQ-41` | `./scripts/run_all_scenarios.sh --run-id full_all_scenarios --mc-runs 500` |
 | **Core 4 Gates** | Gates 1–4 | `full` (`gate1`..`gate4`) | `EQ-01`–`EQ-30` | `./scripts/run_sim.sh --mode full --run-id core_4gates` |
 | **Gate 5 (6-State)** | `DSP-6` | `dsp6_compare` | `EQ-31`–`EQ-34` | `./scripts/run_sim.sh --mode dsp6_compare --run-id gate5_6state` |
 | **Group A (All TD)** | `TD-01`..`TD-06` | `td_all` | `EQ-09,16,19,21,31..34` | `./scripts/run_sim.sh --mode td_all --run-id td_suite` |
@@ -94,10 +91,15 @@ Every single scenario can be run independently with one CLI command, by category
 | **ENG Scenario 3** | `ENG-03` | `eng_vre_faraday` | `EQ-10,18,37,38` | `./scripts/run_sim.sh --mode eng_vre_faraday --run-id eng03` |
 | **ENG Scenario 4** | `ENG-04` | `eng_fault_bit` | `EQ-39` | `./scripts/run_sim.sh --mode eng_fault_bit --run-id eng04` |
 | **ENG Scenario 5** | `ENG-05` | `eng_mc_yield_cal` | `EQ-40,41` | `./scripts/run_sim.sh --mode eng_mc_yield_cal --run-id eng05 --mc-runs 500` |
+| **Group C (All DYN)** | `DYN-01`..`DYN-04` | `dyn_all` | `EQ-06..23,31..34` | `./scripts/run_sim.sh --mode dyn_all --run-id dyn_suite` |
+| **DYN Scenario 1** | `DYN-01` | `dyn_step_response` | `EQ-20,22,23,34` | `./scripts/run_sim.sh --mode dyn_step_response --run-id dyn01` |
+| **DYN Scenario 2** | `DYN-02` | `dyn_freq_response` | `EQ-22,23,34` | `./scripts/run_sim.sh --mode dyn_freq_response --run-id dyn02` |
+| **DYN Scenario 3** | `DYN-03` | `dyn_output_psd` | `EQ-15,19,26,33` | `./scripts/run_sim.sh --mode dyn_output_psd --run-id dyn03` |
+| **DYN Scenario 4** | `DYN-04` | `dyn_sine_electro_optic` | `EQ-06..19,21,31..34` | `./scripts/run_sim.sh --mode dyn_sine_electro_optic --run-id dyn04` |
 
 Additional CLI flags available across modes:
 - `--dsp-mode {2state,4state,6state}`: Override DSP modulation architecture from the command line (or pass `--cfg configs/baseline_1km_6state.json`).
-- `--mc-runs N`: Set Monte Carlo production population size for `eng_mc_yield_cal` / `eng_all` / `all_scenarios` (default `64`, production campaign `500`+).
+- `--mc-runs N`: Set Monte Carlo production population size for `eng_mc_yield_cal` / `eng_all` / `all_scenarios` (default `64` in CLI, `500` in `scripts/run_all_scenarios.sh`).
 - `--workers W`: Override parallel worker thread/process pool size.
 
 ---
@@ -212,11 +214,41 @@ All 6 scenarios operate directly on the unmodified Tier 2 physical core (`Optica
 
 ---
 
-## 6. Automated Reporting & Deliverable Contract (`report/`)
+## 6. Group C — 4 Dynamic Characterization, Output PSD & Internal Electro-Optic Probe Scenarios (`DYN-01` .. `DYN-04`)
 
-Every CLI invocation (`./scripts/run_sim.sh --mode <mode>` or `./scripts/run_all_scenarios.sh`) automatically produces:
-- `report/<run_id>/report.md`: Structured Markdown report with KPI tables, SPEC-005 gate/scenario statuses, and embedded figures.
-- `report/<run_id>/report.html`: Interactive HTML5 report with Plotly zoomable plots, status badges, 300-DPI gallery, and raw JSON telemetry inspector.
-- `report/<run_id>/figures/*.png`: 300-DPI diagnostic figures (`dsp6_compare.png`, `td01_blanking.png`..`td06_limit_cycles.png`, `eng01_hw_sizing.png`..`eng05_mc_yield_cal.png`).
-- `report/<run_id>/virtual_calibration_dataset.csv`: Clean CSV dataset (when `eng_mc_yield_cal`, `eng_all`, or `all_scenarios` is executed) ready for direct consumption by embedded calibration / EKF firmware teams.
+Implemented in [`tier3_analysis/scenarios_dynamic_probe.py`](../tier3_analysis/scenarios_dynamic_probe.py) and plotted in [`viz/plot_scenarios.py`](../viz/plot_scenarios.py) (`plot_dyn_scenarios()`), Group C provides dedicated, industrial-grade control-loop dynamic characterization and direct internal electro-optic node probing using genuine compiled Tier 2 C++ SystemC-AMS runs:
+
+### DYN-01 — Dedicated Closed-Loop Step Response (`--mode dyn_step_response`)
+- **Objective:** Characterize both small-signal linear ($0 \to 10^\circ/\text{s}$) and large-signal tactical ($0 \to 100^\circ/\text{s}$, $\Delta\phi_S = 2.36\text{ rad} > \pi/2$) closed-loop step transients comparing **4-State Lefèvre** vs **Official 6-State Symmetric DSP**, plus a Loop-1 gain trade-off sweep ($K_{\text{tot},1} \in \{0.15, 0.25, 0.45\}$ with Rule 11 $K_{\text{tot},2} \le 0.08\,K_{\text{tot},1}$ scaling).
+- **Signals & Metrics:** Delay time $t_d$ (50%), rise time $t_r$ (10%–90%), settling times $t_{s,2\%}$ & $t_{s,0.1\%}$, overshoot (%), steady-state error (%), tracking error convergence $|\Omega_{\text{out}}(t) - \Omega_{\text{in}}(t)|$, and Sagnac phase $\Delta\phi_S(t)$ vs closed-loop feedback phase step $\Delta\phi_{\text{step}}(t)$.
+- **Verified Measured Results:** `step10_4state` $t_r = 0.137\text{ ms}$; `step10_6state` $t_r = 0.206\text{ ms}$; `step100_4state` $t_r = 0.215\text{ ms}$; `step100_6state` $t_r = 0.294\text{ ms}$ (`0.00%` overshoot, `0.0000%` steady-state error); gain sweep monotonically accelerates rise time from `0.382 ms` ($K=0.15$) $\to$ `0.206 ms` ($K=0.25$) $\to$ `0.118 ms` ($K=0.45$) (**PASS**).
+
+### DYN-02 — Full Closed-Loop Frequency Response: Bode Magnitude, Phase & Group Delay (`--mode dyn_freq_response`)
+- **Objective:** Extract the complete complex frequency response $H_{\text{CL}}(j2\pi f)$ across **15 log-spaced sinusoidal tones from $20\text{ Hz}$ to $10\text{ kHz}$** for both 4-State and Official 6-State DSP, overlaid against the exact half-frame-centered Z-domain analytical model:
+  $$H_{\text{theory}}(f) = \frac{K_{\text{tot},1}}{1 - (1 - K_{\text{tot},1}) e^{-j 2\pi f T_f}}\,e^{-j \pi f T_f}, \qquad \tau_{g,0} = \left(\frac{1 - K_{\text{tot},1}}{K_{\text{tot},1}} + \frac{1}{2}\right) T_f$$
+- **Verified Measured Results:**
+  - **4-State ($T_f = 4\tau$):** $-3\text{ dB}$ BW = **`2,544 Hz`** (theory `2,354 Hz`), DC gain `-0.0003 dB`, low-freq group delay **`65.2 us`** (theory `68.6 us`).
+  - **Official 6-State ($T_f = 6\tau$):** $-3\text{ dB}$ BW = **`1,642 Hz`** (theory `1,569 Hz`), DC gain `-0.0006 dB`, low-freq group delay **`103.3 us`** (theory `102.8 us`, `0.5%` match); exact `1.55×` bandwidth ratio matching the $6/4$ frame period ratio (**PASS**).
+
+### DYN-03 — Broadband Output Angular-Rate PSD, ASD & Cumulative RMS Noise (`--mode dyn_output_psd`)
+- **Objective:** Measure stationary zero-rate closed-loop one-sided output rate **PSD** $S_\Omega(f)$ [$(\text{deg/h})^2/\text{Hz}$], **ASD** $\sqrt{S_\Omega(f)}$ [$\text{deg/h}/\sqrt{\text{Hz}}$], and cumulative integrated RMS noise $\sigma_{\text{cum}}(f) = \sqrt{\int_{f_{\min}}^f S_\Omega(\nu)\,d\nu}$ across **`3 Hz` – `25 kHz`**, comparing: (a) linear white-noise floor vs analytical `EQ-15`/`EQ-19` ARW reference $S_\Omega^{\text{white}} = 2(60 N)^2$, (b) full-impairment 4-State DSP, and (c) full-impairment Official 6-State DSP.
+- **Verified Measured Results:** White-noise floor ARW = **`0.000352 deg/rt-h`** vs analytical `EQ-15` **`0.000363 deg/rt-h`** (`0.970×` match); closed-loop high-frequency roll-off = **`-13.5 dB`**; Official 6-State suppresses low-frequency ($5\text{–}40\text{ Hz}$) $1/f$ crosstalk PSD by **`+29.2 dB`** vs 4-State (**PASS**).
+
+### DYN-04 — Sinusoidal Angular-Rate Input & Full Internal Electro-Optic Signal Chain (`--mode dyn_sine_electro_optic`)
+- **Objective:** Drive a real tactical sinusoidal angular rate $\Omega_{\text{in}}(t) = 50^\circ/\text{s}\cdot\sin(2\pi\cdot 250\text{ Hz}\cdot t)$ (`16 ms` = 4 exact cycles, with `8.2 ms` of full sub-$\tau$ `K=16` micro-waveform capture + cycle-accurate `dsp_trace.bin`) in Official 6-State DSP with full hardware effects enabled, exposing every physical node in the electro-optic loop:
+  1. **Macro Rate & Spectral Purity:** $\Omega_{\text{in}}(t)$ vs $\Omega_{\text{out}}(t)$, coherent gain, phase lag, **THD [dB]** & **SFDR [dB]**.
+  2. **Optical Sagnac & Feedback Phase:** Sagnac phase $\Delta\phi_S(t) = K_{\text{opt}}\Omega_{\text{in}}(t)$ ($\pm 1.180\text{ rad}$), closed-loop feedback phase $\Delta\phi_{\text{fb}}(t) = \Delta\phi_{\text{step}}(t)$, and quadrature residual phase error $\Delta\phi_{\text{err}}(t) = \Delta\phi_S(t) - \Delta\phi_{\text{step}}(t)$.
+  3. **MIOC Feedback Voltage:** Pure closed-loop serrodyne feedback ramp $V_{\text{fb,MIOC}}(t) = -(\phi_{\text{ramp}}(t)/\pi)\,V_{\pi,0}$ (displaying zero-crossing reversal & periodic $2\pi$ flyback resets) and total MIOC drive voltage $V_{\text{MIOC}}(t) = V_{\text{fb,MIOC}}(t) + V_{\text{bias}}(t)$.
+  4. **Photodiode & TIA Output (Macro + $60\ \mu\text{s}$ Sub-$\tau$ Zoom):** Photodiode optical power $P_{\text{PD}}(t)$ [$\mu\text{W}$], photocurrent $I_{\text{PD}}(t) = \mathcal{R} P_{\text{PD}}(t)$ [$\mu\text{A}$], 6-state frame-demodulated PD differential $\Delta P_{\text{PD}}(t)$, TIA output voltage $V_{\text{TIA}}(t)$ [V], and ADC blanking window alignment.
+- **Verified Measured Results:** Tracking gain = **`0.9889`**, phase lag = **`-9.36°`**, **THD = `-67.5 dB`**, **SFDR = `43.6 dB`**, $\Delta\phi_{S,\max} = \mathbf{1.1800\text{ rad}}$, $\Delta\phi_{\text{err},\max} = 216.2\text{ mrad}$, **`391`** serrodyne $2\pi$ resets ($|V_{\text{fb,MIOC}}| = 2.999\text{ V}$), $P_{\text{PD}} \in [11.5, 37.6]\ \mu\text{W}$, and correlation $r(\Delta P_{\text{PD,demod}}, \Delta\phi_{\text{err}}) = \mathbf{0.9960}$ (**PASS**).
+
+---
+
+## 7. Automated Reporting & Deliverable Contract (`report/`)
+
+Every CLI invocation (`./scripts/run_sim.sh --mode <mode>`, `./scripts/run_all_scenarios.sh`, or `./examples/run_example.sh`) automatically produces:
+- `report/<run_id>/report.md`: Structured Markdown report with 20-row executive scorecard, Core Gates 1–5, Group A `TD-01`..`TD-06`, Group B `ENG-01`..`ENG-05`, Group C `DYN-01`..`DYN-04` tables, and all 20 embedded 300-DPI figures.
+- `report/<run_id>/report.html`: Interactive HTML5 report with **19 multi-panel Plotly zoomable charts**, status badges, 20-figure 300-DPI gallery, and collapsible JSON telemetry inspector.
+- `report/<run_id>/figures/*.png`: Up to **20** 300-DPI diagnostic figures (`waveforms`, `bunny_ears`, `psd_flicker`, `avar_5regions`, `dsp6_compare`, `td01`..`td06`, `eng01`..`eng05`, `dyn01`..`dyn04`).
+- `report/<run_id>/virtual_calibration_dataset.csv`: Clean CSV dataset ready for direct embedded calibration / EKF firmware ingestion.
 - `report/index.md` & `report/index.html`: Automatically refreshed centralized index across all simulation runs.

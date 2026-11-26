@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [2.2.0] - 2026-11-26
+
+### Added
+- **Group C — Closed-Loop Dynamic Response, Broadband Output PSD & Internal Electro-Optic Probe Scenarios (`DYN-01`..`DYN-04`, `tier3_analysis/scenarios_dynamic_probe.py`):**
+  - `DYN-01` (`--mode dyn_step_response`): Dedicated multi-amplitude closed-loop step response (`0->10 deg/s` linear & `0->100 deg/s` large-signal tactical, 4-State vs Official 6-State DSP, plus $K_{\text{tot},1} \in \{0.15, 0.25, 0.45\}$ gain sweep) capturing $t_d, t_r, t_{s,2\%}, t_{s,0.1\%}$, overshoot, tracking error convergence, and Sagnac $\Delta\phi_S(t)$ vs closed-loop feedback $\Delta\phi_{\text{step}}(t)$.
+  - `DYN-02` (`--mode dyn_freq_response`): Full 15-point log-spaced (`20 Hz..10 kHz`) closed-loop Bode Magnitude [dB], unwrapped Phase [deg], and Group Delay [$\mu\text{s}$] sweep for both 4-State (`2,544 Hz`, $\tau_{g,0}=65.2\;\mu\text{s}$) and Official 6-State (`1,642 Hz`, $\tau_{g,0}=103.3\;\mu\text{s}$, $1.55\times$ ratio) overlaid with the exact half-frame-centered Z-domain analytical FRF.
+  - `DYN-03` (`--mode dyn_output_psd`): Stationary broadband output angular-rate PSD [$(\text{deg/h})^2/\text{Hz}$], ASD [$\text{deg/h}/\sqrt{\text{Hz}}$], analytical `EQ-15`/`EQ-19` ARW reference (`0.000363 deg/rt-h`, `0.97x` ratio), low-frequency $1/f$ suppression (`+29.2 dB` 6-State vs 4-State), high-frequency closed-loop roll-off (`-13.5 dB`), and cumulative integrated RMS rate noise.
+  - `DYN-04` (`--mode dyn_sine_electro_optic`): Real sinusoidal angular-rate excitation (`50 deg/s @ 250 Hz`, $\Delta\phi_{S,\max}=1.180\text{ rad}$, `THD=-67.5 dB`, `SFDR=43.6 dB`) probing all internal physical electro-optic nodes: $\Omega_{\text{in}}(t)$ vs $\Omega_{\text{out}}(t)$, Sagnac phase $\Delta\phi_S(t)$ vs feedback $\Delta\phi_{\text{fb}}(t)$ & residual $\Delta\phi_{\text{err}}(t)$, MIOC serrodyne feedback voltage $V_{\text{fb,MIOC}}(t)$ (`391` $2\pi$ resets) & total $V_{\text{MIOC}}(t)$, Photodiode optical power $P_{\text{PD}}(t)$ / photocurrent $I_{\text{PD}}(t)$ ($r(\Delta P_{\text{PD,demod}}, \Delta\phi_{\text{err}}) = 0.9960$), TIA voltage $V_{\text{TIA}}(t)$, and $60\;\mu\text{s}$ sub-$\tau$ ADC blanking zoom.
+- **5 New Official CLI Modes & Unified Plotting / Reporting:** Added `dyn_step_response`, `dyn_freq_response`, `dyn_output_psd`, `dyn_sine_electro_optic`, `dyn_all` (27 total CLI modes), 4 new 300-DPI figures (`plot_dyn_scenarios()`, 20 total figures), Section 10 Group C Markdown tables, 4 new multi-panel interactive HTML5 Plotly charts (19 total interactive Plotly charts), unit/coverage tests (`tests/unit/test_dyn_probe_scenarios_unit.py`), and real system test (`test_all_4_dynamic_probe_scenarios_system`).
+
+### Changed
+- Upgraded `mode == "all_scenarios"`, `scripts/run_all_scenarios.sh`, and `examples/run_example.sh` to execute all **20 official gates & scenarios** (Gates 1–5 + 6 TD + 5 ENG + 4 DYN) and refreshed `examples/full_all_scenarios/` with complete real 20/20 PASS outputs (`v2.2.0`).
+- Synchronized `pyproject.toml`, `Containerfile`, `Dockerfile`, `compose.yaml`, `scripts/container_run.sh`, `README.md`, `skills/`, and all `docs/*.{md,tex,pdf}` to `v2.2.0` per Rule 16.
+
 ## [2.1.0] - 2026-11-25
 
 ### Added

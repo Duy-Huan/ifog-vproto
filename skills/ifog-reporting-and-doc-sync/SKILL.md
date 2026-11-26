@@ -7,19 +7,20 @@ description: Auto-generated Markdown (.md) & Interactive HTML (.html) reporting 
 
 ## 1. Automated Report Generation (`viz/export_report.py` -> `report/`)
 - Every orchestrated simulation run (`scripts/run_sim.sh` / `scripts/run_all_scenarios.sh` / `examples/run_example.sh` / `ifog-sim-run`) writes raw artifacts into `data/<run_id>/` and automatically publishes reports into `report/<run_id>/`:
-  - `report/<run_id>/report.md` — Version-stamped Markdown report with Executive 16-row Pass/Fail table, Tier 1–3 KPIs, Dual-Regime 5-Region WLS, Gate 5 6-State DSP comparison, Group A `TD-01`..`TD-06`, Group B `ENG-01`..`ENG-05` (including 5-fault BIT/FDIR & Monte Carlo Yield / Thermal Cal tables), and all 16 embedded 300-DPI PNG figure links.
-  - `report/<run_id>/report.html` — Self-contained interactive HTML5 diagnostic report loading Plotly CDN once in `<head>` and rendering up to **15 interactive multi-panel Plotly charts** across Core Gates (2, 3, 4, 5), Group A (`TD-01`..`TD-06`), and Group B (`ENG-01`..`ENG-05`), plus the 16-plot 300-DPI PNG gallery and collapsible `metrics_summary.json` inspector.
-  - `report/<run_id>/metrics_summary.json`, `report/<run_id>/virtual_calibration_dataset.csv`, and `report/<run_id>/figures/*.png` (up to 16 plots).
+  - `report/<run_id>/report.md` — Version-stamped Markdown report with Executive 20-row Pass/Fail table, Tier 1–3 KPIs, Dual-Regime 5-Region WLS, Gate 5 6-State DSP comparison, Group A `TD-01`..`TD-06`, Group B `ENG-01`..`ENG-05` (5-fault BIT/FDIR & Monte Carlo Yield / Thermal Cal tables), **Group C `DYN-01`..`DYN-04`** (Step comparison & Sinusoidal Electro-Optic node table), and all 20 embedded 300-DPI PNG figure links.
+  - `report/<run_id>/report.html` — Self-contained interactive HTML5 diagnostic report loading Plotly CDN once in `<head>` and rendering up to **19 interactive multi-panel Plotly charts** across Core Gates (2, 3, 4, 5), Group A (`TD-01`..`TD-06`), Group B (`ENG-01`..`ENG-05`), and **Group C (`DYN-01`..`DYN-04`)**, plus the 20-plot 300-DPI PNG gallery and collapsible `metrics_summary.json` inspector.
+  - `report/<run_id>/metrics_summary.json`, `report/<run_id>/virtual_calibration_dataset.csv`, and `report/<run_id>/figures/*.png` (up to 20 plots).
   - `report/index.md` and `report/index.html` — Auto-refreshed dashboard listing all runs newest-first.
 - Spec §5.2 CLI contract (`python3 viz/export_report.py --run data/run01/ --format png,html`) remains 100% backward-compatible when `--report-dir` is omitted.
 - `.gitignore` ignores generated `report/*` runs while tracking `report/README.md`.
 
 ## 2. Unified Simulation Runner & All-Scenarios Example (`tier3_analysis/sim_runner_cli.py`, `scripts/`, `examples/`)
 - Core orchestration resides in `tier3_analysis/sim_runner_cli.py` (enforcing **100.0% Python line coverage**), wrapped by `scripts/run_sim.py`, `scripts/run_sim.sh`, `scripts/run_all_scenarios.sh`, `examples/run_example.sh`, and `ifog-sim-run`.
-- Supported 22 `--mode` workflows:
+- Supported **27 `--mode` workflows**:
   - Core SPEC-004: `single`, `gate1`..`gate4`, `full`, `sweep`
   - Gate 5 & Group A Time-Domain: `dsp6_compare`, `td_blanking`, `td_step_sine`, `td_vpi_shock`, `td_high_rate`, `td_shupe_shock`, `td_limit_cycles`, `td_all`
   - Group B System Engineering: `eng_hw_sizing`, `eng_imu_3axis`, `eng_vre_faraday`, `eng_fault_bit`, `eng_mc_yield_cal`, `eng_all`
+  - Group C Dynamic & Electro-Optic Probe: `dyn_step_response`, `dyn_freq_response`, `dyn_output_psd`, `dyn_sine_electro_optic`, `dyn_all`
   - Complete Official Suite: `all_scenarios` (default for `./scripts/run_all_scenarios.sh`, `./examples/run_example.sh`, and `./scripts/container_run.sh example`, with default `--mc-runs 500`).
 - `scripts/run_sim.sh` automatically compiles `build/ifog_sim` via CMake Release (`-O3`) if absent before invoking `scripts/run_sim.py`.
 

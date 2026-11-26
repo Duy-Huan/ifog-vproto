@@ -5,12 +5,28 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v2.1.0` |
+| **Current Version** | `v2.2.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0) & [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v2.2.0` (2026-11-26)
+
+### Highlights & New Capabilities
+1. **Group C — Dedicated Closed-Loop Dynamic Characterization, Broadband Output PSD & Internal Electro-Optic Probe (`DYN-01`..`DYN-04`):**
+   - **`DYN-01` (`--mode dyn_step_response`):** Multi-amplitude closed-loop step characterization ($0\to 10^\circ/\text{s}$ linear & $0\to 100^\circ/\text{s}$ large-signal tactical, 4-State vs Official 6-State DSP, plus $K_{\text{tot},1}\in\{0.15, 0.25, 0.45\}$ gain sweep) reporting $t_d, t_r, t_{s,2\%}, t_{s,0.1\%}$, overshoot (`0.00%`), tracking error convergence, and Sagnac $\Delta\phi_S(t)$ vs feedback $\Delta\phi_{\text{step}}(t)$.
+   - **`DYN-02` (`--mode dyn_freq_response`):** Full 15-point log-spaced (`20 Hz..10 kHz`) closed-loop Bode Magnitude [dB], unwrapped Phase [deg], and Group Delay [$\mu\text{s}$] comparing 4-State (`2,544 Hz`, $\tau_{g,0}=65.2\;\mu\text{s}$) and Official 6-State (`1,642 Hz`, $\tau_{g,0}=103.3\;\mu\text{s}$, $1.55\times$ ratio) against the exact half-frame-centered Z-domain analytical FRF.
+   - **`DYN-03` (`--mode dyn_output_psd`):** Stationary broadband output angular-rate PSD [$(\text{deg/h})^2/\text{Hz}$], ASD [$\text{deg/h}/\sqrt{\text{Hz}}$], and cumulative integrated RMS noise (`3 Hz..25 kHz`), validating the white-noise ARW floor (`0.000352` vs analytical `EQ-15` `0.000363 deg/rt-h`), high-frequency closed-loop roll-off (`-13.5 dB`), and Official 6-State low-frequency $1/f$ crosstalk suppression (`+29.2 dB` vs 4-State).
+   - **`DYN-04` (`--mode dyn_sine_electro_optic`):** Real sinusoidal angular-rate excitation (`50 deg/s @ 250 Hz`, $\Delta\phi_{S,\max}=1.1800\text{ rad}$, `THD=-67.5 dB`, `SFDR=43.6 dB`) exposing every internal physical node: $\Omega_{\text{in}}(t)$ vs $\Omega_{\text{out}}(t)$, Sagnac phase $\Delta\phi_S(t)$ vs feedback $\Delta\phi_{\text{fb}}(t)$ & quadrature residual $\Delta\phi_{\text{err}}(t)$, MIOC serrodyne voltage $V_{\text{fb,MIOC}}(t)$ (`391` $2\pi$ resets) & total $V_{\text{MIOC}}(t)$, Photodiode optical power $P_{\text{PD}}(t)$ / photocurrent $I_{\text{PD}}(t)$ & demodulated $\Delta P_{\text{PD}}(t)$ ($r = 0.9960$), TIA voltage $V_{\text{TIA}}(t)$, and $60\;\mu\text{s}$ sub-$\tau$ ADC blanking zoom.
+2. **20-Scenario Default Official Flow, 19-Chart Interactive HTML5 & Refreshed Curated Example (`examples/full_all_scenarios/`):**
+   - Expanded `sim_runner_cli.py` to **27 CLI modes** (`dyn_step_response`, `dyn_freq_response`, `dyn_output_psd`, `dyn_sine_electro_optic`, `dyn_all`), `viz/plot_scenarios.py` to **20 300-DPI PNG figures**, and `viz/export_report.py` to **Section 10 Group C Markdown tables** + **19 interactive multi-panel Plotly HTML5 charts**.
+   - Re-ran `./examples/run_example.sh --sync-example` end-to-end (`20 / 20` PASS, zero mocks / zero smoke tests) and committed the refreshed bundle in [`examples/full_all_scenarios/`](../examples/full_all_scenarios/README.md).
+3. **100.0% Dual Coverage, 9 Real System Tests & Rule 16 Sync:**
+   - Maintained **100.0% C++** (`gcovr`) and **100.0% Python** (`pytest-cov`) coverage, **41/41 verified formulas**, **9/9 real system tests** (including `test_all_4_dynamic_probe_scenarios_system`), and full Rule 16 version–document synchronization (`v2.2.0`).
 
 ---
 
