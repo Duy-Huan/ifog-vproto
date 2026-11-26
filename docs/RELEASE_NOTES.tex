@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v3.0.1}
+\newcommand{\DocVersion}{v4.0.0}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -47,37 +47,42 @@
 
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=9pt,bottom=9pt]
 {\color{white}\Large\bfseries \texttt{ifog-vproto} --- Official Release Notes}\\[3pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-006} v6.0 \quad|\quad Date: \DocDate}
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-007} v7.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
-\section{Release v3.0.1 (2026-11-26)}
+\section{Release v4.0.0 (2026-11-26)}
 
-\subsection{Key New Features}
+\subsection{Key New Features (\texttt{IFOG-SIM-SPEC-007} --- High-Fidelity Predictive Physics \& Inverse Calibration)}
 \begin{enumerate}
-    \item \textbf{Code-Audited Interactive HTML5 Mathematical Architecture Explorer (\texttt{viz/architecture\_explorer.py}):}
-    Generated standalone \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} (attached to Release \texttt{v3.0.1}) and automatic per-run \texttt{report/<run\_id>/architecture\_model.html} audited 1-to-1 against live C++/Python source code (\texttt{EQ-01}--\texttt{EQ-44}), with 4 interactive signal-flow highlight modes, non-specialist intuition, live run parameter strip, and formula-to-source audit table.
-    \item \textbf{Standardized Professional \texttt{.md} \& \texttt{.html} Reports with Full Theory \& Plain-Language Guides (\texttt{viz/report\_narratives.py}, \texttt{viz/export\_report.py}):}
-    Embedded standardized 3-part explanations beneath all \textbf{21 official diagnostic figures} in both Markdown (\texttt{report.md}) and KaTeX/Plotly HTML5 (\texttt{report.html}): (1) theoretical foundation \& exact \texttt{EQ-xx} equations, (2) plain-language reading guide for non-specialists, and (3) dynamically populated quantitative simulation proof, plus sticky quick-navigation bar and embedded interactive architecture diagram inside \texttt{report.html}.
-    \item \textbf{Regenerated Both Curated Examples \& 100.0\% Dual Coverage:}
-    Re-executed both \texttt{examples/full\_4gate\_baseline/} (\textbf{4 / 4 PASS}) and \texttt{examples/full\_all\_scenarios/} (\textbf{21 / 21 PASS}) with the standardized \texttt{v3.0.1} reporting suite and \texttt{architecture\_model.html}; verified \textbf{100.0\% C++} (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) and \textbf{100.0\% Python} coverage (including \texttt{viz/architecture\_explorer.py} and \texttt{viz/report\_narratives.py}), 44/44 verified formulas, 10/10 real system tests, and full Rule 16 doc sync.
+    \item \textbf{Normative Specification \texttt{IFOG-SIM-SPEC-007} v7.0 (\texttt{EQ-45}--\texttt{EQ-53}) \& Schema v6:}
+    Authored checksum-locked \texttt{spec/IFOG-SIM-SPEC-007.\{md,tex,pdf,sha256\}} (Quadruple Spec Lock preserving \texttt{SPEC-004/005/006}) and backward-compatible \texttt{configs/schema\_v6.json} + \texttt{configs/baseline\_1km\_spec007.json}; expanded CI formula traceability from 44 to \textbf{53 / 53 verified equations}.
+    \item \textbf{Tier 1 Discrete Coil Winding, Elasto-Optic Stress \& 6-Channel \texttt{shupe\_lut.bin} v2 (\texttt{EQ-45}--\texttt{EQ-49}):}
+    Added turn-by-turn Quadrupole/Octupole coil winding geometry (\texttt{PHY-01}: $-47.69\%$ octupole Shupe reduction), thermo-mechanical stress-optic drift, dynamic $K_{\text{opt}}(t)/V_{\text{eff}}(t)/\Delta\phi_{\text{pol}}(t)/V_\pi(t)$, and 56-byte \texttt{<7d} binary LUT v2 with transparent v1 fallback.
+    \item \textbf{Tier 2 Predictive Parasitics \& Live Tunable FMI 3.0 FMU (\texttt{EQ-50}--\texttt{EQ-52}, \texttt{VR 15..21}):}
+    Implemented 2nd-order $\text{LiNbO}_3$ MIOC electro-acoustic step dynamics before $K_{\text{delay}}$, capacitive + resistive PCB crosstalk ($C_{\text{xtalk}}\,dV/dt + G_{\text{xtalk}}V$), coherent Rayleigh/facet back-reflection phase noise, $O(1)$ LUT v2 interpolation, and \textbf{7 live tunable parasitic FMI 3.0 parameters (\texttt{VR 15..21})} in \texttt{build/ifog\_core.fmu} (22 SI variables, 0 XSD errors, bit-exact $0.00\times 10^0\text{ rad/s}$ Gate 6 equivalence).
+    \item \textbf{Tier 3 Anti-Double-Counting BI Stitching \& 3-Stage Bounded Inverse Calibration (\texttt{EQ-52}, \texttt{EQ-53}, \texttt{CAL-01}):}
+    Added \texttt{DualRegimeStitcher} quadrature BI subtraction and 3-stage bounded \texttt{InverseCalibrator} (\texttt{tier3\_analysis/inverse\_calibration.py}) with Gauss--Newton 95\% CI (\texttt{calibrated\_params.json}), reducing uncalibrated baseline error ($40$--$103\%$) to \textbf{$< 1\%$} across Static AVAR ($0.81\%$), Slow Rate Ramp Deadband ($0.91\%$), Thermal Bias ($0.29\%$), and Scale Factor ($0.04\%$) while recovering all 10 hidden parameters within $\le 2.18\%$ ($< 5\%$ target).
+    \item \textbf{Presentation-Grade Tier-by-Tier Mathematical Documentation \& 23/23 Curated Example:}
+    Embedded complete tier-by-tier mathematical formulations (\texttt{EQ-01}--\texttt{EQ-53}) in \texttt{IFOG\_VPROTO\_ARCHITECTURE.\{md,tex,pdf\}}, \texttt{IFOG\_ARCHITECTURE\_EXPLORER.html}, and every generated \texttt{report.md} / KaTeX \texttt{report.html}; regenerated \texttt{examples/full\_all\_scenarios/} (\textbf{23 / 23 PASS}, 23 300-DPI PNGs, \texttt{calibrated\_params.json}) at \textbf{100.0\% C++} ($2{,}329/2{,}329$ lines) \& \textbf{100.00\% Python} ($4{,}650/4{,}650$ stmts) coverage.
 \end{enumerate}
 
-\subsection{Verified Quality Gates \& Attached Release Assets}
+\subsection{Verified Quality Gates \& Attached Release Assets (20 Assets)}
 \begin{tabularx}{\textwidth}{@{}l X c@{}}
 \toprule
 \textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
 \midrule
-Triple Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004/005/006} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs + HTML explorer synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
-FMI 3.0 FMU Compliance (Gate 6) & 0 XSD errors; $0.00\times 10^0\text{ rad/s}$ equiv; 97.42\% deadband; 3.83\% AVAR overlap & \textcolor{TealDark}{\textbf{PASS}} \\
-Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% (\texttt{tier2} + \texttt{fmi\_wrapper}) \& Python \texttt{pytest-cov} 100.0\% & \textcolor{TealDark}{\textbf{PASS}} \\
-44-Formula \& Standardized Reports & 44 / 44 formulas + 21 annotated figures + both curated examples regenerated & \textcolor{TealDark}{\textbf{PASS}} \\
-Container Build \& In-Container FMU & Live \texttt{Containerfile} build from Git + in-container FMU validation \& 6-State report & \textcolor{TealDark}{\textbf{PASS}} \\
+Quadruple Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004..007} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs + HTML explorer synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
+\texttt{SPEC-007} Physics \& Calibration & \texttt{PHY-01} ($-47.7\%$ octupole, LUT v2, MIOC+xtalk); \texttt{CAL-01} ($40$--$103\% \to 0.04$--$0.91\% < 5\%$) & \textcolor{TealDark}{\textbf{PASS}} \\
+FMI 3.0 Tunable FMU (Gate 6 + \texttt{VR 15..21}) & 0 XSD errors; $0.00\times 10^0\text{ rad/s}$ equiv; live \texttt{VR 15..21} tuning; 3.83\% AVAR overlap & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% ($2{,}329/2{,}329$ lines) \& Python \texttt{pytest-cov} 100.00\% ($4{,}650/4{,}650$ stmts) & \textcolor{TealDark}{\textbf{PASS}} \\
+53-Formula \& 23-Scenario Suite & 53 / 53 formulas (\texttt{EQ-01}--\texttt{EQ-53}) + 23 / 23 PASS curated example + container CI & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
 
 \section{Previous Releases}
 
 \begin{itemize}
+    \item \textbf{Release v3.0.1 (2026-11-26):} Added code-audited interactive HTML5 mathematical architecture explorer (\texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} + per-run \texttt{architecture\_model.html}) and standardized 3-part theoretical/non-specialist explanations beneath all 21 plots in \texttt{report.md} and KaTeX/Plotly \texttt{report.html}.
     \item \textbf{Release v3.0.0 (2026-11-26):} Owner-authorized \texttt{IFOG-SIM-SPEC-006} v6.0 (44/44 verified formulas), standalone FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}, 75 C-API exports, 15 SI variables), FMPy Gate 6 orchestrator (0 XSD errors, $0.00\times 10^0\text{ rad/s}$ equivalence, 97.42\% deadband red., 3.83\% AVAR overlap), and 21/21 PASS curated example.
     \item \textbf{Release v2.2.0 (2026-11-26):} Added Group C dedicated dynamic \& internal electro-optic probe scenarios (\texttt{DYN-01} Step Response, \texttt{DYN-02} Full Bode Magnitude/Phase/Group Delay, \texttt{DYN-03} Broadband Output Rate PSD/ASD \& Cumulative RMS, \texttt{DYN-04} Sinusoidal Input Internal Chain \texttt{PD}, $V_{\text{fb,MIOC}}$, Sagnac phase, $V_{\text{TIA}}$, ADC blanking); 20/20 PASS curated example.
     \item \textbf{Release v2.1.0 (2026-11-25):} Upgraded \texttt{viz/export\_report.py} with 15 interactive Plotly HTML5 charts and full scenario Markdown tables; switched \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to all-scenarios default (\texttt{MC=500}); committed initial \texttt{examples/full\_all\_scenarios/} bundle.

@@ -5,13 +5,33 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v3.0.1` |
+| **Current Version** | `v4.0.0` |
 | **Status** | `RELEASED (Production Gate Verified)` |
-| **Normative Specification** | [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](../spec/IFOG-SIM-SPEC-006.pdf) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
+| **Normative Specification** | [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md) & [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf) (v7.0); [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) |
 | **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v4.0.0` (2026-11-26)
+
+### Highlights & New Capabilities
+1. **Owner-Authorized Specification Upgrade — `IFOG-SIM-SPEC-007` (v7.0, High-Fidelity Predictive Physics & Inverse Calibration):**
+   - Authored checksum-locked [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md), [`spec/IFOG-SIM-SPEC-007.tex`](../spec/IFOG-SIM-SPEC-007.tex), 3-pass LuaLaTeX [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf), and [`spec/IFOG-SIM-SPEC-007.sha256`](../spec/IFOG-SIM-SPEC-007.sha256) (Quadruple Spec Lock preserving `SPEC-004/005/006` untouched) plus backward-compatible [`configs/schema_v6.json`](../configs/schema_v6.json) & [`configs/baseline_1km_spec007.json`](../configs/baseline_1km_spec007.json).
+   - Expanded CI per-formula verification matrix from 44 to **53 / 53 independent equations (`EQ-01` .. `EQ-53`)**.
+2. **Tier 1 Discrete Winding, Thermo-Mechanical Stress & Multi-Column `shupe_lut.bin` v2 (`EQ-45`..`EQ-49`):**
+   - Implemented turn-by-turn **Quadrupole / Octupole** coil winding coordinate mapping (`build_winding_map`, achieving **`-47.69%`** octupole Shupe reduction in `PHY-01`), thermo-mechanical elasto-optic stress-optic drift, dynamic thermal scale-factor drift $K_{\text{opt}}(t)$ (`85.6 ppm`), dynamic $V_{\text{eff}}(t)/\Delta\phi_{\text{pol}}(t)/V_\pi(t)$, and 6-channel binary `shupe_lut.bin` v2 (`24 B` header + `56 B <7d` records) with zero-error roundtrip and automatic v1 fallback.
+3. **Tier 2 Parasitic Physics & Live Tunable FMI 3.0 FMU (`EQ-50`..`EQ-52`, `VR 15..21`):**
+   - Implemented 2nd-order $\text{LiNbO}_3$ MIOC electro-acoustic step dynamics before $K_{\text{delay}}$, capacitive + resistive PCB crosstalk $C_{\text{xtalk}}\,dV/dt + G_{\text{xtalk}}V$ (exact reduction to `SPEC-004` when $C_{\text{xtalk}}=0$), coherent Rayleigh/facet back-reflection phase noise, and $O(1)$ LUT v2 interpolation.
+   - Added **7 live tunable FMI 3.0 parasitic parameters (`VR 15..21`)** to `build/ifog_core.fmu` (22 SI variables total, 0 `fmpy.validation.validate_fmu` errors) while keeping `0.00e+00 rad/s` bit-exact Gate 6 equivalence with `ifog_sim`.
+4. **Tier 3 Anti-Double-Counting BI Stitching & Automated 3-Stage Bounded Inverse Calibration (`EQ-52`, `EQ-53`, `CAL-01`):**
+   - Added `DualRegimeStitcher` quadrature BI subtraction ($B_{\text{T3,mech}} = \sqrt{\max(0, B_{\text{total}}^2 - B_{\text{T2,meas}}^2)}$) and 3-stage bounded `InverseCalibrator` (`tier3_analysis/inverse_calibration.py`) with Gauss–Newton 95% CI (`calibrated_params.json`).
+   - Verified `CAL-01` cuts uncalibrated prediction error (`40–103%`) down to **`< 1%`** (`AVAR 0.81%`, `Deadband 0.91%`, `Thermal Bias 0.29%`, `Scale Factor 0.04%`), recovering all 10 hidden parasitic parameters within **`<= 2.18%`** (`< 5%` target).
+5. **Presentation-Grade Tier-by-Tier Mathematical Documentation, 23/23 Curated Example & 100.0% Dual Coverage:**
+   - Added complete tier-by-tier mathematical formulations (`EQ-01`..`EQ-53`) in `docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}`, `docs/IFOG_ARCHITECTURE_EXPLORER.html`, and every generated `report.md` / KaTeX `report.html`.
+   - Re-ran `./examples/run_example.sh --sync-example` (`23 / 23` PASS, **23 300-DPI PNGs**, `calibrated_params.json`), verified **100.0% C++** (`2,329/2,329` lines, `211/211` functions) and **100.00% Python** (`4,650/4,650` statements) coverage, added 10th skill `skills/ifog-spec007-physics-calibration/`, and shipped **20 verified release assets**.
 
 ---
 

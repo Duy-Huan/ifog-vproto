@@ -21,10 +21,12 @@ import numpy as np
 
 from tier1_offline.config_loader import (
     C_LIGHT,
+    compute_backscatter_sigma_rad,
     compute_delta_nu_eff,
     compute_k_opt,
     compute_kerr_phase,
     compute_tau,
+    get_spec007_physics,
     load_config,
 )
 
@@ -226,8 +228,21 @@ def solve_tier1_optics(cfg: dict[str, Any]) -> dict[str, Any]:
         eta_coh=float(opt["eta_coh"]),
     )
 
+    sp7 = get_spec007_physics(cfg)
+    l_coherence_m = C_LIGHT / delta_nu_eff
+    sigma_phi_back = (
+        compute_backscatter_sigma_rad(
+            R_facet_dB=float(sp7["R_facet_dB"]),
+            alpha_R_per_m=float(sp7["alpha_R_per_m"]),
+            S_capture=float(sp7["S_capture"]),
+            delta_nu_eff_Hz=delta_nu_eff,
+        )
+        if sp7["en_spec007_physics"]
+        else 0.0
+    )
+
     return {
-        "spec_id": "IFOG-SIM-SPEC-004",
+        "spec_id": str(cfg["meta"].get("spec_id", "IFOG-SIM-SPEC-004")),
         "seed": seed,
         "visibility_V": visibility,
         "phi_pol_rad": phi_pol,
@@ -237,6 +252,8 @@ def solve_tier1_optics(cfg: dict[str, Any]) -> dict[str, Any]:
         "tau_s": tau_s,
         "f_eigen_Hz": 1.0 / (2.0 * tau_s),
         "delta_nu_eff_Hz": delta_nu_eff,
+        "L_coherence_m": l_coherence_m,
+        "sigma_phi_back_rad": sigma_phi_back,
         "delta_phi_kerr_rad": delta_phi_kerr,
         "n_spec": int(opt["n_spec"]),
         "m_segments": int(opt["m_segments"]),

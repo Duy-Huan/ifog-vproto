@@ -56,7 +56,7 @@ constexpr uint32_t BIT_MASK_ADC_SAT = 1u << 3;
 constexpr uint32_t BIT_MASK_DSP_SEU = 1u << 4;
 constexpr uint32_t BIT_MASK_ANTI_WINDUP = 1u << 5;
 
-// Optional zero-overhead external FMI 3.0 ZOH drive & live tunable parameter state (SPEC-006)
+// Optional zero-overhead external FMI 3.0 ZOH drive & live tunable parameter state (SPEC-006/007)
 struct ExternalDriveState {
     bool use_external_omega = false;
     double omega_in_rad_per_s = 0.0;
@@ -66,6 +66,15 @@ struct ExternalDriveState {
     double eps_vpi_live = 0.02;
     double k_xtalk_live_A_per_V = 1.0e-8;
     bool enable_dither_live = true;
+    // SPEC-007 FMI 3.0 tunable physical & calibration parameters (VR 15..21)
+    bool use_spec007_live = false;
+    double C_xtalk_F_live = 0.0;
+    double G_xtalk_S_live = 1.0e-8;
+    double c_pink_coeff_live = 1.0;
+    double R_facet_dB_live = -200.0;
+    double alpha_vpi_ppm_K_live = 0.0;
+    double alpha_bobbin_ppm_K_live = 0.0;
+    double delta_z_quad_m_live = 0.002;
 };
 
 // Optional micro-sample waveform diagnostic record (64 bytes, local window dump for plot_waveforms.py)
@@ -151,6 +160,53 @@ enum class FaultType {
 struct ShupeSample {
     double t_s;
     double delta_phi_rad;
+};
+
+// SPEC-007 EQ-49: 56-byte binary LUT v2 record (<7d)
+#pragma pack(push, 1)
+struct ShupeLutRecordV2 {
+    double t_s = 0.0;
+    double delta_phi_shupe_rad = 0.0;
+    double delta_phi_stress_rad = 0.0;
+    double visibility_V_t = 1.0;
+    double phi_pol_rad_t = 0.0;
+    double v_pi_V_t = 0.0;
+    double k_opt_scale_rel_t = 1.0;
+};
+#pragma pack(pop)
+
+static_assert(sizeof(ShupeLutRecordV2) == 56, "ShupeLutRecordV2 must be exactly 56 bytes per SPEC-007 EQ-49");
+
+// Optional SPEC-007 high-fidelity predictive physics configuration (defaults to zero/ideal for v4/v5)
+struct Spec007PhysicsConfig {
+    bool en_spec007_physics = false;
+    int lut_version = 1;
+    std::string winding_pattern = "quadrupole";
+    int n_turns = 3200;
+    int n_layers = 32;
+    double flange_offset_m = 0.0;
+    double C_eo_per_Pa = 0.0;
+    double stress_rate_Pa_per_K = 0.0;
+    double alpha_bobbin_ppm_K = 0.0;
+    double alpha_lambda_pm_K = 0.0;
+    double kappa_back_m_per_W = 0.0;
+    double P_back_W = 0.0;
+    double beta_V_per_K = 0.0;
+    double gamma_pol_rad_per_K = 0.0;
+    double alpha_vpi_ppm_K = 0.0;
+    double delta_T_sld_ratio = 0.0;
+    double delta_T_mioc_ratio = 0.0;
+    double C_xtalk_F = 0.0;
+    double G_xtalk_S = 0.0;
+    double R_facet_dB = -200.0;
+    double alpha_R_per_m = 0.0;
+    double S_capture = 0.0;
+    double tau_env_s = 1.0;
+    double sigma_theta_env_rad = 0.0;
+    double mioc_f_elec_Hz = 0.0;
+    double mioc_f_acoustic_Hz = 0.0;
+    double mioc_zeta_acoustic = 0.1;
+    double mioc_g_acoustic = 0.0;
 };
 
 struct IfogConfig {
@@ -289,8 +345,13 @@ struct IfogConfig {
     double imu_r_load_ohm = 50.0;
     double imu_c_load_F = 200.0e-12;
 
-    // Optional Shupe LUT loaded from shupe_lut.bin
+    // Optional Shupe LUT loaded from shupe_lut.bin (v1 or v2)
     std::vector<ShupeSample> shupe_lut;
+    std::vector<ShupeLutRecordV2> shupe_lut_v2;
+    uint32_t shupe_lut_version = 1u;
+
+    // Optional SPEC-007 high-fidelity predictive physics parameters
+    Spec007PhysicsConfig spec007;
 };
 
 struct SimSummary {

@@ -143,6 +143,40 @@ run_cfg("imu_3axis_cov", {
     "simulation": {"duration_s": 0.005, "decimation_tau": 6, "dump_micro_ms": 0.0},
 }, extra_args=["--imu3axis"])
 
+# (h2) SPEC-007 full predictive physics + LUT v2 (MIOC acoustic, capacitive xtalk, Rayleigh backscatter)
+from tier1_offline.shupe_thermal import write_shupe_lut_v2
+import numpy as np
+shupe_v2 = work / "shupe_lut_v2.bin"
+write_shupe_lut_v2(
+    shupe_v2,
+    np.array([0.0, 0.01]),
+    np.array([0.0, 1e-7]),
+    np.array([0.0, 2e-8]),
+    np.array([0.999, 0.998]),
+    np.array([0.0, 1e-8]),
+    np.array([3.0, 3.01]),
+    np.array([1.0, 1.0001]),
+)
+run_cfg("spec007_full_cov", {
+    "ablation_flags": {"en_shupe": True, "en_xtalk": True},
+    "spec007_physics": {
+        "en_spec007_physics": True,
+        "lut_version": 2,
+        "C_xtalk_F": 3.0e-12,
+        "G_xtalk_S": 1.5e-8,
+        "R_facet_dB": -60.0,
+        "alpha_R_per_m": 4.5e-5,
+        "S_capture": 1.5e-3,
+        "tau_env_s": 0.5,
+        "sigma_theta_env_rad": 0.15,
+        "mioc_f_elec_Hz": 15.0e6,
+        "mioc_f_acoustic_Hz": 3.5e6,
+        "mioc_zeta_acoustic": 0.08,
+        "mioc_g_acoustic": 0.05,
+    },
+    "simulation": {"duration_s": 0.003, "decimation_tau": 1, "dump_micro_ms": 0.02},
+}, extra_args=["--shupe", str(shupe_v2)])
+
 # (i) Negative validation & CLI error branches in ifog_config.cpp / main.cpp / digital_dsp_sc.cpp
 run_cfg("bad_dsp_mode", {"dsp": {"mode": "8state"}}, expect_fail=True)
 run_cfg("bad_sine_target", {"noise": {"sine_inject_target": "bogus"}}, expect_fail=True)

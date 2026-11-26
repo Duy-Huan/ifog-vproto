@@ -13,8 +13,12 @@ IfogConfig load_ifog_config(
     const std::string& shupe_lut_path = ""
 );
 
-// Load binary shupe_lut.bin written by tier1_offline/shupe_thermal.py
+// Load binary shupe_lut.bin written by tier1_offline/shupe_thermal.py (v1 or v2 auto-detected)
 std::vector<ShupeSample> load_shupe_lut(const std::string& lut_path);
+std::vector<ShupeLutRecordV2> load_shupe_lut_v2(
+    const std::string& lut_path,
+    uint32_t* detected_version = nullptr
+);
 
 // Validate stability & physical bounds (Rule 11 fail-closed)
 void validate_ifog_config(const IfogConfig& cfg);

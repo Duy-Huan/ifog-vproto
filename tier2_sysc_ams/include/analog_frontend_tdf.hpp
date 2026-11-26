@@ -55,6 +55,8 @@ private:
     FastRng rng_;
     uint64_t cluster_idx_;
     uint64_t clip_count_;
+    double v_drv_prev_;
+    bool has_v_drv_prev_;
     MicroTraceCollector* micro_trace_;
     const ExternalDriveState* ext_drive_;
 };

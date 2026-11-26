@@ -33,11 +33,17 @@ from viz.plot_scenarios import (
     plot_fmi_gate,
     plot_td_scenarios,
 )
+from viz.plot_spec007_calibration import (
+    plot_spec007_calibration_validation,
+    plot_spec007_physics_winding_mioc,
+)
 from viz.plot_waveforms import plot_waveforms
 from viz.report_narratives import (
     get_figure_narrative,
     render_narrative_html,
     render_narrative_markdown,
+    render_tier_formulas_html,
+    render_tier_formulas_markdown,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -169,6 +175,20 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
             }
         )
 
+    for sc_id, sc in summary.get("spec007_scenarios", {}).items():
+        title = (
+            "SPEC-007 Predictive Physics (Winding, LUT v2, MIOC, Xtalk, Backscatter)"
+            if sc_id == "PHY-01"
+            else "SPEC-007 Inverse Calibration (>40% -> <5% Hardware Prediction)"
+        )
+        rows.append(
+            {
+                "gate": f"{sc_id} — {title}",
+                "status": "PASS" if bool(sc.get("passed", False)) else "FAIL",
+                "detail": _summarize_scenario_detail(sc_id, sc),
+            }
+        )
+
     if not rows and summary.get("sim_summary") is not None:
         ss = summary["sim_summary"]
         detail = (
@@ -183,7 +203,7 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
-    """Build concise quantitative KPI summary string for TD-01..06, ENG-01..05 & DYN-01..04 rows."""
+    """Build concise quantitative KPI summary string for TD, ENG, DYN & SPEC-007 rows."""
     if sc_id == "TD-01":
         return f"t_s={sc['tia_ts_0p1pct_ns']:.1f} ns, k*_opt={sc['k_start_optimal_0p5pct']}, clean_err={sc['clean_window_max_err_pct']:.3f}%, ARW x{sc['arw_blanking_penalty_factor']:.3f}"
     if sc_id == "TD-02":
@@ -217,6 +237,11 @@ def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
     if sc_id == "DYN-03":
         wl = sc["regimes"]["white_linear"]
         return f"ARW={wl['measured_arw_deg_per_rt_h']:.4f} deg/rt-h (ratio={sc['arw_white_meas_to_theory_ratio']:.2f}), 6s LF supp={sc['low_freq_6state_suppression_dB']:.1f} dB, HF rolloff={wl['hf_rolloff_dB']:.1f} dB"
+    if sc_id == "PHY-01":
+        return f"Octupole -{sc['octupole_drift_reduction_pct']:.1f}%, dK_opt={sc['k_opt_thermal_drift_ppm']:.1f} ppm, dV_TIA_cap={sc['v_tia_cap_spike_diff_rms_V']:.3f} V, LUTv2 err={sc['lut_roundtrip_err_rad']:.1e}"
+    if sc_id == "CAL-01":
+        eb, ea = sc["error_before_pct"], sc["error_after_pct"]
+        return f"AVAR {eb['avar_nrmse_pct']:.1f}%->{ea['avar_nrmse_pct']:.2f}%, DB {eb['deadband_nrmse_pct']:.1f}%->{ea['deadband_nrmse_pct']:.2f}%, Therm {eb['thermal_bias_nrmse_pct']:.1f}%->{ea['thermal_bias_nrmse_pct']:.2f}%, max param err={sc['max_param_recovery_err_pct']:.2f}%"
     return f"Gain={sc['sine_tracking_gain']:.4f}, Phase={sc['sine_phase_lag_deg']:.2f} deg, THD={sc['output_thd_dB']:.1f} dB, SFDR={sc['output_sfdr_dB']:.1f} dB, phi_S={sc['peak_phi_sagnac_rad']:.3f} rad, wraps={sc['flyback_count']}, r(PD,phi_err)={sc['pd_demod_to_phi_err_corr']:.4f}"
 
 
@@ -239,7 +264,7 @@ def _build_markdown_report(
         "",
         "| Field | Value |",
         "| :--- | :--- |",
-        f"| **Specification** | `{summary['spec_id']}` (v6.0) |",
+        f"| **Specification** | `{summary['spec_id']}` (v7.0) |",
         f"| **Software Version** | `v{meta['version']}` |",
         f"| **Run Mode** | `{meta['mode']}` |",
         f"| **Generated (UTC)** | `{meta['generated_utc']}` |",
@@ -250,7 +275,7 @@ def _build_markdown_report(
         "",
         "## 0. Tổng quan Mô hình Mô phỏng & Hướng dẫn Đọc cho Người không chuyên",
         "",
-        "Hệ thống mô phỏng vòng kín con quay sợi quang giao thoa (**IFOG — Interferometric Fiber Optic Gyroscope**, chuẩn `IFOG-SIM-SPEC-006`) kết nối 3 tầng vật lý–số và lớp đóng gói công nghiệp **FMI 3.0 FMU**:",
+        "Hệ thống mô phỏng vòng kín con quay sợi quang giao thoa (**IFOG — Interferometric Fiber Optic Gyroscope**, chuẩn `IFOG-SIM-SPEC-007`) kết nối 3 tầng vật lý–số và lớp đóng gói công nghiệp **FMI 3.0 FMU**:",
         "",
         "- **Tầng 1 (Quang học & Nhiệt Offline — Python):** Tính hằng số tĩnh của cuộn sợi PM 1 km (`jones_spectral.py`: ma trận Jones tách phổ, hệ số Sagnac $K_{\\text{opt}}$, độ tương phản $V$, pha phân cực $\\phi_{\\text{pol}}$, pha Kerr) và truyền nhiệt Shupe (`shupe_thermal.py` $\\rightarrow$ `shupe_lut.bin`).",
         "- **Tầng 2 (Lõi Vòng kín Thời gian Thực — C++17 / SystemC-AMS @ ~3.27 MHz):** Mô phỏng chi tiết từng mẫu con $\\Delta t_{\\text{fast}} = \\tau/K$ gồm `OpticalEnvelope_TDF` (pha Sagnac, MIOC, trễ vòng $K$ mẫu, RAM), `AnalogFrontEnd_TDF` (xuyên âm $C_{\\text{xtalk}}/k_{\\text{xtalk}}$, nhiễu trắng 6 thành phần, LTF bậc 2 TIA, nhiễu $1/f$ và méo bậc 3), `ADC_Bridge_TDF`/`DAC_Driver_TDF` (cửa sổ Blanking, jitter, `set_delay(1)`), và `DigitalDSP_SC` (điều chế 2/4/**Official 6-State** $\\alpha^*=\\pi/3$, Vòng 1 khóa pha + Anti-windup, Vòng 2 khóa $V_\\pi$, PRBS Dither, BIT/FDIR 5 lỗi), đồng thời đóng gói hộp đen thành `build/ifog_core.fmu`.",
@@ -556,6 +581,22 @@ def _build_markdown_report(
                 ]
             )
 
+    sp7_sc = summary.get("spec007_scenarios", {})
+    if sp7_sc:
+        lines.extend(
+            [
+                "## 10b. Group D — `IFOG-SIM-SPEC-007` High-Fidelity Predictive Physics & Inverse Calibration (`PHY-01`, `CAL-01`)",
+                "",
+                "| Scenario ID | Scope (`EQ-45`..`EQ-53`) | Key Quantitative Metrics | Status |",
+                "| :--- | :--- | :--- | :---: |",
+            ]
+        )
+        for sc_id, sc in sp7_sc.items():
+            st = "PASS" if bool(sc.get("passed", False)) else "FAIL"
+            scope = "Winding, Elasto-Optic Stress, LUT v2, MIOC Acoustic, C_xtalk & Backscatter" if sc_id == "PHY-01" else "3-Stage Bounded Inverse Calibration (>40% -> <5%)"
+            lines.append(f"| `{sc_id}` | {scope} | {_summarize_scenario_detail(sc_id, sc)} | **{st}** |")
+        lines.append("")
+
     if fig_rel_paths:
         lines.extend(
             [
@@ -574,6 +615,7 @@ def _build_markdown_report(
             lines.extend(render_narrative_markdown(stem, summary))
             lines.append("")
 
+    lines.extend(render_tier_formulas_markdown())
     out_md.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return out_md
 
@@ -1117,11 +1159,21 @@ def _build_interactive_html(
         "figure.fig-card{margin:0;background:#FFF;padding:1.1rem;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 1px 4px rgba(15,23,42,.07);}"
         "figcaption{font-weight:800;color:#1B365D;margin-bottom:.65rem;font-size:.98rem;}"
         "figure.fig-card img{width:100%;max-width:1040px;display:block;margin:0 auto;height:auto;border:1px solid #E2E8F0;border-radius:6px;}"
+        ".formula-section{margin-top:2rem;}"
+        ".tier-formula-group{background:#FFF;border:1px solid #CBD5E1;border-radius:12px;padding:1.1rem 1.35rem;margin-bottom:1.25rem;box-shadow:0 1px 4px rgba(15,23,42,.06);}"
+        ".tier-formula-group h3{margin:0 0 .25rem;color:#1B365D;font-size:1.06rem;}"
+        ".tier-sub{margin:0 0 .85rem;color:#475569;font-size:.88rem;}"
+        ".formula-card{border:1px solid #E2E8F0;border-radius:10px;background:#F8FAFC;margin-bottom:.8rem;overflow:hidden;}"
+        ".formula-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.5rem;padding:.45rem .85rem;background:#EDF2F7;border-bottom:1px solid #E2E8F0;}"
+        ".formula-name{font-weight:700;color:#0F172A;font-size:.88rem;}"
+        ".formula-math{padding:.7rem 1rem;background:#FFF;overflow-x:auto;border-bottom:1px solid #E2E8F0;}"
+        ".formula-meta{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.6rem;padding:.5rem .85rem;font-size:.83rem;color:#334155;}"
+        ".formula-src code{background:#E2E8F0;color:#1E293B;padding:.1rem .45rem;border-radius:5px;}"
         "pre{background:#0F172A;color:#E2E8F0;padding:1rem;border-radius:10px;overflow-x:auto;font-size:.82rem;}"
         "code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;}"
         "</style></head><body>"
         "<div class='header'>"
-        f"<h1>IFOG-SIM-SPEC-006 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
+        f"<h1>IFOG-SIM-SPEC-007 Virtual Prototype Report — {html.escape(meta['run_id'])}</h1>"
         "<div class='meta'>"
         f"<span>Version: <strong>v{html.escape(meta['version'])}</strong></span>"
         f"<span>Mode: <strong>{html.escape(meta['mode'])}</strong></span>"
@@ -1131,6 +1183,7 @@ def _build_interactive_html(
         "<nav class='nav-bar'>"
         "<a href='#sec-scorecard'>Bảng Nghiệm thu</a>"
         "<a href='#sec-arch'>Sơ đồ Mô hình 3 Tầng</a>"
+        "<a href='#sec-formulas'>Công thức Theo Tầng (EQ-01..53)</a>"
         "<a href='#sec-core'>Core Gates (1–6)</a>"
         "<a href='#sec-td'>Group A (TD)</a>"
         "<a href='#sec-eng'>Group B (ENG)</a>"
@@ -1147,6 +1200,7 @@ def _build_interactive_html(
             else ""
         )
         + arch_section
+        + render_tier_formulas_html()
         + avar_section
         + plot_sections_html
         + gallery_html
@@ -1233,7 +1287,7 @@ def update_report_index(report_root: Path | str) -> tuple[Path, Path]:
         ".badge{display:inline-block;padding:.15rem .55rem;border-radius:999px;font-weight:700;font-size:.8rem;color:#FFF;}"
         ".badge.pass{background:#0E6251;} .badge.fail{background:#9B2C2C;} .badge.info{background:#4A5568;}"
         "</style></head><body>"
-        f"<h1>IFOG-SIM-SPEC-006 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
+        f"<h1>IFOG-SIM-SPEC-007 Simulation Reports Index (v{html.escape(get_project_version())})</h1>"
         "<table><thead><tr><th>Run ID</th><th>Mode</th><th>Version</th><th>Generated (UTC)</th><th>Status</th><th>Markdown</th><th>HTML</th><th>Model Explorer</th></tr></thead>"
         f"<tbody>{''.join(html_rows)}</tbody></table>"
         "</body></html>",
@@ -1283,9 +1337,16 @@ def export_run_report(
     dyn_loaded = {k: v for k, fname in dyn_files if (v := _load_optional_json(rdir / fname)) is not None}
     dsp6_loaded = _load_optional_json(rdir / "dsp6_compare.json")
     fmi_loaded = _load_optional_json(rdir / "fmi_gate_summary.json")
+    sp7_loaded: dict[str, Any] = {}
+    phy01_dir = rdir / "phy01_spec007_physics"
+    cal01_dir = rdir / "cal01_spec007_calibration"
+    if (p_phy := _load_optional_json(phy01_dir / "spec007_physics_summary.json")) is not None:
+        sp7_loaded["PHY-01"] = p_phy
+    if (p_cal := _load_optional_json(cal01_dir / "spec007_calibration_summary.json")) is not None:
+        sp7_loaded["CAL-01"] = p_cal
 
     summary: dict[str, Any] = {
-        "spec_id": "IFOG-SIM-SPEC-006",
+        "spec_id": "IFOG-SIM-SPEC-007",
         "run_dir": str(rdir),
         "report_dir": str(dest_dir),
         "phys_params": _load_optional_json(rdir / "phys_params.json"),
@@ -1301,6 +1362,7 @@ def export_run_report(
         "td_scenarios": td_loaded,
         "eng_scenarios": eng_loaded,
         "dyn_scenarios": dyn_loaded,
+        "spec007_scenarios": sp7_loaded,
         "generated_artifacts": [],
     }
 
@@ -1358,6 +1420,20 @@ def export_run_report(
             fig_rel_paths.append(f"figures/{p.name}")
 
         for p in plot_dyn_scenarios(rdir, fig_dir):
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append(f"figures/{p.name}")
+
+        if "PHY-01" in sp7_loaded and (phy01_dir / "spec007_physics_curves.npz").exists():
+            p = plot_spec007_physics_winding_mioc(
+                phy01_dir, fig_dir / "fig_spec007_physics_winding_mioc.png"
+            )
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append(f"figures/{p.name}")
+
+        if "CAL-01" in sp7_loaded and (cal01_dir / "spec007_calibration_curves.npz").exists():
+            p = plot_spec007_calibration_validation(
+                cal01_dir, fig_dir / "fig_spec007_calibration_validation.png"
+            )
             summary["generated_artifacts"].append(str(p))
             fig_rel_paths.append(f"figures/{p.name}")
 

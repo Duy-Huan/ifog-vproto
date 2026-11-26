@@ -453,7 +453,9 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "scripts/container_run.sh",
         "scripts/run_all_scenarios.sh",
         "configs/schema_v5.json",
+        "configs/schema_v6.json",
         "configs/baseline_1km_6state.json",
+        "configs/baseline_1km_spec007.json",
         "examples/run_example.sh",
     ):
         p = REPO_ROOT / rel
@@ -482,7 +484,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         fp = ex / fname
         assert fp.exists() and fp.stat().st_size > 100, f"Missing example deliverable: {fname}"
 
-    # Curated full 4-Gate baseline example (regenerated with v3.0.1 standardized reports)
+    # Curated full 4-Gate baseline example
     assert (REPO_ROOT / "docs" / "IFOG_ARCHITECTURE_EXPLORER.html").stat().st_size > 15_000
     assert (ex / "architecture_model.html").stat().st_size > 15_000
     assert "Cơ sở lý thuyết" in (ex / "report.md").read_text(encoding="utf-8")
@@ -493,7 +495,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
     assert len(ms["gate_statuses"]) == 4
     assert all(g["status"] == "PASS" for g in ms["gate_statuses"])
 
-    # Complete SPEC-006 All-Scenarios curated example (Gates 1-6 + 6 TD + 5 ENG + 4 DYN = 21 PASS, 21 300-DPI PNGs)
+    # Complete SPEC-007 All-Scenarios curated example (Gates 1-6 + 6 TD + 5 ENG + 4 DYN + PHY-01 + CAL-01 = 23 PASS, 23 300-DPI PNGs)
     ex_all = REPO_ROOT / "examples" / "full_all_scenarios"
     for fname in (
         "README.md",
@@ -502,6 +504,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "architecture_model.html",
         "metrics_summary.json",
         "virtual_calibration_dataset.csv",
+        "calibrated_params.json",
         "phys_params.json",
         "shupe_summary.json",
         "sim_summary.json",
@@ -528,6 +531,9 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "dyn02_freq_response.json",
         "dyn03_output_psd.json",
         "dyn04_sine_electro_optic.json",
+        "spec007_physics.json",
+        "spec007_calibration.json",
+        "spec007_summary.json",
         "figures/waveforms.png",
         "figures/bunny_ears.png",
         "figures/psd_flicker.png",
@@ -549,22 +555,26 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "figures/dyn02_freq_response.png",
         "figures/dyn03_output_psd.png",
         "figures/dyn04_sine_electro_optic.png",
+        "figures/fig_spec007_physics_winding_mioc.png",
+        "figures/fig_spec007_calibration_validation.png",
     ):
         fp = ex_all / fname
         assert fp.exists() and fp.stat().st_size > 100, f"Missing all-scenarios example deliverable: {fname}"
 
     ms_all = json.loads((ex_all / "metrics_summary.json").read_text(encoding="utf-8"))
     assert ms_all["report_meta"]["overall_status"] == "PASS"
-    assert len(ms_all["gate_statuses"]) == 21
+    assert len(ms_all["gate_statuses"]) == 23
     assert all(g["status"] == "PASS" for g in ms_all["gate_statuses"])
     md_all = (ex_all / "report.md").read_text(encoding="utf-8")
     assert "Tổng quan Mô hình Mô phỏng" in md_all
     assert "Ý nghĩa biểu đồ" in md_all
+    assert "Hệ thống Công thức Toán học Chi tiết Theo Từng Tầng" in md_all
     html_all = (ex_all / "report.html").read_text(encoding="utf-8")
     assert "Interactive Telemetry — Core Acceptance Gates" in html_all
     assert "Gate 6" in html_all
     assert "Interactive Telemetry — Group A: 6 Time-Domain Scenarios" in html_all
     assert "Interactive Telemetry — Group B: 5 System Engineering Scenarios" in html_all
     assert "Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe" in html_all
+    assert "sec-formulas" in html_all
     assert "architecture_model.html" in html_all
     assert "explain-box" in html_all

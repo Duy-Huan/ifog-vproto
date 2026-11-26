@@ -116,6 +116,26 @@ void IfogTopModule::prepare_macro_step(
     dsp_.reset_step_accumulator();
 }
 
+void IfogTopModule::set_spec007_tunable_params(
+    bool enable_live,
+    double C_xtalk_F,
+    double G_xtalk_S,
+    double c_pink_coeff,
+    double R_facet_dB,
+    double alpha_vpi_ppm_K,
+    double alpha_bobbin_ppm_K,
+    double delta_z_quad_m
+) {
+    ext_drive_.use_spec007_live = enable_live;
+    ext_drive_.C_xtalk_F_live = C_xtalk_F;
+    ext_drive_.G_xtalk_S_live = G_xtalk_S;
+    ext_drive_.c_pink_coeff_live = c_pink_coeff;
+    ext_drive_.R_facet_dB_live = R_facet_dB;
+    ext_drive_.alpha_vpi_ppm_K_live = alpha_vpi_ppm_K;
+    ext_drive_.alpha_bobbin_ppm_K_live = alpha_bobbin_ppm_K;
+    ext_drive_.delta_z_quad_m_live = delta_z_quad_m;
+}
+
 FmiOutputSnapshot IfogTopModule::sample_outputs() {
     FmiOutputSnapshot snap{};
     snap.omega_out_rad_per_s = dsp_.final_omega_out();

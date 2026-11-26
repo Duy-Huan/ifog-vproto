@@ -51,6 +51,18 @@ public:
         bool enable_dither
     );
 
+    // Apply SPEC-007 FMI 3.0 tunable physical & calibration parameters (VR 15..21)
+    void set_spec007_tunable_params(
+        bool enable_live,
+        double C_xtalk_F,
+        double G_xtalk_S,
+        double c_pink_coeff,
+        double R_facet_dB,
+        double alpha_vpi_ppm_K,
+        double alpha_bobbin_ppm_K,
+        double delta_z_quad_m
+    );
+
     // Sample & publish closed-loop outputs after sc_start() (EQ-42, EQ-43)
     FmiOutputSnapshot sample_outputs();
 

@@ -68,7 +68,7 @@ def test_all_5_engineering_scenarios_system(tmp_path: Path) -> None:
     rep = export_run_report(tmp_path, formats=("png", "md", "html"), report_dir=tmp_path / "rep")
     assert rep["report_meta"]["overall_status"] == "PASS"
     assert (tmp_path / "rep" / "virtual_calibration_dataset.csv").exists()
-    assert json.loads((tmp_path / "rep" / "metrics_summary.json").read_text())["spec_id"] == "IFOG-SIM-SPEC-006"
+    assert json.loads((tmp_path / "rep" / "metrics_summary.json").read_text())["spec_id"] == "IFOG-SIM-SPEC-007"
 
 
 @pytest.mark.system

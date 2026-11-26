@@ -10,7 +10,10 @@ namespace ifog {
 
 using json = nlohmann::json;
 
-std::vector<ShupeSample> load_shupe_lut(const std::string& lut_path) {
+std::vector<ShupeLutRecordV2> load_shupe_lut_v2(
+    const std::string& lut_path,
+    uint32_t* detected_version
+) {
     std::ifstream ifs(lut_path, std::ios::binary);
     if (!ifs.is_open()) {
         throw std::runtime_error("Cannot open shupe_lut.bin: " + lut_path);
@@ -24,17 +27,36 @@ std::vector<ShupeSample> load_shupe_lut(const std::string& lut_path) {
     ifs.read(reinterpret_cast<char*>(&n_samples), sizeof(n_samples));
     ifs.read(reinterpret_cast<char*>(&dt_s), sizeof(dt_s));
 
-    if (!ifs || std::memcmp(magic, "SHUP", 4) != 0 || version != 1u) {
+    if (!ifs || std::memcmp(magic, "SHUP", 4) != 0 || (version != 1u && version != 2u)) {
         throw std::runtime_error("Invalid shupe_lut.bin header in: " + lut_path);
     }
+    if (detected_version != nullptr) {
+        *detected_version = version;
+    }
 
-    std::vector<ShupeSample> samples(static_cast<size_t>(n_samples));
-    for (size_t i = 0; i < samples.size(); ++i) {
-        ifs.read(reinterpret_cast<char*>(&samples[i].t_s), sizeof(double));
-        ifs.read(reinterpret_cast<char*>(&samples[i].delta_phi_rad), sizeof(double));
+    std::vector<ShupeLutRecordV2> records(static_cast<size_t>(n_samples));
+    if (version == 1u) {
+        for (size_t i = 0; i < records.size(); ++i) {
+            ifs.read(reinterpret_cast<char*>(&records[i].t_s), sizeof(double));
+            ifs.read(reinterpret_cast<char*>(&records[i].delta_phi_shupe_rad), sizeof(double));
+        }
+    } else {
+        for (size_t i = 0; i < records.size(); ++i) {
+            ifs.read(reinterpret_cast<char*>(&records[i]), sizeof(ShupeLutRecordV2));
+        }
     }
     if (!ifs) {
         throw std::runtime_error("Truncated shupe_lut.bin data in: " + lut_path);
+    }
+    return records;
+}
+
+std::vector<ShupeSample> load_shupe_lut(const std::string& lut_path) {
+    const auto v2 = load_shupe_lut_v2(lut_path, nullptr);
+    std::vector<ShupeSample> samples(v2.size());
+    for (size_t i = 0; i < v2.size(); ++i) {
+        samples[i].t_s = v2[i].t_s;
+        samples[i].delta_phi_rad = v2[i].delta_phi_shupe_rad + v2[i].delta_phi_stress_rad;
     }
     return samples;
 }
@@ -59,6 +81,10 @@ void validate_ifog_config(const IfogConfig& cfg) {
     }
     if (cfg.V_min_V >= cfg.V_max_V) {
         throw std::invalid_argument("ADC rails V_min_V must be strictly less than V_max_V");
+    }
+    if (cfg.spec007.n_turns < cfg.spec007.n_layers || cfg.spec007.mioc_zeta_acoustic <= 0.0 ||
+        cfg.spec007.R_facet_dB > 0.0 || cfg.spec007.C_xtalk_F < 0.0 || cfg.spec007.G_xtalk_S < 0.0) {
+        throw std::invalid_argument("SPEC-007 physical bounds violated (Rule 11 fail-closed)");
     }
 }
 
@@ -295,8 +321,47 @@ IfogConfig load_ifog_config(
         cfg.imu_c_load_F = im.value("c_load_F", 200.0e-12);
     }
 
+    // Optional SPEC-007 high-fidelity predictive physics block (defaults to zero/ideal for v4/v5)
+    if (jcfg.contains("spec007_physics")) {
+        const auto& sp7 = jcfg.at("spec007_physics");
+        cfg.spec007.en_spec007_physics = sp7.value("en_spec007_physics", false);
+        cfg.spec007.lut_version = sp7.value("lut_version", 2);
+        cfg.spec007.winding_pattern = sp7.value("winding_pattern", std::string("quadrupole"));
+        cfg.spec007.n_turns = sp7.value("n_turns", 3200);
+        cfg.spec007.n_layers = sp7.value("n_layers", 32);
+        cfg.spec007.flange_offset_m = sp7.value("flange_offset_m", 0.0);
+        cfg.spec007.C_eo_per_Pa = sp7.value("C_eo_per_Pa", 0.0);
+        cfg.spec007.stress_rate_Pa_per_K = sp7.value("stress_rate_Pa_per_K", 0.0);
+        cfg.spec007.alpha_bobbin_ppm_K = sp7.value("alpha_bobbin_ppm_K", 0.0);
+        cfg.spec007.alpha_lambda_pm_K = sp7.value("alpha_lambda_pm_K", 0.0);
+        cfg.spec007.kappa_back_m_per_W = sp7.value("kappa_back_m_per_W", 0.0);
+        cfg.spec007.P_back_W = sp7.value("P_back_W", 0.0);
+        cfg.spec007.beta_V_per_K = sp7.value("beta_V_per_K", 0.0);
+        cfg.spec007.gamma_pol_rad_per_K = sp7.value("gamma_pol_rad_per_K", 0.0);
+        cfg.spec007.alpha_vpi_ppm_K = sp7.value("alpha_vpi_ppm_K", 0.0);
+        cfg.spec007.delta_T_sld_ratio = sp7.value("delta_T_sld_ratio", 0.0);
+        cfg.spec007.delta_T_mioc_ratio = sp7.value("delta_T_mioc_ratio", 0.0);
+        cfg.spec007.C_xtalk_F = sp7.value("C_xtalk_F", cfg.C_xtalk_F);
+        cfg.spec007.G_xtalk_S = sp7.value("G_xtalk_S", cfg.k_xtalk_A_per_V);
+        cfg.spec007.R_facet_dB = sp7.value("R_facet_dB", -200.0);
+        cfg.spec007.alpha_R_per_m = sp7.value("alpha_R_per_m", 0.0);
+        cfg.spec007.S_capture = sp7.value("S_capture", 0.0);
+        cfg.spec007.tau_env_s = sp7.value("tau_env_s", 1.0);
+        cfg.spec007.sigma_theta_env_rad = sp7.value("sigma_theta_env_rad", 0.0);
+        cfg.spec007.mioc_f_elec_Hz = sp7.value("mioc_f_elec_Hz", 0.0);
+        cfg.spec007.mioc_f_acoustic_Hz = sp7.value("mioc_f_acoustic_Hz", 0.0);
+        cfg.spec007.mioc_zeta_acoustic = sp7.value("mioc_zeta_acoustic", 0.1);
+        cfg.spec007.mioc_g_acoustic = sp7.value("mioc_g_acoustic", 0.0);
+    }
+
     if (!shupe_lut_path.empty()) {
-        cfg.shupe_lut = load_shupe_lut(shupe_lut_path);
+        cfg.shupe_lut_v2 = load_shupe_lut_v2(shupe_lut_path, &cfg.shupe_lut_version);
+        cfg.shupe_lut.resize(cfg.shupe_lut_v2.size());
+        for (size_t i = 0; i < cfg.shupe_lut_v2.size(); ++i) {
+            cfg.shupe_lut[i].t_s = cfg.shupe_lut_v2[i].t_s;
+            cfg.shupe_lut[i].delta_phi_rad =
+                cfg.shupe_lut_v2[i].delta_phi_shupe_rad + cfg.shupe_lut_v2[i].delta_phi_stress_rad;
+        }
     }
 
     validate_ifog_config(cfg);

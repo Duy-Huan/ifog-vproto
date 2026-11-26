@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-ARCH-001}
-\newcommand{\DocVersion}{v3.0.1}
+\newcommand{\DocVersion}{v4.0.0}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -51,9 +51,9 @@
 
 % --- Title Banner ---
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=10pt,bottom=10pt]
-{\color{white}\Large\bfseries Closed-Loop IFOG Multi-Scale Virtual Prototype \& FMI 3.0 FMU}\\[4pt]
-{\color{white}\large System Architecture \& Implementation Specification}\\[6pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-006} v6.0 \quad|\quad Date: \DocDate}
+{\color{white}\Large\bfseries Closed-Loop IFOG Multi-Scale Virtual Prototype \& Tunable FMI 3.0 FMU}\\[4pt]
+{\color{white}\large System Architecture, Tier-by-Tier Mathematical Formulation \& Inverse Calibration Specification}\\[6pt]
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-007} v7.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
 \section{Document Control \& Revision History}
@@ -65,9 +65,9 @@
 \midrule
 Document Identifier & \texttt{\DocID} \\
 Current Version & \texttt{\DocVersion} (Synchronized with \texttt{pyproject.toml} per \texttt{AGENT.md} Rule 16) \\
-Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 44-Formula, FMI 3.0 FMU \& Standardized Report Verified}} \\
-Normative Authority & \texttt{spec/IFOG-SIM-SPEC-006.\{md,tex\}} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (triple SHA-256 locked) \\
-Interactive HTML Model & \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} (Code-Audited 3-Tier + FMI 3.0 Explorer) \\
+Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 53-Formula, FMI 3.0 FMU \& \texttt{SPEC-007} Calibrated}} \\
+Normative Authority & \texttt{spec/IFOG-SIM-SPEC-007.\{md,tex\}} (v7.0), \texttt{SPEC-006} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (quadruple SHA-256 locked) \\
+Interactive HTML Model & \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} (Code-Audited 3-Tier + FMI 3.0 + \texttt{SPEC-007} Explorer) \\
 Scenarios Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}} (\DocVersion) \\
 Reference Standards & FMI Standard 3.0.2; IEEE Std 952-2020 (IFOG Test \& AVAR); IEEE Std 1666.1-2016 (SystemC-AMS) \\
 Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
@@ -87,6 +87,7 @@ Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \texttt{v2.2.0} & 2026-11-26 & Group C Dynamic, PSD \& Electro-Optic Probe & Added \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py} (\texttt{DYN-01} Step Response, \texttt{DYN-02} Full Bode Magnitude/Phase/Group Delay, \texttt{DYN-03} Broadband Output Rate PSD/ASD \& Cumulative RMS, \texttt{DYN-04} Sinusoidal Input Internal Chain \texttt{PD}, $V_{\text{fb,MIOC}}$, Sagnac phase, $V_{\text{TIA}}$, ADC blanking); expanded CLI to 27 modes, 20 official gates/scenarios, 20 300-DPI PNGs, and 19 interactive Plotly HTML5 charts; refreshed \texttt{examples/full\_all\_scenarios/} (\texttt{20/20} PASS). \\
 \texttt{v3.0.0} & 2026-11-26 & \texttt{SPEC-006} FMI 3.0 Co-Simulation FMU & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-006} v6.0 (44/44 formulas \texttt{EQ-01}--\texttt{EQ-44}); wrapped unmodified Tier 2 SystemC/SystemC-AMS core (\texttt{IfogTopModule}) into standalone FMI 3.0 FMU \texttt{build/ifog\_core.fmu} via vendorized FMI 3.0 C headers, 75-symbol \texttt{fmi3\_bridge.cpp}, 15-variable \texttt{modelDescription.xml.in} (\texttt{canBeInstantiatedOnlyOncePerProcess="true"}), and CMake \texttt{package\_fmu} target; added subprocess-isolated FMPy master orchestrator (\texttt{fmi\_master\_runner.py}, Gate 6: 0 XSD errors, $0.00\times 10^{0}\text{ rad/s}$ bit-exact equivalence, 97.42\% deadband reduction, 3.83\% 5-region AVAR overlap), 100.0\% C++ (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) \& Python coverage, and refreshed \texttt{examples/full\_all\_scenarios/} (\texttt{21/21} PASS). \\
 \texttt{v3.0.1} & 2026-11-26 & Standardized Explanatory Reports \& HTML Model Explorer & Added code-audited interactive HTML5 mathematical architecture explorer (\texttt{viz/architecture\_explorer.py} $\to$ \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html} + per-run \texttt{architecture\_model.html}) reconciled 1-to-1 against live C++/Python source code (\texttt{EQ-01}--\texttt{EQ-44}); added \texttt{viz/report\_narratives.py} embedding full theoretical foundations, plain-language non-specialist reading guides, and dynamic simulation proofs beneath all 21 plots in both \texttt{report.md} and KaTeX-rendered \texttt{report.html}; regenerated both curated examples (\texttt{examples/full\_4gate\_baseline/} \& \texttt{examples/full\_all\_scenarios/}) at 100.0\% dual coverage. \\
+\texttt{v4.0.0} & 2026-11-26 & \texttt{SPEC-007} Predictive Physics \& Inverse Calibration & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-007} v7.0 (\textbf{53/53 verified formulas \texttt{EQ-01}--\texttt{EQ-53}}): added discrete Quadrupole/Octupole winding (\texttt{PHY-01}: $-47.69\%$ Shupe reduction), thermo-mechanical stress drift, dynamic $K_{\text{opt}}(t)/V_{\text{eff}}(t)/\Delta\phi_{\text{pol}}(t)/V_\pi(t)$, 6-channel \texttt{shupe\_lut.bin} v2 (56 B \texttt{<7d} + v1 fallback), 2nd-order MIOC electro-acoustic dynamics before $K_{\text{delay}}$, capacitive + resistive PCB crosstalk ($C_{\text{xtalk}}\,dV/dt + G_{\text{xtalk}}V$), Rayleigh/facet back-reflection, \textbf{7 live tunable FMI 3.0 parameters (\texttt{VR 15..21})}, \texttt{DualRegimeStitcher} quadrature BI subtraction, automated 3-stage bounded \texttt{InverseCalibrator} (\texttt{CAL-01}: $40$--$103\% \to 0.04$--$0.91\% < 5\%$ across all 4 validation domains, 10 params recovered $\le 2.18\%$), complete tier-by-tier mathematical compendium, and \textbf{100.0\% C++} ($2{,}329/2{,}329$ lines) \& \textbf{100.00\% Python} ($4{,}650/4{,}650$ stmts) coverage. \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -208,7 +209,40 @@ Tier 2 is compiled in C++17 (\texttt{SC\_CPLUSPLUS=201703L}) against Ubuntu 24.0
     \item \textbf{Automatic Reporting Engine (\texttt{viz/export\_report.py}):} Produces \texttt{report/<run\_id>/report.md}, \texttt{report/<run\_id>/report.html} (interactive Plotly AVAR/Bunny Ears/PSD charts + styled KPI tables + 300-DPI gallery + JSON inspector), \texttt{metrics\_summary.json}, and refreshes \texttt{report/index.\{md,html\}}.
 \end{itemize}
 
-\section{Normative 41-Formula White-Box Traceability Matrix}
+\section{Complete Tier-by-Tier Mathematical Formulation Compendium (\texttt{EQ-01}--\texttt{EQ-53})}
+
+This section provides a self-contained, partner-ready mathematical specification of every equation implemented across Tier 1, Tier 2, the FMI 3.0 wrapper, and Tier 3, audited 1-to-1 against live C++/Python code and verified by \texttt{scripts/verify\_formulas\_ci.py} ($53/53$ PASS).
+
+\subsection{Tier 1 --- Offline Spectral Jones Optics, Coil Winding \& Thermo-Mechanical Solvers}
+\begin{align}
+\mathbf{J}_{\text{CW}}(\omega_k) &= \prod_{j=1}^{M} \mathbf{R}(-\theta_j)\operatorname{diag}\!\left(e^{-i\Delta\beta(\omega_k)\Delta z_j/2}, e^{+i\Delta\beta(\omega_k)\Delta z_j/2}\right)\mathbf{R}(\theta_j), \quad \mathbf{J}_{\text{CCW}} = \mathbf{J}_{\text{CW}}^T \quad (\text{EQ-04}) \\
+V &= \frac{\left|\sum_k w_k \mathbf{E}_{\text{CW}}^\dagger \mathbf{E}_{\text{CCW}}\right|}{\frac{1}{2}\sum_k w_k (\|\mathbf{E}_{\text{CW}}\|^2 + \|\mathbf{E}_{\text{CCW}}\|^2)}, \qquad \phi_{\text{pol}} = \arg\!\left(\sum_k w_k \mathbf{E}_{\text{CW}}^\dagger \mathbf{E}_{\text{CCW}}\right) \quad (\text{EQ-05}) \\
+K_{\text{opt},0} &= \frac{2\pi L D}{\bar{\lambda} c}, \qquad \Delta\phi_{\text{Kerr}} = \eta_{\text{coh}}\frac{2\pi n_2}{\bar{\lambda} A_{\text{eff}}} L (P_{\text{CW}}-P_{\text{CCW}}), \qquad L_c = \frac{\bar{\lambda}^2}{\Delta\lambda_{\text{FWHM}}} \quad (\text{EQ-07, 08, 52}) \\
+\Delta\phi_{\text{Shupe}}(t) &= \frac{\beta_0}{c}\!\left(\frac{dn}{dT}+n_{\text{eff}}\alpha_f\right)\sum_{i=0}^{N_{\text{turns}}-1}(L-2z_i)\,\dot{T}(r_i,z_{\text{ax},i},t)\,\Delta z_i \quad (\text{EQ-09, 45}) \\
+\Delta\phi_{\text{stress}}(t) &= \frac{\beta_0}{c}\!\left(-\frac{n_{\text{eff}}^3}{2}(p_{11}+2p_{12})\right)E_{\text{fiber}}(\alpha_{\text{bobbin}}-\alpha_f)\sum_{i=0}^{N_{\text{turns}}-1}(L-2z_i)\,\dot{\varepsilon}_{\text{th}}(r_i,t)\,\Delta z_i \quad (\text{EQ-46}) \\
+K_{\text{opt}}(t) &= K_{\text{opt},0}\!\left[1 + (\alpha_{\text{bobbin}}+\alpha_f)\Delta\bar{T}(t) - \frac{\Delta\bar{\lambda}(t)}{\bar{\lambda}_0}\right], \qquad V_\pi(t) = V_{\pi,0}\bigl(1 + \alpha_{V_\pi}\Delta T_{\text{MIOC}}(t)\bigr) \quad (\text{EQ-47, 48})
+\end{align}
+All six time-varying profiles $(\Delta\phi_{\text{Shupe}}, \Delta\phi_{\text{stress}}, \delta K_{\text{opt}}, V_{\text{eff}}, \Delta\phi_{\text{pol}}, V_\pi)$ are packed into \texttt{shupe\_lut.bin} v2 (24 B header \texttt{<4sIQd} + 56 B \texttt{<7d} records, \texttt{EQ-49}) with transparent v1 fallback.
+
+\subsection{Tier 2 --- Fast-Scale SystemC-AMS Electro-Optics, Parasitics \& Bit-True DSP}
+\begin{align}
+H_{\text{MIOC}}(s) &= \frac{\omega_{\text{mioc}}^2}{s^2 + 2\zeta_{\text{mioc}}\omega_{\text{mioc}}s + \omega_{\text{mioc}}^2}, \qquad \phi_{\text{MIOC}}[m] = \frac{\pi(1+\epsilon_{V_\pi})}{V_\pi(t)}V_{\text{eff,mioc}}[m] + \gamma_{\text{nl}}V_{\text{eff,mioc}}^2[m] \quad (\text{EQ-11, 50}) \\
+\Delta\phi_{\text{mod}}[m] &= \operatorname{wrap}_{2\pi}\!\bigl(\phi_{\text{MIOC}}[m] - \phi_{\text{MIOC}}[m-K_{\text{delay}}]\bigr), \qquad \sigma_{\phi,\text{back}} = \sqrt{2(R_{\text{facet}} + R_{\text{Rayleigh}}L_c)} \quad (\text{EQ-12, 52}) \\
+P_{\text{det}}[m] &= \frac{P_0}{2}\bigl(1+\alpha_{\text{RAM}}V_{\text{eff,mioc}}[m]\bigr)\bigl(1+V_{\text{eff}}(t)\cos(\Delta\phi_{\text{NR}}+\Delta\phi_{\text{mod}})\bigr) \quad (\text{EQ-13}) \\
+I_{\text{in}}[m] &= \mathcal{R}P_{\text{det}}[m] + G_{\text{xtalk}}V_{\text{drv}}[m] + C_{\text{xtalk}}\frac{V_{\text{drv}}[m]-V_{\text{drv}}[m-1]}{\Delta t_{\text{fast}}} + i_w[m] \quad (\text{EQ-14, 51}) \\
+H_{\text{TIA}}(s) &= \frac{-R_f\omega_0^2}{s^2 + 2\zeta\omega_0 s + \omega_0^2}, \qquad V_{\text{out,nl}} = \operatorname{clip}\!\bigl(V_{\text{lin}} + G_2 V_{\text{lin}}^2 + G_3 V_{\text{lin}}^3 + v_{1/f},\; V_{\min}, V_{\max}\bigr) \quad (\text{EQ-16, 18}) \\
+e_\Omega^{(6)} &= (y_4+y_5+y_6)-(y_1+y_2+y_3), \quad e_{V_\pi}^{(6)} = 2(y_2+y_5)-(y_1+y_3+y_4+y_6), \quad e_{\text{asym}}^{(6)} = (y_1-y_3)+(y_6-y_4) \quad (\text{EQ-33}) \\
+L_1(z) &= \frac{K_{\text{tot},1}}{z^2(z-1)} \;\;(0 < K_{\text{tot},1} < 1,\; K_{\text{tot},2} \le 0.1 K_{\text{tot},1}), \qquad \Omega_{\text{out}} = \frac{\Delta\phi_{\text{step}}}{\mathrm{SF}_{\text{CL}}} \quad (\text{EQ-22, 23, 34})
+\end{align}
+
+\subsection{FMI 3.0 Co-Simulation Wrapper (\texttt{VR 0..21}) \& Tier 3 Inverse Calibration / AVAR}
+\begin{align}
+N_{\tau,k} &= \left\lfloor \frac{t_k+H}{\tau} \right\rfloor - \left\lfloor \frac{t_k}{\tau} \right\rfloor, \qquad \bar{\Omega}_{\text{out},k} = \frac{1}{N_{\tau,k}}\sum_{j=1}^{N_{\tau,k}}\Omega_{\text{out}}[j], \qquad e_{V_\pi,\text{res}} = 2\pi\epsilon_{V_\pi,\text{eff}} \quad (\text{EQ-42, 43}) \\
+\sigma^2(T_m) &= \frac{3Q^2}{T_m^2} + \frac{N^2}{T_m} + \frac{2\ln 2}{\pi}B^2 + \frac{K^2 T_m}{3} + \frac{R^2 T_m^2}{2}, \qquad B_{\text{T3,mech}} = \sqrt{\max(0, B_{\text{total}}^2 - B_{\text{T2,meas}}^2)} \quad (\text{EQ-24, 52}) \\
+\hat{\boldsymbol{\theta}} &= \arg\min_{\boldsymbol{\theta}\in[\boldsymbol{\theta}_{\min},\boldsymbol{\theta}_{\max}]}\sum_{m=1}^M w_m\left\|\frac{\mathbf{y}_{\text{sim},m}(\boldsymbol{\theta})-\mathbf{y}_{\text{exp},m}}{\boldsymbol{\sigma}_m}\right\|_2^2, \qquad \mathrm{CI}_{95\%} = \hat{\theta}_j \pm 1.96\sqrt{[\hat{s}^2(\mathbf{J}^T\mathbf{J}+\lambda\mathbf{I})^{-1}]_{jj}} \quad (\text{EQ-53})
+\end{align}
+
+\section{Normative 53-Formula White-Box Traceability Matrix}
 
 \scriptsize
 \begin{longtable}{@{}l l l l@{}}
@@ -257,6 +291,18 @@ Tier 2 is compiled in C++17 (\texttt{SC\_CPLUSPLUS=201703L}) against Ubuntu 24.0
 \texttt{EQ-39} & SPEC-005 \S 4.4 & Real-time FPGA BIT/FDIR 5-fault \& SEU recovery & \texttt{tier2\_sysc\_ams/src/digital\_dsp\_sc.cpp} \\
 \texttt{EQ-40} & SPEC-005 \S 4.5 & Monte Carlo yield, 95\% Wilson CI \& $C_{pk}$ & \texttt{tier3\_analysis/scenarios\_engineering.py} \\
 \texttt{EQ-41} & SPEC-005 \S 4.5 & $-40..+85^\circ\text{C}$ 2D thermal poly \& 4-state EKF & \texttt{tier3\_analysis/scenarios\_engineering.py} \\
+\texttt{EQ-42} & SPEC-006 \S 4.1 & FMI 3.0 multi-rate ZOH ($N_{\tau,k}$) \& $\bar{\Omega}_{\text{out},k}$ & \texttt{tier2\_sysc\_ams/src/ifog\_top\_module.cpp} \\
+\texttt{EQ-43} & SPEC-006 \S 4.2 & FMI 3.0 residual $V_\pi$ error \& 6-bit \texttt{bit\_status} & \texttt{tier2\_sysc\_ams/src/ifog\_top\_module.cpp} \\
+\texttt{EQ-44} & SPEC-006 \S 4.3 & Black-box FMU vs standalone $<10^{-12}\text{ rad/s}$ equiv & \texttt{fmi\_wrapper/src/fmi3\_bridge.cpp} \\
+\texttt{EQ-45} & SPEC-007 \S 2.1 & Quadrupole/Octupole discrete winding \& $\Delta\phi_{\text{thermo}}$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-46} & SPEC-007 \S 2.1 & Elasto-optic thermo-mechanical stress $\Delta\phi_{\text{stress}}(t)$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-47} & SPEC-007 \S 2.2 & Dynamic Sagnac scale factor thermal drift $K_{\text{opt}}(t)$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-48} & SPEC-007 \S 2.2 & Dynamic $V_{\text{eff}}(t), \Delta\phi_{\text{pol}}(t), V_\pi(t)$ & \texttt{tier1\_offline/shupe\_thermal.py} \\
+\texttt{EQ-49} & SPEC-007 \S 2.3 & 6-channel \texttt{shupe\_lut.bin} v2 (56 B) + v1 fallback & \texttt{tier2\_sysc\_ams/src/ifog\_config.cpp} \\
+\texttt{EQ-50} & SPEC-007 \S 2.4 & 2nd-order MIOC electro-acoustic dynamics ($< K_{\text{delay}}$) & \texttt{tier2\_sysc\_ams/include/ifog\_math.hpp} \\
+\texttt{EQ-51} & SPEC-007 \S 2.5 & Capacitive + resistive crosstalk $G_{\text{xtalk}}V + C_{\text{xtalk}}\dot{V}$ & \texttt{tier2\_sysc\_ams/src/analog\_frontend\_tdf.cpp} \\
+\texttt{EQ-52} & SPEC-007 \S 2.6 & Rayleigh/facet back-reflection \& $B_{\text{T3,mech}}$ stitch & \texttt{tier3\_analysis/dual\_regime\_avar.py} \\
+\texttt{EQ-53} & SPEC-007 \S 2.7 & 3-Stage bounded Inverse Calibration \& Gauss--Newton CI & \texttt{tier3\_analysis/inverse\_calibration.py} \\
 \bottomrule
 \end{longtable}
 \normalsize
@@ -265,19 +311,19 @@ Tier 2 is compiled in C++17 (\texttt{SC\_CPLUSPLUS=201703L}) against Ubuntu 24.0
 
 Every pull request (\texttt{dev -> main}) and SemVer release tag (\texttt{vX.Y.Z}) is gated by \texttt{.github/workflows/ci.yml} and \texttt{.github/workflows/release.yml} on pinned \texttt{ubuntu-24.04} runners:
 \begin{enumerate}
-    \item \textbf{Governance, Branch Policy, Dual Spec Lock \& Rule 16 Doc-Sync:} Enforces strictly 2 branches (\texttt{\{main, dev\}}), verifies both \texttt{spec/IFOG-SIM-SPEC-004.sha256} and \texttt{spec/IFOG-SIM-SPEC-005.sha256}, verifies all 8 project skills, and executes \texttt{python3 scripts/verify\_doc\_sync.py} (with \texttt{--expected-tag} on release tags) asserting exact synchronization across \texttt{pyproject.toml}, all 3 \texttt{docs/*.\{md,tex,pdf\}} documents, \texttt{docs/DOCS\_BUILD.sha256}, \texttt{docs/CHANGELOG.md}, \texttt{README.md}, and \texttt{AGENT.md}.
-    \item \textbf{Dual-Domain 100.0\% Coverage (Rules 2 \& 14):} Enforces \texttt{100.0\%} C++ line \& function coverage (\texttt{gcovr --fail-under-line 100}, $1{,}546/1{,}546$ lines, $109/109$ functions) and \texttt{100.0\%} Python line coverage (\texttt{pytest-cov}, \texttt{fail\_under = 100}, $2{,}631/2{,}631$ statements).
-    \item \textbf{41-Formula Independent CI Verification (Rule 3):} Runs \texttt{scripts/verify\_formulas\_ci.py} asserting all 41 equations (\texttt{EQ-01}--\texttt{EQ-41}) pass individually.
-    \item \textbf{Full Real 5-Gate + 11-Scenario Suite (Rule 5):} Executes Gates 1--4 (including $60\text{ s}$ Fast-Scale + $10\text{ h}$ Slow-Scale AVAR overlap $2.42\% < 5\%$ \& all 5 WLS parameters within $\pm 10\%$), Gate 5 (Official 6-State DSP $+136.94\text{ dB}$ RAM/xtalk rejection \& $-33.3\%$ $V_{\text{peak}}$), all 6 Time-Domain scenarios (\texttt{TD-01}--\texttt{TD-06}), and all 5 System Engineering scenarios (\texttt{ENG-01}--\texttt{ENG-05}, including concurrent 3-axis SystemC-AMS IMU $+51.6\text{ dB}$ rejection and $N=500$ MC Yield $97.2\%$).
-    \item \textbf{Container CI Verification:} Builds \texttt{Containerfile} cleanly from Git sources and runs live in-container C++ tests and Gate 1 simulation producing host-mounted reports.
+    \item \textbf{Governance, Branch Policy, Quadruple Spec Lock \& Rule 16 Doc-Sync:} Enforces strictly 2 branches (\texttt{\{main, dev\}}), verifies all four spec checksums (\texttt{SPEC-004}--\texttt{SPEC-007}), verifies all 10 project skills, and executes \texttt{python3 scripts/verify\_doc\_sync.py} (with \texttt{--expected-tag} on release tags) asserting exact synchronization across \texttt{pyproject.toml}, all 3 \texttt{docs/*.\{md,tex,pdf\}} documents, \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html}, \texttt{docs/DOCS\_BUILD.sha256}, \texttt{docs/CHANGELOG.md}, \texttt{README.md}, and \texttt{AGENT.md}.
+    \item \textbf{Dual-Domain 100.0\% Coverage (Rules 2 \& 14):} Enforces \texttt{100.0\%} C++ line \& function coverage (\texttt{gcovr --fail-under-line 100}, $2{,}329/2{,}329$ lines, $211/211$ functions across \texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) and \texttt{100.00\%} Python line coverage (\texttt{pytest-cov}, \texttt{fail\_under = 100}, $4{,}650/4{,}650$ statements).
+    \item \textbf{53-Formula Independent CI Verification (Rule 3):} Runs \texttt{scripts/verify\_formulas\_ci.py} asserting all 53 equations (\texttt{EQ-01}--\texttt{EQ-53}) pass individually.
+    \item \textbf{Full Real 6-Gate + 17-Scenario Suite (Rule 5):} Executes Gates 1--6 (including $60\text{ s}$ Fast + $10\text{ h}$ Slow AVAR, Gate 5 6-State DSP $+136.94\text{ dB}$, Gate 6 FMI 3.0 FMU $0.00\times 10^0\text{ rad/s}$ equiv + live \texttt{VR 15..21} tuning), \texttt{TD-01}--\texttt{TD-06}, \texttt{ENG-01}--\texttt{ENG-05}, \texttt{DYN-01}--\texttt{DYN-04}, and \texttt{SPEC-007} \texttt{PHY-01} \& \texttt{CAL-01} ($40$--$103\% \to 0.04$--$0.91\% < 5\%$).
+    \item \textbf{Container CI Verification:} Builds \texttt{Containerfile} cleanly from Git sources and runs live in-container C++ tests, FMI 3.0 FMU validation, and live 6-State simulation producing host-mounted reports.
 \end{enumerate}
 
-\section{Portable Linux Toolchain, OCI Containers \& Curated Example}
+\section{Portable Linux Toolchain, OCI Containers \& Curated Examples}
 
 \begin{itemize}
-    \item \textbf{Distro-Independent Source Setup (\texttt{scripts/setup\_env.sh}, \texttt{scripts/install\_systemc.sh}, \texttt{scripts/install\_systemc\_ams.sh}, \texttt{scripts/env.sh}):} Pulls and builds Accellera SystemC 2.3.4, SystemC-AMS PoC 2.3.4, \texttt{nlohmann/json} v3.11.3, and an isolated Python 3 virtual environment into \texttt{/opt/ifog-env} (root/container) or \texttt{\$HOME/.local/ifog-env} (rootless Linux/HPC), exporting all runtime and CMake variables via \texttt{source scripts/env.sh}.
-    \item \textbf{Docker \& Podman OCI Suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}):} Layer-cached Ubuntu 24.04 OCI image pre-built with SystemC 2.3.4, SystemC-AMS 2.3.4, Python venv, and Release \texttt{-O3} \texttt{build/ifog\_sim}. \texttt{scripts/container\_run.sh} auto-detects Podman (with rootless \texttt{:Z} and \texttt{--userns=keep-id}) or Docker.
-    \item \textbf{Official Scenarios \& Curated Example (\texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, \texttt{examples/full\_4gate\_baseline/}):} Complete individual and batch scenario CLI (\texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_all\_scenarios.sh}) plus committed real 4-Gate baseline outputs for zero-setup feasibility evaluation.
+    \item \textbf{Distro-Independent Source Setup (\texttt{scripts/setup\_env.sh}, \texttt{scripts/install\_systemc.sh}, \texttt{scripts/install\_systemc\_ams.sh}, \texttt{scripts/env.sh}):} Pulls and builds Accellera SystemC 2.3.4, SystemC-AMS PoC 2.3.4, \texttt{nlohmann/json} v3.11.3, and an isolated Python 3 virtual environment (with FMPy) into \texttt{/opt/ifog-env} (root/container) or \texttt{\$HOME/.local/ifog-env} (rootless Linux/HPC), exporting all runtime and CMake variables via \texttt{source scripts/env.sh}.
+    \item \textbf{Docker \& Podman OCI Suite (\texttt{Containerfile}, \texttt{Dockerfile}, \texttt{compose.yaml}, \texttt{scripts/container\_run.sh}):} Layer-cached Ubuntu 24.04 OCI image pre-built with SystemC 2.3.4, SystemC-AMS 2.3.4, Python venv, Release \texttt{-O3} \texttt{build/ifog\_sim}, and validated \texttt{build/ifog\_core.fmu}. \texttt{scripts/container\_run.sh} auto-detects Podman (with rootless \texttt{:Z} and \texttt{--userns=keep-id}) or Docker.
+    \item \textbf{Official Scenarios \& Curated Examples (\texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, \texttt{examples/full\_all\_scenarios/}):} Complete individual and batch scenario CLI (31 modes, \texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_all\_scenarios.sh}) plus committed real 23/23 PASS all-scenarios outputs (including \texttt{calibrated\_params.json}, 23 300-DPI PNGs, and KaTeX/Plotly reports with complete tier-by-tier formulas) for zero-setup technical and partner review.
 \end{itemize}
 
 \end{document}

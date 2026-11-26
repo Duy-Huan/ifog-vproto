@@ -1,0 +1,102 @@
+{
+  "spec_id": "IFOG-SIM-SPEC-007",
+  "phy01_physics": {
+    "scenario_id": "PHY-01",
+    "spec_id": "IFOG-SIM-SPEC-007",
+    "lut_version": 2,
+    "lut_roundtrip_err_rad": 0.0,
+    "quadrupole_peak_therm_deg_per_h": 0.555762493352887,
+    "octupole_peak_therm_deg_per_h": 0.29073588903115705,
+    "octupole_drift_reduction_pct": 47.68702593131786,
+    "k_opt_thermal_drift_ppm": 85.59065698676704,
+    "v_pi_final_V": 3.0062990331122945,
+    "v_tia_cap_spike_diff_rms_V": 0.5831134296334406,
+    "p_det_mioc_acoustic_diff_rms_W": 2.199336503963354e-06,
+    "sigma_phi_back_rad": 0.0035565595773115358,
+    "b_t3_mech_deg_per_h": 0.004,
+    "bi_quadrature_conservation_err_rad_s": 0.0,
+    "passed": true
+  },
+  "cal01_calibration": {
+    "scenario_id": "CAL-01",
+    "spec_id": "IFOG-SIM-SPEC-007",
+    "true_params": {
+      "c_pink_coeff": 4.2,
+      "R_facet_dB": -52.0,
+      "eta_pd_scale": 0.55,
+      "C_xtalk_F": 7.8e-12,
+      "G_xtalk_S": 6.2e-08,
+      "dac_asym_lsb": 1.35,
+      "diffusivity_m2_per_s": 5.2e-07,
+      "delta_z_quad_m": 0.0046,
+      "alpha_vpi_ppm_K": 620.0,
+      "alpha_bobbin_ppm_K": 18.5
+    },
+    "uncalibrated_params": {
+      "c_pink_coeff": 1.0,
+      "R_facet_dB": -72.0,
+      "eta_pd_scale": 1.0,
+      "C_xtalk_F": 2e-12,
+      "G_xtalk_S": 1.5e-08,
+      "dac_asym_lsb": 0.0,
+      "diffusivity_m2_per_s": 9.5e-07,
+      "delta_z_quad_m": 0.0018,
+      "alpha_vpi_ppm_K": 250.0,
+      "alpha_bobbin_ppm_K": 8.0
+    },
+    "calibrated_params": {
+      "c_pink_coeff": 4.182367885290937,
+      "R_facet_dB": -52.16307856498718,
+      "eta_pd_scale": 0.5497246483488427,
+      "C_xtalk_F": 7.788772089530375e-12,
+      "G_xtalk_S": 6.200973614002289e-08,
+      "dac_asym_lsb": 1.3526687097105174,
+      "diffusivity_m2_per_s": 5.21529743566336e-07,
+      "delta_z_quad_m": 0.004499785486887194,
+      "alpha_vpi_ppm_K": 619.9837991024941,
+      "alpha_bobbin_ppm_K": 18.498948077966993
+    },
+    "ci95": {
+      "c_pink_coeff": 0.06233365726758964,
+      "R_facet_dB": 0.6383020124886803,
+      "eta_pd_scale": 0.0013607185048588202,
+      "C_xtalk_F": 1.8716826589196668e-14,
+      "G_xtalk_S": 4.447776354366397e-11,
+      "dac_asym_lsb": 0.008860673202183209,
+      "diffusivity_m2_per_s": 2.2129290498638815e-09,
+      "delta_z_quad_m": 0.0005034551260033403,
+      "alpha_vpi_ppm_K": 3.2752935254421933,
+      "alpha_bobbin_ppm_K": 0.004929986701904442
+    },
+    "param_recovery_err_pct": {
+      "c_pink_coeff": 0.4198122549777012,
+      "R_facet_dB": 0.31361262497534825,
+      "eta_pd_scale": 0.05006393657405991,
+      "C_xtalk_F": 0.1439475701233943,
+      "G_xtalk_S": 0.0157034516498238,
+      "dac_asym_lsb": 0.19768220077906357,
+      "diffusivity_m2_per_s": 0.29418145506461113,
+      "delta_z_quad_m": 2.178576372017524,
+      "alpha_vpi_ppm_K": 0.0026130479848197573,
+      "alpha_bobbin_ppm_K": 0.005686065043279713
+    },
+    "max_param_recovery_err_pct": 2.178576372017524,
+    "error_before_pct": {
+      "avar_nrmse_pct": 40.22577174499733,
+      "deadband_nrmse_pct": 102.68065955770564,
+      "thermal_bias_nrmse_pct": 58.77626079978652,
+      "thermal_sf_nrmse_pct": 52.30379773309749
+    },
+    "error_after_pct": {
+      "avar_nrmse_pct": 0.8092785048838798,
+      "deadband_nrmse_pct": 0.9119973963159713,
+      "thermal_bias_nrmse_pct": 0.2944360889554912,
+      "thermal_sf_nrmse_pct": 0.03963389395685363
+    },
+    "cost_before": 275.9896517959815,
+    "cost_after": 0.01919535166119092,
+    "tier2_closed_loop_rate_err_pct": 0.02875705484262803,
+    "passed": true
+  },
+  "all_passed": true
+}

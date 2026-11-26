@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-SCEN-001}
-\newcommand{\DocVersion}{v3.0.1}
+\newcommand{\DocVersion}{v4.0.0}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -31,13 +31,13 @@
     colorlinks=true,
     linkcolor=NavyBlue,
     urlcolor=TealDark,
-    pdftitle={IFOG Official Simulation Scenarios, 6-State DSP \& FMI 3.0 FMU Guide (\DocVersion)},
+    pdftitle={IFOG Official Simulation Scenarios, 6-State DSP, FMI 3.0 \& SPEC-007 Guide (\DocVersion)},
     pdfauthor={Duy-Huan / ifog-vproto}
 }
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{NavyBlue}\textbf{\DocID} --- Official Simulation Scenarios, 6-State DSP \& FMI 3.0 FMU}
+\fancyhead[L]{\small\color{NavyBlue}\textbf{\DocID} --- Official Simulation Scenarios, FMI 3.0 \& \texttt{SPEC-007}}
 \fancyhead[R]{\small\color{TealDark}\textbf{\DocVersion} (\DocDate)}
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.5pt}
@@ -52,8 +52,8 @@
 % --- Title Banner ---
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=10pt,bottom=10pt]
 {\color{white}\Large\bfseries Closed-Loop IFOG Multi-Scale Virtual Prototype}\\[4pt]
-{\color{white}\large Official Simulation Scenarios, 6-State Symmetric DSP \& FMI 3.0 FMU Guide}\\[6pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-006} v6.0 \quad|\quad Date: \DocDate}
+{\color{white}\large Official Simulation Scenarios, 6-State DSP, FMI 3.0 FMU \& \texttt{SPEC-007} Calibration Guide}\\[6pt]
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-007} v7.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
 \section{Document Control \& Revision History}
@@ -65,8 +65,8 @@
 \midrule
 Document Identifier & \texttt{\DocID} \\
 Current Version & \texttt{\DocVersion} (Synchronized with \texttt{pyproject.toml} per \texttt{AGENT.md} Rule 16) \\
-Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 44-Formula, FMI 3.0 FMU \& 21-Scenario Verified}} \\
-Normative Authority & \texttt{spec/IFOG-SIM-SPEC-006.\{md,tex\}} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (triple SHA-256 locked) \\
+Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 53-Formula, FMI 3.0 FMU \& 23-Scenario Verified}} \\
+Normative Authority & \texttt{spec/IFOG-SIM-SPEC-007.\{md,tex\}} (v7.0), \texttt{SPEC-006} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (quadruple SHA-256 locked) \\
 Architecture Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.\{md,tex,pdf\}} (\DocVersion) \\
 Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 \bottomrule
@@ -82,6 +82,7 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 \texttt{v2.2.0} & 2026-11-26 & Group C Dynamic, PSD \& Electro-Optic Probe (\texttt{20/20}) & Added Group C (\texttt{tier3\_analysis/scenarios\_dynamic\_probe.py}, 5 CLI modes): dedicated multi-amplitude/gain-sweep Step Response (\texttt{DYN-01}), 15-pt Bode Magnitude/Phase/Group Delay (\texttt{DYN-02}), broadband Output Rate PSD/ASD \& Cumulative RMS (\texttt{DYN-03}), and Sinusoidal Internal Electro-Optic Probe exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $P_{\text{PD}}/I_{\text{PD}}$, $V_{\text{TIA}}$, and ADC blanking (\texttt{DYN-04}); expanded suite to 20 gates/scenarios, 20 PNGs, and 19 interactive Plotly HTML5 charts. \\
 \texttt{v3.0.0} & 2026-11-26 & \texttt{SPEC-006} Gate 6 FMI 3.0 FMU (\texttt{21/21}) & Added standalone FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}, \texttt{fmi\_wrapper/}) and \textbf{Gate 6} (\texttt{--mode fmi\_gate}, \texttt{tier3\_analysis/fmi\_master\_runner.py}, \texttt{EQ-42}--\texttt{EQ-44}): 0 XSD validation errors, $0.00\times 10^{0}\text{ rad/s}$ bit-exact equivalence vs \texttt{ifog\_sim} (4s \& 6s), 97.42\% deadband reduction, and 3.83\% ($<5\%$) 5-region AVAR overlap; expanded suite to 21 gates/scenarios, 28 CLI modes, 21 PNGs, and 20 interactive Plotly HTML5 charts. \\
 \texttt{v3.0.1} & 2026-11-26 & Standardized Explanatory Reports \& HTML Explorer & Standardized auto-generated \texttt{report.md} and KaTeX/Plotly \texttt{report.html} with embedded code-audited interactive model diagram (\texttt{architecture\_model.html} / \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html}) plus 3-part theoretical foundation, plain-language reading guide (for non-specialists), and live measured proof beneath all 21 figures; regenerated both curated examples. \\
+\texttt{v4.0.0} & 2026-11-26 & \texttt{SPEC-007} Group D Physics \& Calibration (\texttt{23/23}) & Added \textbf{Group D} (\texttt{PHY-01} \& \texttt{CAL-01}, \texttt{--mode spec007\_all}, \texttt{EQ-45}--\texttt{EQ-53}): discrete Quadrupole vs Octupole winding ($-47.69\%$ Shupe reduction), thermo-mechanical stress, 6-channel \texttt{shupe\_lut.bin} v2, MIOC electro-acoustic ringing + capacitive crosstalk spike, live FMI 3.0 \texttt{VR 15..21} tunability, and 3-stage bounded \texttt{InverseCalibrator} cutting uncalibrated $40$--$103\%$ error to $0.04$--$0.91\%$ ($<5\%$) with 10-param recovery $\le 2.18\%$; expanded suite to 23 gates/scenarios, 31 CLI modes, and 23 300-DPI PNGs. \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -92,7 +93,7 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 
 \section{Official Scenario Taxonomy \& Execution Architecture}
 
-Under \textbf{\texttt{IFOG-SIM-SPEC-006} (v6.0)}, the \texttt{ifog-vproto} verification platform organizes its official simulation flow into six orthogonal layers (\textbf{21 gates \& scenarios}), runnable individually by CLI mode, by functional group, or end-to-end via \texttt{./scripts/run\_all\_scenarios.sh}:
+Under \textbf{\texttt{IFOG-SIM-SPEC-007} (v7.0)}, the \texttt{ifog-vproto} verification platform organizes its official simulation flow into seven orthogonal layers (\textbf{23 gates \& scenarios}), runnable individually by CLI mode, by functional group, or end-to-end via \texttt{./scripts/run\_all\_scenarios.sh}:
 
 \begin{enumerate}
     \item \textbf{Core Acceptance Gates (Gates 1--4, \texttt{--mode full}):} Golden linear baseline \& $2\pi$ flyback (\texttt{gate1}), Deadband \& Bunny Ears mitigation (\texttt{gate2}), $1/f$ Flicker PSD \& $100\text{ Hz}$ $\mathbf{K}$-matrix (\texttt{gate3}), and 60 s Fast-Scale + 10 h Slow-Scale Dual-Regime Overlapping AVAR (\texttt{gate4}).
@@ -101,42 +102,47 @@ Under \textbf{\texttt{IFOG-SIM-SPEC-006} (v6.0)}, the \texttt{ifog-vproto} verif
     \item \textbf{Group A --- 6 Time-Domain Scenarios (\texttt{TD-01}..\texttt{TD-06}, \texttt{--mode td\_all}):} Exercises unmodified Tier 2 physics with sub-$\tau$ waveform logging (\texttt{micro\_waveforms.bin}) and DSP register logging (\texttt{dsp\_trace.bin}).
     \item \textbf{Group B --- 5 System Engineering \& Production Scenarios (\texttt{ENG-01}..\texttt{ENG-05}, \texttt{--mode eng\_all}):} Leverages the compiled C++17 \texttt{-O3} SystemC-AMS engine for BOM sizing, concurrent 3-axis IMU crosstalk (\texttt{--imu3axis}), VRE \& dynamic Faraday/Mu-metal sizing, 5-mode real-time FPGA BIT/FDIR fault injection, and parallel Monte Carlo production yield ($C_{pk}$) + $-40..+85^\circ\text{C}$ virtual thermal calibration.
     \item \textbf{Group C --- 4 Dynamic Response, Output PSD \& Internal Electro-Optic Probe Scenarios (\texttt{DYN-01}..\texttt{DYN-04}, \texttt{--mode dyn\_all}):} Dedicated closed-loop step characterization, full 15-point Bode Magnitude/Phase/Group Delay, broadband output angular-rate PSD/ASD/cumulative RMS noise, and sinusoidal rate excitation exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $V_{\text{MIOC}}$, Photodiode $P_{\text{PD}}/I_{\text{PD}}$, and $V_{\text{TIA}}$.
+    \item \textbf{Group D --- \texttt{SPEC-007} Predictive Physics \& Inverse Calibration (\texttt{PHY-01}, \texttt{CAL-01}, \texttt{--mode spec007\_all}):} Validates discrete Quadrupole/Octupole coil winding, elasto-optic stress, 6-channel \texttt{shupe\_lut.bin} v2, MIOC electro-acoustic ringing + capacitive crosstalk spike (\texttt{PHY-01}), and automated 3-stage bounded \texttt{InverseCalibrator} reducing uncalibrated $40$--$103\%$ error to $< 1\%$ across Static AVAR, Deadband, and Thermal Chamber validation datasets (\texttt{CAL-01}).
 \end{enumerate}
 
 \begin{figure}[h!]
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
-    node distance=0.85cm and 0.6cm,
-    cli/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=NavyBlue!12,thick,align=center,font=\footnotesize,minimum width=12.4cm,minimum height=0.95cm,inner sep=5pt},
-    grp/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=SlateBg,thick,align=center,font=\scriptsize,minimum width=3.1cm,minimum height=2.25cm,inner sep=4pt},
-    rep/.style={rectangle,rounded corners=3pt,draw=TealDark,fill=TealDark!12,thick,align=center,font=\footnotesize,minimum width=13.4cm,minimum height=0.95cm,inner sep=5pt},
+    node distance=0.85cm and 0.45cm,
+    cli/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=NavyBlue!12,thick,align=center,font=\footnotesize,minimum width=14.6cm,minimum height=0.95cm,inner sep=5pt},
+    grp/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=SlateBg,thick,align=center,font=\scriptsize,minimum width=2.7cm,minimum height=2.25cm,inner sep=4pt},
+    rep/.style={rectangle,rounded corners=3pt,draw=TealDark,fill=TealDark!12,thick,align=center,font=\footnotesize,minimum width=14.6cm,minimum height=0.95cm,inner sep=5pt},
     arr/.style={-{Stealth[length=2.2mm]},thick,NavyBlue},
     tarr/.style={-{Stealth[length=2.2mm]},thick,TealDark}
 ]
-\node[cli] (top) {\textbf{Official Unified CLI \& Batch Orchestrator (28 Modes / 21 Official Gates \& Scenarios)}\\\texttt{./scripts/run\_sim.sh --mode <mode>} \quad|\quad \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}};
+\node[cli] (top) {\textbf{Official Unified CLI \& Batch Orchestrator (31 Modes / 23 Official Gates \& Scenarios)}\\\texttt{./scripts/run\_sim.sh --mode <mode>} \quad|\quad \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}};
 
-\node[grp,below=1.0cm of top.south,xshift=-5.1cm] (core) {\textbf{Gates 1--6 (Core+FMU)}\\{\scriptsize\texttt{gate1..4}, \texttt{full}}\\{\scriptsize\texttt{dsp6\_compare}, \texttt{fmi\_gate}}\\[2pt]10 h AVAR, 6-State\\\& FMI 3.0 FMU};
+\node[grp,below=1.0cm of top.south,xshift=-5.8cm] (core) {\textbf{Gates 1--6}\\{\scriptsize\texttt{full}, \texttt{dsp6\_compare}}\\{\scriptsize\texttt{fmi\_gate}}\\[2pt]10 h AVAR, 6-State\\\& FMI 3.0 FMU};
 
-\node[grp,below=1.0cm of top.south,xshift=-1.7cm] (td) {\textbf{Group A: Time-Dom.}\\{\scriptsize\texttt{td\_all} (\texttt{TD-01..06})}\\Blanking, Bode, $V_\pi$\\700 deg/s, Shupe\\Limit Cycles / PRBS};
+\node[grp,below=1.0cm of top.south,xshift=-2.9cm] (td) {\textbf{Group A: TD}\\{\scriptsize\texttt{td\_all} (\texttt{TD-01..06})}\\Blanking, Bode, $V_\pi$\\700 deg/s, Shupe\\PRBS Limit Cycles};
 
-\node[grp,below=1.0cm of top.south,xshift=1.7cm] (eng) {\textbf{Group B: Sys. Eng.}\\{\scriptsize\texttt{eng\_all} (\texttt{ENG-01..05})}\\ENOB/Jitter, 3-Axis\\VRE/Faraday, BIT\\MC Yield $C_{pk}$ + Cal};
+\node[grp,below=1.0cm of top.south,xshift=0.0cm] (eng) {\textbf{Group B: ENG}\\{\scriptsize\texttt{eng\_all} (\texttt{ENG-01..05})}\\ENOB/Jitter, 3-Axis\\VRE/Faraday, BIT\\MC Yield $C_{pk}$ + Cal};
 
-\node[grp,below=1.0cm of top.south,xshift=5.1cm] (dyn) {\textbf{Group C: Dyn./Probe}\\{\scriptsize\texttt{dyn\_all} (\texttt{DYN-01..04})}\\Step, Bode M/P/GD\\Output PSD \& ASD\\Sine $\to$ PD, $V_{\text{fb}}$, $\Delta\phi_S$};
+\node[grp,below=1.0cm of top.south,xshift=2.9cm] (dyn) {\textbf{Group C: DYN}\\{\scriptsize\texttt{dyn\_all} (\texttt{DYN-01..04})}\\Step, Bode M/P/GD\\Output PSD \& ASD\\Sine $\to$ PD, $V_{\text{fb}}$};
 
-\node[rep,below=1.0cm of td.south,xshift=1.7cm] (out) {\textbf{Automated Reporting Engine (\texttt{viz/export\_report.py} + \texttt{viz/plot\_scenarios.py})}\\\texttt{report/<run\_id>/\{report.md, report.html (20 Plotly charts), figures/*.png (21 plots), CSV\}} + \texttt{report/index.\{md,html\}}};
+\node[grp,below=1.0cm of top.south,xshift=5.8cm,draw=TealDark,fill=TealDark!8] (s07) {\textbf{Group D: SPEC-007}\\{\scriptsize\texttt{spec007\_all}}\\{\scriptsize(\texttt{PHY-01}, \texttt{CAL-01})}\\Octupole, LUT v2\\MIOC + Inv. Calib};
+
+\node[rep,below=1.0cm of eng.south] (out) {\textbf{Automated Reporting Engine (\texttt{viz/export\_report.py} + \texttt{viz/plot\_spec007\_calibration.py})}\\\texttt{report/<run\_id>/\{report.md, report.html (KaTeX + Plotly + EQ-01..53), figures/*.png (23 plots), calibrated\_params.json\}}};
 
 \draw[arr] (top.south) -| (core.north);
 \draw[arr] (top.south) -| (td.north);
-\draw[arr] (top.south) -| (eng.north);
+\draw[arr] (top.south) -- (eng.north);
 \draw[arr] (top.south) -| (dyn.north);
+\draw[arr] (top.south) -| (s07.north);
 \draw[tarr] (core.south) |- (out.west);
 \draw[tarr] (td.south) -- (out.north -| td.south);
-\draw[tarr] (eng.south) -- (out.north -| eng.south);
-\draw[tarr] (dyn.south) |- (out.east);
+\draw[tarr] (eng.south) -- (out.north);
+\draw[tarr] (dyn.south) -- (out.north -| dyn.south);
+\draw[tarr] (s07.south) |- (out.east);
 \end{tikzpicture}%
 }
-\caption{Official 6-Layer \texttt{IFOG-SIM-SPEC-006} Scenario Orchestration (21 Gates \& Scenarios), CLI Routing, and Automated Report Pipeline.}
+\caption{Official 7-Layer \texttt{IFOG-SIM-SPEC-007} Scenario Orchestration (23 Gates \& Scenarios), CLI Routing, and Automated Report Pipeline.}
 \end{figure}
 
 \subsection{Unified CLI Execution Reference Table}
@@ -146,7 +152,7 @@ Under \textbf{\texttt{IFOG-SIM-SPEC-006} (v6.0)}, the \texttt{ifog-vproto} verif
 \toprule
 \textbf{ID} & \textbf{CLI Mode (\texttt{--mode})} & \textbf{Equations} & \textbf{Official Reproducible Command} \\
 \midrule
-ALL & \texttt{all\_scenarios} & \texttt{EQ-01..44} & \texttt{./scripts/run\_all\_scenarios.sh --run-id full\_all\_scenarios --mc-runs 500} \\
+ALL & \texttt{all\_scenarios} & \texttt{EQ-01..53} & \texttt{./scripts/run\_all\_scenarios.sh --run-id full\_all\_scenarios --mc-runs 500} \\
 Gates 1--4 & \texttt{full} (\texttt{gate1..4}) & \texttt{EQ-01..30} & \texttt{./scripts/run\_sim.sh --mode full --run-id core\_4gates} \\
 Gate 5 & \texttt{dsp6\_compare} & \texttt{EQ-31..34} & \texttt{./scripts/run\_sim.sh --mode dsp6\_compare --run-id gate5\_6state} \\
 Gate 6 & \texttt{fmi\_gate} & \texttt{EQ-42..44} & \texttt{./scripts/run\_sim.sh --mode fmi\_gate --run-id gate6\_fmu} \\
@@ -168,6 +174,9 @@ DYN-01 & \texttt{dyn\_step\_response} & \texttt{EQ-20,22,23,34} & \texttt{./scri
 DYN-02 & \texttt{dyn\_freq\_response} & \texttt{EQ-22,23,34} & \texttt{./scripts/run\_sim.sh --mode dyn\_freq\_response --run-id dyn02} \\
 DYN-03 & \texttt{dyn\_output\_psd} & \texttt{EQ-15,19,26,33} & \texttt{./scripts/run\_sim.sh --mode dyn\_output\_psd --run-id dyn03} \\
 DYN-04 & \texttt{dyn\_sine\_electro\_optic} & \texttt{EQ-06..19,21,31..34} & \texttt{./scripts/run\_sim.sh --mode dyn\_sine\_electro\_optic --run-id dyn04} \\
+Group D & \texttt{spec007\_all} & \texttt{EQ-45..53} & \texttt{./scripts/run\_sim.sh --mode spec007\_all --run-id spec007\_suite} \\
+PHY-01 & \texttt{spec007\_physics} & \texttt{EQ-45..52} & \texttt{./scripts/run\_sim.sh --mode spec007\_physics --run-id phy01} \\
+CAL-01 & \texttt{spec007\_calibration} & \texttt{EQ-52,53} & \texttt{./scripts/run\_sim.sh --mode spec007\_calibration --run-id cal01} \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -286,6 +295,19 @@ Implemented in \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py}, Group C ad
     \item \textbf{Gate 6D --- FMU $\to$ Tier 3 Dual-Regime 5-Region AVAR (\texttt{EQ-43}, \texttt{EQ-44}):} Anti-aliased boxcar readout \texttt{omega\_out\_avg} ($vr=14$) across $4\times 60\text{ s}$ FMU runs stitched seamlessly with $12\times 10\text{ h}$ slow ensemble yields $\mathbf{3.83\%}$ ($< 5\%$) overlap error and all 5 IEEE Std 952 WLS parameters ($Q, N, B, K, R$) within $\mathbf{\le 8.92\%}$ ($\le 10\%$).
 \end{itemize}
 
+\section{Group D: \texttt{IFOG-SIM-SPEC-007} Predictive Physics \& Inverse Calibration (\texttt{PHY-01}, \texttt{CAL-01})}
+
+Implemented in \texttt{tier3\_analysis/scenarios\_spec007.py} and \texttt{tier3\_analysis/inverse\_calibration.py}, Group D validates the high-fidelity parasitic physics extensions (\texttt{EQ-45}--\texttt{EQ-52}) and 3-stage bounded parameter identification engine (\texttt{EQ-53}) targeting \textbf{$<5\%$ hardware prediction error}:
+\begin{enumerate}
+    \item \textbf{\texttt{PHY-01} --- Discrete Winding, Elasto-Optic Stress, LUT v2 \& MIOC/Capacitive Crosstalk (\texttt{spec007\_physics}):}
+    Compares turn-by-turn Quadrupole vs Octupole coil winding (\texttt{EQ-45}), thermo-mechanical elasto-optic stress (\texttt{EQ-46}), dynamic thermal scale-factor drift $\delta K_{\text{opt}}(t)$ (\texttt{EQ-47}), 6-channel \texttt{shupe\_lut.bin} v2 roundtrip (\texttt{EQ-49}), 2nd-order $\text{LiNbO}_3$ MIOC electro-acoustic step ringing (\texttt{EQ-50}), and capacitive + resistive PCB crosstalk (\texttt{EQ-51}) in live Tier 2 \texttt{build/ifog\_sim}.\\
+    \emph{Verified Result:} Octupole reduces peak thermal Shupe phase by $\mathbf{47.69\%}$; LUT v2 roundtrip error $= \mathbf{0.0}$; peak $\delta K_{\text{opt}} = \mathbf{85.59\text{ ppm}}$; MIOC + $C_{\text{xtalk}}$ TIA transient spike delta $= \mathbf{0.583\text{ V}}$ (\textbf{PASS}).
+
+    \item \textbf{\texttt{CAL-01} --- Automated 3-Stage Bounded Inverse Calibration (\texttt{spec007\_calibration}):}
+    Identifies 10 hidden parasitic parameters from synthetic physical-prototype Static AVAR (Stage A), Slow Rate Ramp Deadband/Bunny Ears (Stage B), and Thermal Chamber Bias \& Scale-Factor (Stage C) datasets using \texttt{InverseCalibrator} + \texttt{DualRegimeStitcher} quadrature BI subtraction, exporting \texttt{calibrated\_params.json} with Gauss--Newton 95\% CI.\\
+    \emph{Verified Result:} Uncalibrated baseline error ($40.23\%$ AVAR, $102.68\%$ Deadband, $58.78\%$ Thermal Bias, $52.30\%$ Scale Factor) drops to $\mathbf{0.81\%}$, $\mathbf{0.91\%}$, $\mathbf{0.29\%}$, and $\mathbf{0.04\%}$ (all $<5\%$); all 10 hidden parameters recover within $\mathbf{\le 2.18\%}$; real Tier 2 closed-loop rate error $= \mathbf{0.034\%}$ (\textbf{PASS}).
+\end{enumerate}
+
 \section{Summary of Verified Official Scenario Acceptance Results}
 
 \scriptsize
@@ -310,6 +332,8 @@ DYN-01 & \texttt{dyn\_step\_response} & 10 \& $100^\circ/\text{s}$ 4s/6s step ($
 DYN-02 & \texttt{dyn\_freq\_response} & 15-pt Bode Mag/Phase/GD: 4s $2{,}544\text{ Hz}$ ($65.2\ \mu\text{s}$), 6s $1{,}642\text{ Hz}$ ($103.3\ \mu\text{s}$), ratio $1.55\times$ & \textcolor{TealDark}{\textbf{PASS}} \\
 DYN-03 & \texttt{dyn\_output\_psd} & Output PSD ARW $0.000352\,^\circ/\sqrt{\text{h}}$ ($0.97\times$ EQ-15), 6s LF suppression $+29.2\text{ dB}$, HF $-13.5\text{ dB}$ & \textcolor{TealDark}{\textbf{PASS}} \\
 DYN-04 & \texttt{dyn\_sine\_electro\_optic} & $50^\circ/\text{s}$ @ $250\text{ Hz}$: THD $-67.5\text{ dB}$, SFDR $43.6\text{ dB}$, $\Delta\phi_S=1.18\text{ rad}$, $391$ wraps, $r(\text{PD},\Delta\phi_{\text{err}})=0.9960$ & \textcolor{TealDark}{\textbf{PASS}} \\
+PHY-01 & \texttt{spec007\_physics} & Octupole $-47.69\%$ Shupe, LUT v2 exact ($0.0$), $\delta K_{\text{opt}}=85.59\text{ ppm}$, MIOC+$C_{\text{xtalk}}$ $\Delta V_{\text{TIA}}=0.583\text{ V}$ & \textcolor{TealDark}{\textbf{PASS}} \\
+CAL-01 & \texttt{spec007\_calibration} & 3-Stage Calib: AVAR $0.81\%$, Deadband $0.91\%$, Thermal $0.29\%$, SF $0.04\%$ (all $<5\%$); 10 params $\le 2.18\%$ & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
 \normalsize

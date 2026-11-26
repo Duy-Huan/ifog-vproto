@@ -1,18 +1,18 @@
 # AGENT.md — Governance, Engineering Rules & Workflow Contract for `ifog-vproto`
 
 **Project:** Closed-Loop IFOG Multi-Scale Virtual Prototype (`ifog-vproto`)
-**Normative Specifications:** [`spec/IFOG-SIM-SPEC-006.md`](spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](spec/IFOG-SIM-SPEC-006.pdf) (v6.0, active); [`spec/IFOG-SIM-SPEC-005.tex`](spec/IFOG-SIM-SPEC-005.tex) & [`spec/IFOG-SIM-SPEC-005.pdf`](spec/IFOG-SIM-SPEC-005.pdf) (v5.0, archival); [`spec/IFOG-SIM-SPEC-004.tex`](spec/IFOG-SIM-SPEC-004.tex) & [`spec/IFOG-SIM-SPEC-004.pdf`](spec/IFOG-SIM-SPEC-004.pdf) (v4.0, archival baseline)
+**Normative Specifications:** [`spec/IFOG-SIM-SPEC-007.md`](spec/IFOG-SIM-SPEC-007.md) & [`spec/IFOG-SIM-SPEC-007.pdf`](spec/IFOG-SIM-SPEC-007.pdf) (v7.0, active); [`spec/IFOG-SIM-SPEC-006.md`](spec/IFOG-SIM-SPEC-006.md) & [`spec/IFOG-SIM-SPEC-006.pdf`](spec/IFOG-SIM-SPEC-006.pdf) (v6.0, archival FMI 3.0); [`spec/IFOG-SIM-SPEC-005.tex`](spec/IFOG-SIM-SPEC-005.tex) & [`spec/IFOG-SIM-SPEC-005.pdf`](spec/IFOG-SIM-SPEC-005.pdf) (v5.0, archival 6-state); [`spec/IFOG-SIM-SPEC-004.tex`](spec/IFOG-SIM-SPEC-004.tex) & [`spec/IFOG-SIM-SPEC-004.pdf`](spec/IFOG-SIM-SPEC-004.pdf) (v4.0, archival baseline)
 **Reference Standards:** FMI Standard 3.0.2 (Modelica Association Project FMI); IEEE Std 952-2020 (IFOG Test & AVAR); IEEE Std 1666.1-2016 (SystemC-AMS)
-**Architecture:** 3-Tier Hybrid Co-Simulation + Standalone FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`) (Python Tier 1 Offline Optics/Thermal -> C++17 `-fPIC` / SystemC + SystemC-AMS PoC Tier 2 Fast-Scale Core [Single-Axis, 3-Axis IMU & FMI 3.0 Wrapper `fmi_wrapper/`] -> Python Tier 3 FMPy Master Orchestrator, Dual-Regime AVAR, 15 Official Scenarios & `viz/`)
+**Architecture:** 3-Tier Hybrid Co-Simulation + Standalone FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`, 22 SI variables `VR 0..21`) + Automated 3-Stage Bounded Inverse Calibration (`tier3_analysis/inverse_calibration.py`)
 
 ---
 
 ## 1. Project Objectives
 
-1. **Full Spec-Driven Implementation:** Implement all subsystems specified in `IFOG-SIM-SPEC-006` (preserving `SPEC-005` & `SPEC-004`) (`spec/`, `configs/`, `tier1_offline/`, `tier2_sysc_ams/`, `fmi_wrapper/`, `tier3_analysis/`, `viz/`, `tests/`) with strict 1-to-1 mathematical fidelity to all **44 normative equations (`EQ-01` .. `EQ-44`)**.
-2. **Genuine Multi-Scale Simulation Core & FMI 3.0 Co-Simulation FMU:** Build and execute a real C++ `-O3 -fPIC` IEEE Std 1666.1 SystemC + SystemC-AMS PoC 2.3.4 closed-loop simulator (`OpticalEnvelope_TDF`, `AnalogFrontEnd_TDF` with hybrid `sca_ltf_nd`, `PinkNoise_TDF`, `ADC_Bridge_TDF2DE`, `DAC_Driver_TDF` with `set_delay(1)`, bit-true `DigitalDSP_SC` supporting 2-state, 4-state Lefèvre, and **official 6-state symmetric demodulation** + real-time FPGA BIT/FDIR, concurrent 3-axis IMU `SharedPowerBus_TDF` / `--imu3axis`, and reusable `IfogTopModule`) wrapped via `fmi_wrapper/` into a standalone, tool-agnostic **FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`)**.
-3. **6-Gate + 15-Scenario Quantitative Verification:** Pass Gates 1–4 (Golden Linear, Deadband & Bunny Ears >=90%, $1/f$ Flicker & $\mathbf{K}$-matrix <2%, 60 s Fast + 10 h Slow Dual-Regime AVAR), **Gate 5** (Official 6-State DSP `+136.9 dB` RAM/crosstalk rejection & `-33.3%` peak voltage), **Gate 6** (FMI 3.0 Black-Box FMU XSD compliance, `< 1e-12 rad/s` equivalence vs standalone `ifog_sim`, Slow Rate Ramp deadband reduction >=90%, and Dual-Regime 5-Region AVAR continuity <5%), **6 Time-Domain scenarios (`TD-01`..`TD-06`)**, **5 System Engineering scenarios (`ENG-01`..`ENG-05`)**, and **4 Dynamic Response & Electro-Optic Probe scenarios (`DYN-01`..`DYN-04`)**.
-4. **Zero-Defect CI/CD & Maintainable Release Lifecycle:** Enforce 100% test coverage (Python + C++ including `fmi_wrapper/src/`), 44-formula CI verification, real full-duration simulation execution (zero smoke-test shortcuts), strict 2-branch Git discipline (`dev` -> `main`), mandatory Rule 16 version–doc synchronization, and SemVer `x.y.z` tagged releases.
+1. **Full Spec-Driven Implementation:** Implement all subsystems specified in `IFOG-SIM-SPEC-007` (preserving `SPEC-006`, `SPEC-005`, & `SPEC-004`) (`spec/`, `configs/`, `tier1_offline/`, `tier2_sysc_ams/`, `fmi_wrapper/`, `tier3_analysis/`, `viz/`, `tests/`) with strict 1-to-1 mathematical fidelity to all **53 normative equations (`EQ-01` .. `EQ-53`)**.
+2. **Genuine Multi-Scale Predictive Physics Core & Tunable FMI 3.0 FMU:** Build and execute a real C++ `-O3 -fPIC` IEEE Std 1666.1 SystemC + SystemC-AMS PoC 2.3.4 closed-loop simulator (`OpticalEnvelope_TDF` with MIOC 2nd-order electro-acoustic dynamics, Rayleigh/facet back-reflection, & 6-channel `shupe_lut.bin` v2 interpolation; `AnalogFrontEnd_TDF` with capacitive + resistive crosstalk $C_{\text{xtalk}}\,dV/dt + G_{\text{xtalk}}V$ & hybrid `sca_ltf_nd`; `PinkNoise_TDF`; `ADC_Bridge_TDF2DE`; `DAC_Driver_TDF` with `set_delay(1)`; bit-true `DigitalDSP_SC` supporting 2-state, 4-state Lefèvre, and **official 6-state symmetric demodulation** + real-time FPGA BIT/FDIR; concurrent 3-axis IMU `SharedPowerBus_TDF` / `--imu3axis`; reusable `IfogTopModule`) wrapped via `fmi_wrapper/` into a standalone **FMI 3.0 Co-Simulation FMU (`build/ifog_core.fmu`)** exposing 7 live tunable parasitic parameters (`VR 15..21`).
+3. **6-Gate + 17-Scenario Quantitative Verification (`23 / 23` PASS):** Pass Gates 1–4, **Gate 5** (Official 6-State DSP `+136.9 dB` rejection), **Gate 6** (FMI 3.0 Black-Box FMU XSD compliance, `< 1e-12 rad/s` bit-exact equivalence, Deadband >=90%, Dual-Regime AVAR <5%), **6 Time-Domain scenarios (`TD-01`..`TD-06`)**, **5 System Engineering scenarios (`ENG-01`..`ENG-05`)**, **4 Dynamic Response & Electro-Optic Probe scenarios (`DYN-01`..`DYN-04`)**, and **2 `SPEC-007` High-Fidelity Physics & Inverse Calibration scenarios (`PHY-01`, `CAL-01`: uncalibrated `> 40%` error reduced to `< 5%`)**.
+4. **Zero-Defect CI/CD & Maintainable Release Lifecycle:** Enforce 100% test coverage (Python + C++ including `fmi_wrapper/src/`), 53-formula CI verification, real full-duration simulation execution (zero smoke-test shortcuts), strict 2-branch Git discipline (`dev` -> `main`), mandatory Rule 16 version–doc synchronization, and SemVer `x.y.z` tagged releases.
 
 ---
 
@@ -24,30 +24,30 @@
   - All development MUST occur exclusively on branch `dev`.
   - Changes reach `main` ONLY by merging `dev` into `main` through a Pull Request after all CI/CD checks pass.
   - **NO OTHER BRANCHES MAY EVER BE CREATED** (no `feature/*`, `fix/*`, `hotfix/*`, `release/*`, or ad-hoc branches locally or on `origin`). CI explicitly fails if any branch outside `{main, dev}` exists.
-  - Releases MUST be cut from `main` using annotated Git tags following semantic versioning `v<MAJOR>.<MINOR>.<PATCH>` (numeric `x.y.z`, e.g., `v3.0.0`).
+  - Releases MUST be cut from `main` using annotated Git tags following semantic versioning `v<MAJOR>.<MINOR>.<PATCH>` (numeric `x.y.z`, e.g., `v4.0.0`).
 - **Rule 2 — Comprehensive Unit, System, Regression Testing & 100% Coverage:**
   - Every module across Tier 1 (`tier1_offline/`), Tier 2 (`tier2_sysc_ams/`), FMI 3.0 Wrapper (`fmi_wrapper/`), Tier 3 (`tier3_analysis/`), and Visualization (`viz/`) MUST have thorough unit tests, end-to-end system tests, and bit-exact/numerical regression tests.
   - **100% code coverage is mandatory** in both domains:
-    - Python: `pytest --cov` MUST report `100%` line coverage across `tier1_offline`, `tier3_analysis` (including `fmi_master_runner.py`), and `viz`.
+    - Python: `pytest --cov` MUST report `100%` line coverage across `tier1_offline`, `tier3_analysis` (including `fmi_master_runner.py`, `inverse_calibration.py`, `scenarios_spec007.py`), and `viz`.
     - C++: `gcovr` MUST report `100%` line coverage across `tier2_sysc_ams/src`, `tier2_sysc_ams/include`, and `fmi_wrapper/src`.
 - **Rule 3 — Strict Spec Fidelity & Per-Formula CI/CD Verification:**
-  - Every design decision, data contract, CLI interface, FMI 3.0 XML variable, and physical equation MUST strictly follow `spec/IFOG-SIM-SPEC-006` (preserving `SPEC-005` & `SPEC-004`).
-  - All **44 normative equations (`EQ-01` through `EQ-44`)** MUST each have an independent, isolated verification test under `tests/formula_verification/` executed as a dedicated mandatory job in CI/CD, outputting a formula traceability matrix.
+  - Every design decision, data contract, CLI interface, FMI 3.0 XML variable, and physical equation MUST strictly follow `spec/IFOG-SIM-SPEC-007` (preserving `SPEC-006`, `SPEC-005`, & `SPEC-004`).
+  - All **53 normative equations (`EQ-01` through `EQ-53`)** MUST each have an independent, isolated verification test under `tests/formula_verification/` executed as a dedicated mandatory job in CI/CD, outputting a formula traceability matrix.
 - **Rule 4 — Mandatory Pre-Work Git Synchronization:**
   - Before starting ANY development, debugging, documentation, or release task, agents MUST run `git fetch --all --prune` and pull the latest changes from `origin/dev` (and inspect `origin/main` alignment).
 - **Rule 5 — 100% Real Full-Scale Simulation (No Smoke Tests Allowed):**
   - Never substitute reduced-time smoke tests, mocked physics, or synthetic shortcuts for real simulation verification.
-  - Gates 1–4 (including real 60 s Fast-Scale + 10 h / 3.6M-sample Slow-Scale AVAR), Gate 5 (4-state vs 6-state DSP), **Gate 6 (real `build/ifog_core.fmu` via FMPy — XSD validation, `<1e-12` equivalence, Slow Rate Ramp deadband, and 60 s × 4 FMU + 10 h Slow Dual-Regime AVAR)**, all 6 Time-Domain scenarios (`TD-01`..`TD-06`), all 5 System Engineering scenarios (`ENG-01`..`ENG-05`), and all 4 Dynamic Probe scenarios (`DYN-01`..`DYN-04`) MUST execute end-to-end using the compiled `ifog_sim` binary, `ifog_core.fmu`, and Python analysis pipeline.
+  - Gates 1–6 (including 60 s Fast-Scale + 10 h Slow-Scale AVAR, 6-State DSP, and real `build/ifog_core.fmu` via FMPy), `TD-01`..`TD-06`, `ENG-01`..`ENG-05`, `DYN-01`..`DYN-04`, and `SPEC-007` (`PHY-01` & `CAL-01`) MUST execute end-to-end using the compiled `ifog_sim` binary, `ifog_core.fmu`, and Python analysis pipeline.
 - **Rule 6 — Continuous Skill Accumulation & Mandatory Skill Usage:**
   - After every subsystem design, bug discovery, numerical calibration, or architectural iteration, distilled engineering lessons MUST be recorded into `skills/<skill-name>/SKILL.md` and indexed in `skills/README.md`.
   - **Mandatory Pre-Work Skill Rule:** Before modifying any subsystem, every agent MUST first read `skills/README.md` and the relevant `skills/*/SKILL.md` file(s) and follow all documented invariants, sign conventions, and checklists.
-- **Rule 7 — Specification Immutability (Triple Checksum Lock):**
-  - `spec/IFOG-SIM-SPEC-004.tex`, `spec/IFOG-SIM-SPEC-005.tex`, and `spec/IFOG-SIM-SPEC-006.{md,tex}` (and their rendered PDFs) MUST NOT be modified under any circumstance without explicit approval from the project owner.
-  - CI/CD enforces byte-level immutability via `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256`.
+- **Rule 7 — Specification Immutability (Quadruple Checksum Lock):**
+  - `spec/IFOG-SIM-SPEC-004.tex`, `spec/IFOG-SIM-SPEC-005.tex`, `spec/IFOG-SIM-SPEC-006.{md,tex}`, and `spec/IFOG-SIM-SPEC-007.{md,tex}` (and their rendered PDFs) MUST NOT be modified under any circumstance without explicit approval from the project owner.
+  - CI/CD enforces byte-level immutability via `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 spec/IFOG-SIM-SPEC-007.sha256`.
 - **Rule 8 — Gated Release Tag Procedure:**
-  - No release tag (`vX.Y.Z`) may be created until ALL local and CI/CD pipelines (triple spec checksum locks, branch policy check, 44-formula verification, 100% C++ coverage, 100% Python coverage, Rule 16 doc-sync, FMI 3.0 FMU validation, and full real Gate 1–6 + 15-scenario system simulations) pass with zero failures on `main`. See Section 5 for the exact step-by-step release procedure.
+  - No release tag (`vX.Y.Z`) may be created until ALL local and CI/CD pipelines (quadruple spec checksum locks, branch policy check, 53-formula verification, 100% C++ coverage, 100% Python coverage, Rule 16 doc-sync, FMI 3.0 FMU validation, and full real Gate 1–6 + 17-scenario system simulations) pass with zero failures on `main`. See Section 5 for the exact step-by-step release procedure.
 
-### Additional Engineering Rules (Derived from `IFOG-SIM-SPEC-004`, `SPEC-005` & `SPEC-006`)
+### Additional Engineering Rules (Derived from `IFOG-SIM-SPEC-004` .. `SPEC-007`)
 
 - **Rule 9 — 64-Bit Floating-Point Envelope Precision & Modulo-$2\pi$ Wrapping:**
   - All optical and analog signal paths MUST use IEEE-754 64-bit `double`.
@@ -58,11 +58,11 @@
   - `DAC_Driver_TDF` MUST set `set_delay(1)` on its DE input port (`dac_code`) and `rail_droop_in` to break closed-loop algebraic dependencies cleanly.
   - `fmi_wrapper/modelDescription.xml.in` MUST declare `canBeInstantiatedOnlyOncePerProcess="true"` and multi-run FMI master scripts MUST isolate each FMU instance in a dedicated OS subprocess.
 - **Rule 11 — Fail-Closed Stability & Schema Validation:**
-  - Every configuration JSON MUST validate against `configs/schema_v5.json` (backward-compatible with `"4.0"` and `"5.0"`) before simulation starts.
+  - Every configuration JSON MUST validate against `configs/schema_v6.json` (backward-compatible with `"4.0"`, `"5.0"`, and `"6.0"`) before simulation starts, including `n_turns >= n_layers`, $C_{\text{xtalk}} \ge 0$, $R_{\text{facet,dB}} \le 0$, and $f_{\text{mioc}} > 0$.
   - `ifog_sim` and `IfogTopModule` MUST verify Jury stability ($0 < K_{\text{tot},1} < 1$) and dual-loop bandwidth separation ($K_{\text{tot},2} \le 0.1\,K_{\text{tot},1}$ for both `4state` and `6state`) at startup and fail-closed if violated.
 - **Rule 12 — Deterministic Seed Discipline & Packed Binary I/O Contracts:**
-  - All PRNGs (fiber Jones perturbations, TIA 6-component white noise, 5-pole IIR $1/f$ noise, ADC aperture jitter, LFSR PRBS dither, Slow-Scale ARW/RRW, Monte Carlo tolerances) MUST be seeded explicitly from configuration (and exposed via FMI 3.0 `seed` parameter).
-  - Packed binary structs are enforced at compile time via `static_assert`: `SimRecord == 32 B` (`sim_out.bin`), `MicroRecord == 64 B` (`micro_waveforms.bin`), and `DspTraceRecord == 64 B` (`dsp_trace.bin`).
+  - All PRNGs (fiber Jones perturbations, TIA 6-component white noise, 5-pole IIR $1/f$ noise, Rayleigh/facet back-reflection, ADC aperture jitter, LFSR PRBS dither, Slow-Scale ARW/RRW, Monte Carlo tolerances) MUST be seeded explicitly from configuration (and exposed via FMI 3.0 `seed` parameter).
+  - Packed binary structs are enforced at compile time via `static_assert`: `SimRecord == 32 B` (`sim_out.bin`), `MicroRecord == 64 B` (`micro_waveforms.bin`), `DspTraceRecord == 64 B` (`dsp_trace.bin`), and `ShupeLutRecordV2 == 56 B` (`shupe_lut.bin` v2, with transparent v1 fallback).
 - **Rule 13 — Quantitative Acceptance & Physical Sign Fidelity:**
   - Maintain verified 4-state signs ($e_\Omega = (y_2-y_1)+(y_4-y_3)$, $e_{V_\pi} = (y_3+y_4)-(y_1+y_2)$) and official 6-state 3-channel signs ($e_\Omega^{(6)} = (y_4+y_5+y_6)-(y_1+y_2+y_3)$, $e_{V_\pi}^{(6)} = 2(y_2+y_5)-(y_1+y_3+y_4+y_6)$, $e_{\text{asym}}^{(6)} = (y_1-y_3)+(y_6-y_4)$) with negative-feedback ramp polarity so $\Delta\phi_{\text{step}} \to +K_{\text{opt}}\Omega_{\text{in}}$ and $G_{\text{DAC}} \to 1/(1+\epsilon_{V_\pi})$.
   - Keep unit conversion constant exact: $1\text{ rad/s} = (180/\pi)\times 3600 \approx 206264.806247\,^\circ/\text{h}$.
@@ -70,12 +70,12 @@
   - No dead branches, unexecuted error handlers, or uncovered helper utilities are permitted. Any code added to `tier1_offline/`, `tier2_sysc_ams/`, `fmi_wrapper/src/`, `tier3_analysis/`, or `viz/` MUST have immediate deterministic tests keeping both Python and C++ coverage at exactly `100.0%`.
 - **Rule 15 — Self-Contained Reproducibility & Automated Reporting:**
   - Never hardcode machine-specific paths; all build scripts, CMake files, FMI headers, and CLI invocations must be portable across Linux distros and Docker/Podman containers.
-  - All orchestrated simulation runs via `scripts/run_sim.sh` / `scripts/run_all_scenarios.sh` MUST automatically generate both Markdown (`report.md`) and interactive HTML (`report.html`) reports plus refreshed `report/index.{md,html}` under `report/`.
+  - All orchestrated simulation runs via `scripts/run_sim.sh` / `scripts/run_all_scenarios.sh` MUST automatically generate both Markdown (`report.md`) and interactive HTML (`report.html`, with tier-by-tier mathematical formulations `EQ-01..EQ-53` and `architecture_model.html`) reports plus refreshed `report/index.{md,html}` under `report/`.
 - **Rule 16 — Mandatory Version–Document Synchronization (Release Documentation Lock):**
   - `pyproject.toml` (`[project].version`, SemVer `X.Y.Z`) is the **single source of truth** for the project release version.
   - Every version bump (`vX.Y.Z`) or architectural/feature change MUST synchronously update ALL canonical architecture, scenario, and release documents BEFORE merging `dev -> main` or tagging `vX.Y.Z`:
     1. `pyproject.toml` (`version = "X.Y.Z"`)
-    2. `docs/IFOG_VPROTO_ARCHITECTURE.md` & `.tex` + freshly compiled `.pdf`
+    2. `docs/IFOG_VPROTO_ARCHITECTURE.md` & `.tex` + freshly compiled `.pdf` + `docs/IFOG_ARCHITECTURE_EXPLORER.html`
     3. `docs/IFOG_SIMULATION_SCENARIOS.md` & `.tex` + freshly compiled `.pdf`
     4. `docs/RELEASE_NOTES.md` & `.tex` + freshly compiled `.pdf`
     5. `docs/DOCS_BUILD.sha256` (locking all 3 compiled PDFs to their exact `.tex` sources via `bash scripts/build_docs.sh`)
@@ -96,16 +96,16 @@ Every agent MUST execute these steps in order before writing or editing any code
    git pull origin dev
    ```
 2. **Verify Branch Policy (Rule 1):** Confirm ONLY `main` and `dev` exist (`git branch -a`). Never create any third branch.
-3. **Verify Triple Spec Integrity & Doc Sync (Rules 7 & 16):** Run `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256` and `python3 scripts/verify_doc_sync.py`.
+3. **Verify Quadruple Spec Integrity & Doc Sync (Rules 7 & 16):** Run `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 spec/IFOG-SIM-SPEC-007.sha256` and `python3 scripts/verify_doc_sync.py`.
 4. **Load Project Skills (Rule 6):** Read `skills/README.md` and all `skills/*/SKILL.md` relevant to the target subsystem(s).
-5. **Implement, Test & Verify (Rules 2, 3, 5, 14):** Run unit tests, 44-formula verification, FMI 3.0 FMU validation, 100% coverage checks (Python + C++), and full-scale simulation gates & scenarios.
-6. **Synchronize Docs & Accumulate Skills (Rules 6 & 16):** Update `docs/*.{md,tex}`, recompile all 3 PDFs via `bash scripts/build_docs.sh`, verify `python3 scripts/verify_doc_sync.py`, and record new lessons into `skills/*/SKILL.md` before committing.
+5. **Implement, Test & Verify (Rules 2, 3, 5, 14):** Run unit tests, 53-formula verification, FMI 3.0 FMU validation, 100% coverage checks (Python + C++), and full-scale simulation gates & scenarios.
+6. **Synchronize Docs & Accumulate Skills (Rules 6 & 16):** Update `docs/*.{md,tex}`, recompile all 3 PDFs + HTML explorer via `bash scripts/build_docs.sh`, verify `python3 scripts/verify_doc_sync.py`, and record new lessons into `skills/*/SKILL.md` before committing.
 
 ---
 
-## 4. Normative Formula Registry (`EQ-01` .. `EQ-44`)
+## 4. Normative Formula Registry (`EQ-01` .. `EQ-53`)
 
-Every formula in `IFOG-SIM-SPEC-004` (`EQ-01`..`EQ-30`), `IFOG-SIM-SPEC-005` (`EQ-31`..`EQ-41`), and `IFOG-SIM-SPEC-006` (`EQ-42`..`EQ-44`) is uniquely tracked and verified in `tests/formula_verification/`:
+Every formula in `IFOG-SIM-SPEC-004` (`EQ-01`..`EQ-30`), `IFOG-SIM-SPEC-005` (`EQ-31`..`EQ-41`), `IFOG-SIM-SPEC-006` (`EQ-42`..`EQ-44`), and `IFOG-SIM-SPEC-007` (`EQ-45`..`EQ-53`, cross-referenced to draft `EQ-40`..`EQ-48`) is uniquely tracked and verified in `tests/formula_verification/`:
 
 | ID | Spec Section | Formula Summary | Implementation Binding |
 | :--- | :--- | :--- | :--- |
@@ -153,6 +153,15 @@ Every formula in `IFOG-SIM-SPEC-004` (`EQ-01`..`EQ-30`), `IFOG-SIM-SPEC-005` (`E
 | `EQ-42` | SPEC-006 §4.1 | FMI 3.0 multi-rate ZOH alignment ($N_{\tau,k}$) & anti-aliased macro-step average $\bar{\Omega}_{\text{out},k}$ | `tier2_sysc_ams/src/ifog_top_module.cpp`, `fmi_wrapper/src/fmi3_bridge.cpp` |
 | `EQ-43` | SPEC-006 §4.2 | FMI 3.0 Loop-2 residual $V_\pi$ phase error $e_{V_\pi,\text{res}} = 2\pi\epsilon_{V_\pi,\text{eff}}$ & 6-bit `bit_status` | `tier2_sysc_ams/src/ifog_top_module.cpp`, `tests/formula_verification/test_formulas_spec006.py` |
 | `EQ-44` | SPEC-006 §4.3 | Black-box FMU vs standalone Tier 2 `< 1e-12 rad/s` equivalence & singleton contract | `fmi_wrapper/src/fmi3_bridge.cpp`, `tier3_analysis/fmi_master_runner.py` |
+| `EQ-45` | SPEC-007 §2.1 *(draft 40)* | Discrete Quadrupole/Octupole coil winding map & total thermo-optic phase $\Delta\phi_{\text{thermo}}$ | `tier1_offline/shupe_thermal.py` |
+| `EQ-46` | SPEC-007 §2.1 *(draft 41)* | Thermo-mechanical elasto-optic stress-induced non-reciprocal phase $\Delta\phi_{\text{stress}}(t)$ | `tier1_offline/shupe_thermal.py` |
+| `EQ-47` | SPEC-007 §2.2 *(draft 42)* | Dynamic Sagnac scale factor thermal drift $K_{\text{opt}}(t) = K_{\text{opt},0}(1 + \delta K_{\text{opt}}(t))$ | `tier1_offline/shupe_thermal.py`, `tier2_sysc_ams/include/ifog_math.hpp` |
+| `EQ-48` | SPEC-007 §2.2 *(draft 43)* | Dynamic optical parameters $V_{\text{eff}}(t), \Delta\phi_{\text{pol}}(t), V_\pi(t)$ | `tier1_offline/shupe_thermal.py`, `tier2_sysc_ams/src/optical_envelope_tdf.cpp` |
+| `EQ-49` | SPEC-007 §2.3 *(draft 44)* | Multi-column `shupe_lut.bin` v2 (`56 B <7d`) & $O(1)$ interpolation with v1 fallback | `tier1_offline/shupe_thermal.py`, `tier2_sysc_ams/src/ifog_config.cpp` |
+| `EQ-50` | SPEC-007 §2.4 *(draft 45)* | MIOC $\text{LiNbO}_3$ 2nd-order electro-acoustic step dynamics before $K_{\text{delay}}$ | `tier2_sysc_ams/include/ifog_math.hpp`, `optical_envelope_tdf.cpp` |
+| `EQ-51` | SPEC-007 §2.5 *(draft 46)* | Capacitive + resistive PCB crosstalk $i_{\text{xtalk}}[k] = G_{\text{xtalk}}V_{\text{drv}} + C_{\text{xtalk}}\,dV_{\text{drv}}/dt$ | `tier2_sysc_ams/include/ifog_math.hpp`, `analog_frontend_tdf.cpp` |
+| `EQ-52` | SPEC-007 §2.6 *(draft 47)* | Coherent Rayleigh/facet back-reflection $\sigma_{\phi,\text{back}}$ & quadrature BI stitching $B_{\text{T3,mech}}$ | `tier1_offline/jones_spectral.py`, `tier2_sysc_ams/`, `dual_regime_avar.py` |
+| `EQ-53` | SPEC-007 §2.7 *(draft 48)* | 3-Stage bounded Inverse Calibration weighted least-squares & Gauss–Newton 95% CI | `tier3_analysis/inverse_calibration.py`, `scenarios_spec007.py` |
 
 ---
 
@@ -162,30 +171,30 @@ Every release MUST follow this exact, gated sequence without skipping any step:
 
 1. **Pre-Release Verification on `dev`:**
    - Ensure `git status` is clean on branch `dev` and synced with `origin/dev`.
-   - Bump `pyproject.toml` version to `X.Y.Z`, update `docs/IFOG_VPROTO_ARCHITECTURE.{md,tex}`, `docs/IFOG_SIMULATION_SCENARIOS.{md,tex}`, `docs/RELEASE_NOTES.{md,tex}`, `docs/CHANGELOG.md`, `Containerfile`/`Dockerfile`/`compose.yaml`, `README.md`, and `skills/`, compile all 3 PDFs via `bash scripts/build_docs.sh`, and verify Rule 16 synchronization:
+   - Bump `pyproject.toml` version to `X.Y.Z`, update `docs/IFOG_VPROTO_ARCHITECTURE.{md,tex}`, `docs/IFOG_SIMULATION_SCENARIOS.{md,tex}`, `docs/RELEASE_NOTES.{md,tex}`, `docs/CHANGELOG.md`, `Containerfile`/`Dockerfile`/`compose.yaml`, `README.md`, and `skills/`, compile all 3 PDFs + HTML explorer via `bash scripts/build_docs.sh`, and verify Rule 16 synchronization:
      ```bash
      python3 scripts/verify_doc_sync.py --expected-tag vX.Y.Z
      ```
-   - Verify triple spec checksum locks: `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256`.
+   - Verify quadruple spec checksum locks: `sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 spec/IFOG-SIM-SPEC-007.sha256`.
    - Run full local verification suite:
      - C++ Release build + FMI 3.0 FMU packaging (`cmake --build build --target package_fmu`) + `fmpy.validation.validate_fmu("build/ifog_core.fmu")` + `./build/ifog_cpp_tests`
      - C++ Coverage build -> `gcovr` confirms `100.0%` line & function coverage across `tier2_sysc_ams/` AND `fmi_wrapper/src/`
-     - Python unit, regression, visualization, doc-sync, runner, FMI master, and **44-formula** tests -> `pytest --cov` confirms `100.0%` line coverage
-     - Full real Gate 1–6 (including FMI 3.0 FMU) + 6 Time-Domain + 5 System Engineering + 4 Dynamic Probe real simulations (`pytest tests/system -v -s`) + auto-generated `report/` `.md` & `.html` verification
+     - Python unit, regression, visualization, doc-sync, runner, FMI master, inverse calibration, and **53-formula** tests -> `pytest --cov` confirms `100.0%` line coverage
+     - Full real Gate 1–6 (including FMI 3.0 FMU) + 6 TD + 5 ENG + 4 DYN + 2 SPEC-007 (`PHY-01`/`CAL-01`) real simulations (`pytest tests/system -v -s`) + auto-generated `report/` `.md` & `.html` verification
 2. **Push `dev` & Open Pull Request (`dev` -> `main`):**
    - Push `dev` to `origin/dev`: `git push origin dev`
    - Wait for the GitHub Actions `CI` workflow on `dev` to finish with status `success`.
    - Open a PR from `dev` to `main` via `gh pr create --base main --head dev --title "Release vX.Y.Z: ..." --body "..."`.
-   - Wait for ALL required CI checks on the PR (Branch Policy, Triple Spec Checksum, Rule 16 Doc-Sync, C++ Build & FMI 3.0 FMU Packaging, 100% C++ Coverage, Python 100% Coverage, 44-Formula Verification, Full Real System Simulations, and Container Build & Live Sim) to pass (`success`).
+   - Wait for ALL required CI checks on the PR (Branch Policy, Quadruple Spec Checksum, Rule 16 Doc-Sync, C++ Build & FMI 3.0 FMU Packaging, 100% C++ Coverage, Python 100% Coverage, 53-Formula Verification, Full Real System Simulations, and Container Build & Live Sim) to pass (`success`).
 3. **Merge PR into `main` (Preserving `dev`):**
    - Merge via `gh pr merge --merge` (**NEVER** use `--delete-branch`; `dev` MUST remain intact).
    - Pull `main` locally (`git checkout main && git pull origin main`) and wait for the `CI` workflow triggered on `main` to pass `success`.
 4. **Create & Push Annotated SemVer Tag (`vX.Y.Z`):**
    - Tag the verified `main` commit:
      ```bash
-     git tag -a vX.Y.Z -m "Release vX.Y.Z — Closed-Loop IFOG Virtual Prototype & FMI 3.0 FMU (IFOG-SIM-SPEC-006)"
+     git tag -a vX.Y.Z -m "Release vX.Y.Z — IFOG Virtual Prototype: Predictive Physics & Inverse Calibration (IFOG-SIM-SPEC-007)"
      git push origin vX.Y.Z
      ```
-   - Verify the GitHub Actions `Release` workflow triggered by `vX.Y.Z` enforces `--expected-tag vX.Y.Z` doc sync, re-runs all verification gates, packages all 17 release artifacts (`ifog_core.fmu`, `IFOG-SIM-SPEC-004.pdf`, `IFOG-SIM-SPEC-005.pdf`, `IFOG-SIM-SPEC-006.{pdf,md}`, `IFOG_VPROTO_ARCHITECTURE.{pdf,md,tex}`, `IFOG_SIMULATION_SCENARIOS.{pdf,md,tex}`, `RELEASE_NOTES.{pdf,md,tex}`, `formula_verification_matrix.{md,json}`, `cpp_coverage_summary.json`), and publishes the GitHub Release `vX.Y.Z`.
+   - Verify the GitHub Actions `Release` workflow triggered by `vX.Y.Z` enforces `--expected-tag vX.Y.Z` doc sync, re-runs all verification gates, packages all 20 release artifacts (`ifog_core.fmu`, `IFOG-SIM-SPEC-004.pdf`, `IFOG-SIM-SPEC-005.pdf`, `IFOG-SIM-SPEC-006.{pdf,md}`, `IFOG-SIM-SPEC-007.{pdf,md}`, `IFOG_VPROTO_ARCHITECTURE.{pdf,md,tex}`, `IFOG_ARCHITECTURE_EXPLORER.html`, `IFOG_SIMULATION_SCENARIOS.{pdf,md,tex}`, `RELEASE_NOTES.{pdf,md,tex}`, `formula_verification_matrix.{md,json}`, `cpp_coverage_summary.json`), and publishes the GitHub Release `vX.Y.Z`.
 5. **Return to `dev` and Sync:**
    - Fast-forward `dev` to match `main` (`git checkout dev && git merge --ff-only main && git push origin dev`), ensuring `dev` and `main` stay clean and aligned for subsequent maintenance.

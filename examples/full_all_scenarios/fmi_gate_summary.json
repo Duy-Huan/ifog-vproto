@@ -4,14 +4,14 @@
   "title": "FMI 3.0 Black-Box FMU Compliance, Equivalence (<1e-12), Deadband & 5-Region AVAR",
   "validation": {
     "fmu_path": "/home/antigravity/Duy-Huan/ifog-vproto/build/ifog_core.fmu",
-    "fmu_size_bytes": 277694,
+    "fmu_size_bytes": 290010,
     "fmi_version": "3.0",
     "model_name": "ifog_core",
     "instantiation_token": "{6e9c4b1a-7f20-4f06-9a5c-000000000006}",
     "can_be_instantiated_only_once_per_process": true,
     "validation_problems": [],
     "missing_required_variables": [],
-    "variable_count": 15,
+    "variable_count": 22,
     "binary_entries": [
       "binaries/x86_64-linux/ifog_core.so"
     ],

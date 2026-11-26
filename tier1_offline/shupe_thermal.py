@@ -1,13 +1,16 @@
-"""Tier 1 Offline Thermal-Mechanical Solver: 1D Diffusion / FEM Import & Shupe Integral (EQ-09).
+"""Tier 1 Offline Thermal-Mechanical Solver: Shupe, Discrete Winding, Stress-Optic & LUT v2.
 
-Implements Shupe's thermal non-reciprocity integral (Shupe 1980, IFOG-SIM-SPEC-004 Section 3.1.2):
-    Delta_phi_Shupe(t) = (2*pi / (lambda_bar * c)) * (dn_eff/dT + n_eff * alpha_T)
-                         * integral_0^L (dT(z,t)/dt) * (L - 2*z + delta_z_quad(z)) dz
+Implements:
+  - EQ-09 (SPEC-004): Thermal Shupe integral Delta_phi_Shupe(t)
+  - EQ-45 (SPEC-007 §2.1a): Discrete turn-by-turn quadrupole/octupole winding map (r_i, z_ax_i, delta_z_quad)
+  - EQ-46 (SPEC-007 §2.1b): Elasto-optic thermo-mechanical stress integral Delta_phi_stress(t)
+                            and total Delta_phi_therm(t) = Delta_phi_Shupe(t) + Delta_phi_stress(t)
+  - EQ-47 (SPEC-007 §2.2a): Dynamic Sagnac scale factor K_opt(t) / K_opt,0
+  - EQ-48 (SPEC-007 §2.2b): Time-varying visibility V_eff(t), polarization bias phi_pol(t), and V_pi(t)
+  - EQ-49 (SPEC-007 §2.3):  Binary LUT format v2 (24 B header + 56 B <7d records) with v1 fallback
 
-Outputs binary lookup table ``shupe_lut.bin`` and summary ``shupe_summary.json``.
-
-CLI Contract (IFOG-SIM-SPEC-004 Section 5.2):
-    python3 tier1_offline/shupe_thermal.py --cfg configs/baseline_1km.json --out data/run01/
+CLI Contract (IFOG-SIM-SPEC-004/007):
+    python3 tier1_offline/shupe_thermal.py --cfg configs/baseline_1km_spec007.json --out data/run01/
 """
 
 from __future__ import annotations
@@ -23,12 +26,97 @@ from typing import Any
 import numpy as np
 from scipy.linalg import solve_banded
 
-from tier1_offline.config_loader import C_LIGHT, RAD_S_TO_DEG_H, compute_k_opt, load_config
+from tier1_offline.config_loader import (
+    C_LIGHT,
+    RAD_S_TO_DEG_H,
+    compute_k_opt,
+    get_spec007_physics,
+    load_config,
+)
 
 SHUPE_LUT_MAGIC = b"SHUP"
 SHUPE_LUT_VERSION = 1
+SHUPE_LUT_VERSION_V2 = 2
 SHUPE_HEADER_STRUCT = struct.Struct("<4sIQd")  # magic, version, n_samples, dt_s (24 bytes)
-SHUPE_RECORD_STRUCT = struct.Struct("<dd")  # t_s, delta_phi_shupe_rad (16 bytes)
+SHUPE_RECORD_STRUCT = struct.Struct("<dd")  # v1: t_s, delta_phi_shupe_rad (16 bytes)
+SHUPE_RECORD_V2_STRUCT = struct.Struct("<7d")  # v2: 7 float64 channels (56 bytes)
+
+
+def build_winding_map(
+    L_m: float,
+    D_m: float,
+    coil_thickness_m: float,
+    n_turns: int,
+    n_layers: int,
+    winding_pattern: str = "quadrupole",
+    flange_offset_m: float = 0.0,
+    delta_z_quad_m: float = 0.0,
+) -> dict[str, np.ndarray]:
+    """Map discrete fiber turns i in {0..N_turns-1} to physical (r_i, z_ax_i, delta_z_quad) (EQ-45).
+
+    Supports ``"quadrupole"`` (4-layer repeating ABBA symmetric block: layers [k, k+1, k+1, k])
+    and ``"octupole"`` (8-layer doubly-balanced ABBA-BAAB block, cancelling both linear and
+    quadratic radial temperature gradients across the coil stack). End-flange layer transitions
+    introduce bounded geometric offsets ``flange_offset_m``.
+    """
+    if winding_pattern not in ("quadrupole", "octupole"):
+        raise ValueError(f"Unsupported winding_pattern: {winding_pattern}")
+    if n_turns < 4 or n_layers < 2 or n_turns < n_layers:
+        raise ValueError(f"Invalid coil winding dimensions: n_turns={n_turns}, n_layers={n_layers}")
+
+    idx = np.arange(n_turns, dtype=np.float64)
+    z_m = (idx + 0.5) * (L_m / float(n_turns))
+    half = n_turns // 2
+    turns_per_layer = max(1, n_turns // n_layers)
+
+    # Layer assignment from midpoint outward using quadrupole (4-layer) or octupole (8-layer) parity
+    r_inner = 0.5 * D_m - 0.5 * coil_thickness_m
+    dr_layer = coil_thickness_m / float(max(1, n_layers - 1))
+    coil_height = max(coil_thickness_m, 0.02)
+
+    layer_idx = np.zeros(n_turns, dtype=np.int64)
+    z_ax = np.zeros(n_turns, dtype=np.float64)
+    flange_err = np.zeros(n_turns, dtype=np.float64)
+
+    for i in range(n_turns):
+        # Distance in turns from coil midpoint (0 .. half)
+        d_mid = abs(i - (half - 0.5))
+        side = 1 if i >= half else 0  # 0 = CCW half [0, L/2), 1 = CW half [L/2, L]
+        layer_pair = min(n_layers // 2 - 1, int(d_mid // max(1, turns_per_layer)))
+        turn_in_layer = int(d_mid) % max(1, turns_per_layer)
+        frac_ax = (turn_in_layer + 0.5) / float(max(1, turns_per_layer))
+
+        if winding_pattern == "quadrupole":
+            # ABBA parity per 2-layer pair: even pair (side 0->inner, 1->outer), odd pair flipped
+            parity = (layer_pair % 2) ^ side
+            lay = min(n_layers - 1, 2 * layer_pair + parity)
+            # Small systematic residual from single-order pair asymmetry
+            pair_sign = 1.0 if (layer_pair % 2 == 0) else -1.0
+            flange_err[i] = flange_offset_m * pair_sign * (0.5 if side == 1 else -0.5)
+        else:
+            # Octupole (ABBA-BAAB): flips parity every 4 layers (cancels quadratic gradient)
+            quad_block = (layer_pair // 2) % 2
+            parity = ((layer_pair % 2) ^ quad_block) ^ side
+            lay = min(n_layers - 1, 2 * layer_pair + parity)
+            # Doubly-balanced octupole reduces flange asymmetry by factor of 4
+            oct_sign = 1.0 if ((layer_pair + quad_block) % 2 == 0) else -1.0
+            flange_err[i] = 0.25 * flange_offset_m * oct_sign * (0.5 if side == 1 else -0.5)
+
+        layer_idx[i] = lay
+        z_ax[i] = coil_height * (frac_ax if (lay % 2 == 0) else (1.0 - frac_ax))
+
+    r_m = r_inner + layer_idx.astype(np.float64) * dr_layer
+    # Spatial asymmetry residual combining winding symmetry & configured delta_z_quad_m
+    sym_factor = 1.0 if winding_pattern == "quadrupole" else 0.25
+    delta_z_quad = sym_factor * delta_z_quad_m * np.sin(2.0 * math.pi * z_m / L_m) + flange_err
+
+    return {
+        "z_m": z_m,
+        "r_m": r_m,
+        "z_ax_m": z_ax,
+        "layer_idx": layer_idx,
+        "delta_z_quad_m": delta_z_quad,
+    }
 
 
 def shupe_integral(
@@ -43,12 +131,65 @@ def shupe_integral(
 ) -> float:
     """Compute exact Shupe thermal phase shift Delta_phi_Shupe [rad] (EQ-09).
 
-    Supports both scalar and spatially varying quadrupole winding residual delta_z_quad(z).
+    Supports both scalar and spatially varying quadrupole/octupole residual delta_z_quad(z).
     """
     prefactor = (2.0 * math.pi / (lambda_bar_m * C_LIGHT)) * (dn_dT_per_K + n_eff * alpha_T_per_K)
     kernel = (L_m - 2.0 * z_m) + delta_z_quad_m
     integrand = dT_dt_K_per_s * kernel
     return float(prefactor * np.trapezoid(integrand, z_m))
+
+
+def elasto_optic_stress_integral(
+    z_m: np.ndarray,
+    dsigma_dt_Pa_per_s: np.ndarray,
+    L_m: float,
+    lambda_bar_m: float,
+    C_eo_per_Pa: float,
+    delta_z_quad_m: np.ndarray | float = 0.0,
+) -> float:
+    """Compute thermo-mechanical elasto-optic stress phase shift Delta_phi_stress [rad] (EQ-46)."""
+    if C_eo_per_Pa == 0.0:
+        return 0.0
+    prefactor = (2.0 * math.pi / (lambda_bar_m * C_LIGHT)) * C_eo_per_Pa
+    kernel = (L_m - 2.0 * z_m) + delta_z_quad_m
+    return float(prefactor * np.trapezoid(dsigma_dt_Pa_per_s * kernel, z_m))
+
+
+def compute_dynamic_k_opt_rel(
+    dT_coil_K: np.ndarray | float,
+    dT_sld_K: np.ndarray | float,
+    alpha_bobbin_ppm_K: float,
+    alpha_lambda_pm_K: float,
+    lambda_bar_m: float,
+    kappa_back_m_per_W: float,
+    P_back_W: np.ndarray | float,
+    n_eff: float,
+    dn_dT_per_K: float,
+) -> np.ndarray | float:
+    """Compute dynamic relative Sagnac scale factor K_opt(t) / K_opt,0 (EQ-47)."""
+    alpha_bobbin = alpha_bobbin_ppm_K * 1.0e-6
+    alpha_lambda = alpha_lambda_pm_K * 1.0e-12
+    term_bobbin = alpha_bobbin * dT_coil_K
+    term_lambda = (alpha_lambda * dT_sld_K + kappa_back_m_per_W * P_back_W) / lambda_bar_m
+    term_neff = (dn_dT_per_K / n_eff) * dT_coil_K
+    return 1.0 + term_bobbin - term_lambda + term_neff
+
+
+def compute_dynamic_optical_params(
+    V_eff_0: float,
+    phi_pol_0: float,
+    V_pi_0: float,
+    dT_coil_K: np.ndarray | float,
+    dT_mioc_K: np.ndarray | float,
+    beta_V_per_K: float,
+    gamma_pol_rad_per_K: float,
+    alpha_vpi_ppm_K: float,
+) -> tuple[np.ndarray | float, np.ndarray | float, np.ndarray | float]:
+    """Compute time-varying (V_eff(t), phi_pol(t), V_pi(t)) per EQ-48."""
+    v_eff_t = np.clip(V_eff_0 * (1.0 - beta_V_per_K * np.abs(dT_coil_K)), 1.0e-3, 1.0)
+    phi_pol_t = phi_pol_0 + gamma_pol_rad_per_K * dT_coil_K
+    v_pi_t = V_pi_0 * (1.0 + (alpha_vpi_ppm_K * 1.0e-6) * dT_mioc_K)
+    return v_eff_t, phi_pol_t, v_pi_t
 
 
 def solve_1d_heat_diffusion(
@@ -87,8 +228,6 @@ def solve_1d_heat_diffusion(
     for i in range(n_steps - 1):
         t_next = t_grid[i + 1]
         t_curr = t_grid[i]
-        left_curr = rate_left * t_curr
-        right_curr = rate_right * t_curr
         left_next = rate_left * t_next
         right_next = rate_right * t_next
 
@@ -126,7 +265,7 @@ def load_fem_dT_dt_csv(csv_path: Path | str) -> tuple[np.ndarray, np.ndarray, np
 
 
 def write_shupe_lut(out_path: Path | str, t_s: np.ndarray, delta_phi_rad: np.ndarray) -> None:
-    """Write binary shupe_lut.bin lookup table."""
+    """Write legacy v1 binary shupe_lut.bin lookup table (24 B header + 16 B <2d records)."""
     n_samples = int(len(t_s))
     dt_s = float(t_s[1] - t_s[0]) if n_samples > 1 else 0.0
     with Path(out_path).open("wb") as fh:
@@ -135,16 +274,80 @@ def write_shupe_lut(out_path: Path | str, t_s: np.ndarray, delta_phi_rad: np.nda
             fh.write(SHUPE_RECORD_STRUCT.pack(float(t_val), float(phi_val)))
 
 
-def read_shupe_lut(lut_path: Path | str) -> tuple[np.ndarray, np.ndarray, float]:
-    """Read binary shupe_lut.bin lookup table -> (t_s, delta_phi_rad, dt_s)."""
+def write_shupe_lut_v2(
+    out_path: Path | str,
+    t_s: np.ndarray,
+    delta_phi_shupe_rad: np.ndarray,
+    delta_phi_stress_rad: np.ndarray,
+    visibility_V_t: np.ndarray,
+    phi_pol_rad_t: np.ndarray,
+    v_pi_V_t: np.ndarray,
+    k_opt_scale_rel_t: np.ndarray,
+) -> None:
+    """Write SPEC-007 binary shupe_lut.bin v2 table (24 B header + 56 B <7d records, EQ-49)."""
+    n_samples = int(len(t_s))
+    dt_s = float(t_s[1] - t_s[0]) if n_samples > 1 else 0.0
+    with Path(out_path).open("wb") as fh:
+        fh.write(SHUPE_HEADER_STRUCT.pack(SHUPE_LUT_MAGIC, SHUPE_LUT_VERSION_V2, n_samples, dt_s))
+        for i in range(n_samples):
+            fh.write(
+                SHUPE_RECORD_V2_STRUCT.pack(
+                    float(t_s[i]),
+                    float(delta_phi_shupe_rad[i]),
+                    float(delta_phi_stress_rad[i]),
+                    float(visibility_V_t[i]),
+                    float(phi_pol_rad_t[i]),
+                    float(v_pi_V_t[i]),
+                    float(k_opt_scale_rel_t[i]),
+                )
+            )
+
+
+def read_shupe_lut_v2(lut_path: Path | str) -> dict[str, Any]:
+    """Read binary shupe_lut.bin (v1 or v2) into a normalized 7-column dictionary (EQ-49)."""
     with Path(lut_path).open("rb") as fh:
         header_bytes = fh.read(SHUPE_HEADER_STRUCT.size)
+        if len(header_bytes) < SHUPE_HEADER_STRUCT.size:
+            raise ValueError(f"Truncated shupe_lut.bin header in: {lut_path}")
         magic, version, n_samples, dt_s = SHUPE_HEADER_STRUCT.unpack(header_bytes)
-        if magic != SHUPE_LUT_MAGIC or version != SHUPE_LUT_VERSION:
+        if magic != SHUPE_LUT_MAGIC or version not in (SHUPE_LUT_VERSION, SHUPE_LUT_VERSION_V2):
             raise ValueError(f"Invalid shupe_lut.bin header: magic={magic!r}, version={version}")
-        raw = fh.read(n_samples * SHUPE_RECORD_STRUCT.size)
-    arr = np.frombuffer(raw, dtype="<f8").reshape((n_samples, 2))
-    return arr[:, 0].copy(), arr[:, 1].copy(), float(dt_s)
+        if version == SHUPE_LUT_VERSION:
+            raw = fh.read(n_samples * SHUPE_RECORD_STRUCT.size)
+            arr = np.frombuffer(raw, dtype="<f8").reshape((n_samples, 2))
+            zeros = np.zeros(n_samples, dtype=np.float64)
+            ones = np.ones(n_samples, dtype=np.float64)
+            return {
+                "version": 1,
+                "dt_s": float(dt_s),
+                "t_s": arr[:, 0].copy(),
+                "delta_phi_shupe_rad": arr[:, 1].copy(),
+                "delta_phi_stress_rad": zeros,
+                "visibility_V_t": ones.copy(),
+                "phi_pol_rad_t": zeros.copy(),
+                "v_pi_V_t": zeros.copy(),
+                "k_opt_scale_rel_t": ones,
+            }
+        raw = fh.read(n_samples * SHUPE_RECORD_V2_STRUCT.size)
+        arr = np.frombuffer(raw, dtype="<f8").reshape((n_samples, 7))
+        return {
+            "version": 2,
+            "dt_s": float(dt_s),
+            "t_s": arr[:, 0].copy(),
+            "delta_phi_shupe_rad": arr[:, 1].copy(),
+            "delta_phi_stress_rad": arr[:, 2].copy(),
+            "visibility_V_t": arr[:, 3].copy(),
+            "phi_pol_rad_t": arr[:, 4].copy(),
+            "v_pi_V_t": arr[:, 5].copy(),
+            "k_opt_scale_rel_t": arr[:, 6].copy(),
+        }
+
+
+def read_shupe_lut(lut_path: Path | str) -> tuple[np.ndarray, np.ndarray, float]:
+    """Read binary shupe_lut.bin (v1 or v2) -> (t_s, total_delta_phi_therm_rad, dt_s)."""
+    lut = read_shupe_lut_v2(lut_path)
+    total_phi = lut["delta_phi_shupe_rad"] + lut["delta_phi_stress_rad"]
+    return lut["t_s"], total_phi, float(lut["dt_s"])
 
 
 def solve_tier1_shupe(cfg: dict[str, Any]) -> tuple[np.ndarray, np.ndarray, dict[str, Any]]:
@@ -205,21 +408,197 @@ def solve_tier1_shupe(cfg: dict[str, Any]) -> tuple[np.ndarray, np.ndarray, dict
     return t_grid, delta_phi, summary
 
 
-def main(argv: list[str] | None = None) -> int:
-    """CLI entry point for Tier 1 thermal Shupe solver."""
-    parser = argparse.ArgumentParser(
-        description="Tier 1 Thermal Shupe Solver (IFOG-SIM-SPEC-004)"
+def solve_tier1_shupe_v2(
+    cfg: dict[str, Any],
+    phys_params: dict[str, Any] | None = None,
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    """Solve SPEC-007 thermo-mechanical Shupe + elasto-optic stress + dynamic optical LUT v2."""
+    opt = cfg["optics"]
+    th = cfg["thermal"]
+    mioc = cfg["mioc"]
+    sp7 = get_spec007_physics(cfg)
+
+    L_m = float(opt["L_m"])
+    D_m = float(opt["D_m"])
+    lambda_bar_m = float(opt["lambda_bar_m"])
+    n_eff = float(opt["n_eff"])
+    k_opt = compute_k_opt(L_m, D_m, lambda_bar_m)
+
+    v_eff_0 = float(phys_params["visibility_V"]) if phys_params else 0.999
+    phi_pol_0 = float(phys_params["phi_pol_rad"]) if phys_params else 0.0
+    v_pi_0 = float(mioc["V_pi_0_V"])
+
+    winding = build_winding_map(
+        L_m=L_m,
+        D_m=D_m,
+        coil_thickness_m=float(th["coil_thickness_m"]),
+        n_turns=int(sp7["n_turns"]),
+        n_layers=int(sp7["n_layers"]),
+        winding_pattern=str(sp7["winding_pattern"]),
+        flange_offset_m=float(sp7["flange_offset_m"]),
+        delta_z_quad_m=float(th["delta_z_quad_m"]),
     )
-    parser.add_argument("--cfg", required=True, help="Path to IFOG config JSON (schema v4)")
+
+    fem_path = th.get("fem_csv_path")
+    if fem_path:
+        t_grid, z_fem, dT_dt_fem = load_fem_dT_dt_csv(fem_path)
+        source_mode = "fem_csv"
+        dT_dt_turns = np.array(
+            [np.interp(winding["z_m"], z_fem, dT_dt_fem[i, :]) for i in range(len(t_grid))],
+            dtype=np.float64,
+        )
+    else:
+        t_grid, x_norm, dT_dt_rad = solve_1d_heat_diffusion(
+            n_z=int(th["n_z"]),
+            coil_thickness_m=float(th["coil_thickness_m"]),
+            diffusivity_m2_per_s=float(th["diffusivity_m2_per_s"]),
+            duration_s=float(th["duration_s"]),
+            dt_s=float(th["dt_s"]),
+            boundary_ramp_K_per_s=float(th["boundary_ramp_K_per_s"]),
+            boundary_asymmetry_K_per_s=float(th.get("boundary_asymmetry_K_per_s", 0.0)),
+        )
+        source_mode = "1d_diffusion"
+        # Map radial coordinate r_i of every discrete fiber turn onto normalized radial stack [0, 1]
+        r_min = float(np.min(winding["r_m"]))
+        r_span = max(float(np.max(winding["r_m"]) - r_min), 1.0e-12)
+        r_norm = (winding["r_m"] - r_min) / r_span
+        dT_dt_turns = np.array(
+            [np.interp(r_norm, x_norm, dT_dt_rad[i, :]) for i in range(len(t_grid))],
+            dtype=np.float64,
+        )
+
+    z_turns = winding["z_m"]
+    dz_quad = winding["delta_z_quad_m"]
+    c_eo = float(sp7["C_eo_per_Pa"])
+    stress_rate_per_K = float(sp7["stress_rate_Pa_per_K"])
+
+    delta_phi_shupe = np.empty(len(t_grid), dtype=np.float64)
+    delta_phi_stress = np.empty(len(t_grid), dtype=np.float64)
+    for i in range(len(t_grid)):
+        delta_phi_shupe[i] = shupe_integral(
+            z_m=z_turns,
+            dT_dt_K_per_s=dT_dt_turns[i, :],
+            L_m=L_m,
+            lambda_bar_m=lambda_bar_m,
+            n_eff=n_eff,
+            dn_dT_per_K=float(th["dn_dT_per_K"]),
+            alpha_T_per_K=float(th["alpha_T_per_K"]),
+            delta_z_quad_m=dz_quad,
+        )
+        dsigma_dt = stress_rate_per_K * dT_dt_turns[i, :]
+        delta_phi_stress[i] = elasto_optic_stress_integral(
+            z_m=z_turns,
+            dsigma_dt_Pa_per_s=dsigma_dt,
+            L_m=L_m,
+            lambda_bar_m=lambda_bar_m,
+            C_eo_per_Pa=c_eo,
+            delta_z_quad_m=dz_quad,
+        )
+
+    # Mean coil temperature change Delta_T_coil(t) integrated from mean dT/dt
+    mean_dT_dt = np.mean(dT_dt_turns, axis=1)
+    dt_arr = np.diff(t_grid, prepend=t_grid[0])
+    dT_coil = np.cumsum(mean_dT_dt * dt_arr)
+    dT_sld = float(sp7["delta_T_sld_ratio"]) * dT_coil
+    dT_mioc = float(sp7["delta_T_mioc_ratio"]) * dT_coil
+
+    k_opt_rel = np.asarray(
+        compute_dynamic_k_opt_rel(
+            dT_coil_K=dT_coil,
+            dT_sld_K=dT_sld,
+            alpha_bobbin_ppm_K=float(sp7["alpha_bobbin_ppm_K"]),
+            alpha_lambda_pm_K=float(sp7["alpha_lambda_pm_K"]),
+            lambda_bar_m=lambda_bar_m,
+            kappa_back_m_per_W=float(sp7["kappa_back_m_per_W"]),
+            P_back_W=float(sp7["P_back_W"]),
+            n_eff=n_eff,
+            dn_dT_per_K=float(th["dn_dT_per_K"]),
+        ),
+        dtype=np.float64,
+    )
+    v_eff_t, phi_pol_t, v_pi_t = compute_dynamic_optical_params(
+        V_eff_0=v_eff_0,
+        phi_pol_0=phi_pol_0,
+        V_pi_0=v_pi_0,
+        dT_coil_K=dT_coil,
+        dT_mioc_K=dT_mioc,
+        beta_V_per_K=float(sp7["beta_V_per_K"]),
+        gamma_pol_rad_per_K=float(sp7["gamma_pol_rad_per_K"]),
+        alpha_vpi_ppm_K=float(sp7["alpha_vpi_ppm_K"]),
+    )
+
+    delta_phi_tot = delta_phi_shupe + delta_phi_stress
+    omega_therm_deg_h = (delta_phi_tot / k_opt) * RAD_S_TO_DEG_H
+    channels = {
+        "t_s": t_grid,
+        "delta_phi_shupe_rad": delta_phi_shupe,
+        "delta_phi_stress_rad": delta_phi_stress,
+        "visibility_V_t": np.asarray(v_eff_t, dtype=np.float64),
+        "phi_pol_rad_t": np.asarray(phi_pol_t, dtype=np.float64),
+        "v_pi_V_t": np.asarray(v_pi_t, dtype=np.float64),
+        "k_opt_scale_rel_t": k_opt_rel,
+        "dT_coil_K": dT_coil,
+    }
+    summary = {
+        "spec_id": "IFOG-SIM-SPEC-007",
+        "lut_version": 2,
+        "source_mode": source_mode,
+        "winding_pattern": str(sp7["winding_pattern"]),
+        "n_turns": int(sp7["n_turns"]),
+        "n_layers": int(sp7["n_layers"]),
+        "n_samples": int(len(t_grid)),
+        "duration_s": float(t_grid[-1] - t_grid[0]),
+        "max_abs_delta_phi_shupe_rad": float(np.max(np.abs(delta_phi_shupe))),
+        "max_abs_delta_phi_stress_rad": float(np.max(np.abs(delta_phi_stress))),
+        "max_abs_delta_phi_rad": float(np.max(np.abs(delta_phi_tot))),
+        "max_abs_omega_shupe_deg_per_h": float(np.max(np.abs(omega_therm_deg_h))),
+        "final_delta_phi_rad": float(delta_phi_tot[-1]),
+        "k_opt_rel_drift_ppm": float((k_opt_rel[-1] - 1.0) * 1.0e6),
+        "v_pi_final_V": float(np.asarray(v_pi_t)[-1]),
+    }
+    return channels, summary
+
+
+def main(argv: list[str] | None = None) -> int:
+    """CLI entry point for Tier 1 thermal Shupe / SPEC-007 thermo-mechanical solver."""
+    parser = argparse.ArgumentParser(
+        description="Tier 1 Thermal Shupe & SPEC-007 Thermo-Mechanical Solver"
+    )
+    parser.add_argument("--cfg", required=True, help="Path to IFOG config JSON (schema v4/v5/v6)")
     parser.add_argument("--out", required=True, help="Output run directory for shupe_lut.bin")
+    parser.add_argument(
+        "--lut-version",
+        type=int,
+        choices=(1, 2),
+        default=None,
+        help="Override binary LUT version (defaults to spec007_physics.lut_version or 1)",
+    )
     args = parser.parse_args(argv)
 
     cfg = load_config(args.cfg)
-    t_grid, delta_phi, summary = solve_tier1_shupe(cfg)
-
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
-    write_shupe_lut(out_dir / "shupe_lut.bin", t_grid, delta_phi)
+    sp7 = get_spec007_physics(cfg)
+    lut_ver = args.lut_version if args.lut_version is not None else int(sp7["lut_version"])
+
+    if lut_ver == 2 or sp7["en_spec007_physics"]:
+        phys_path = out_dir / "phys_params.json"
+        phys = json.loads(phys_path.read_text(encoding="utf-8")) if phys_path.exists() else None
+        ch, summary = solve_tier1_shupe_v2(cfg, phys_params=phys)
+        write_shupe_lut_v2(
+            out_dir / "shupe_lut.bin",
+            ch["t_s"],
+            ch["delta_phi_shupe_rad"],
+            ch["delta_phi_stress_rad"],
+            ch["visibility_V_t"],
+            ch["phi_pol_rad_t"],
+            ch["v_pi_V_t"],
+            ch["k_opt_scale_rel_t"],
+        )
+    else:
+        t_grid, delta_phi, summary = solve_tier1_shupe(cfg)
+        write_shupe_lut(out_dir / "shupe_lut.bin", t_grid, delta_phi)
+
     with (out_dir / "shupe_summary.json").open("w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2)
     return 0

@@ -207,6 +207,18 @@ void run_fmi_mode_test(const std::string& res_dir, int32_t dsp_mode, bool explic
     FMI_CHECK(std::fabs(val_f_get[6] - 2.0e-8) < 1e-15, "k_xtalk readback");
     FMI_CHECK(fmi3GetFloat64(inst, &bad_vr, 1, val_f_get, 1) == fmi3Error, "bad VR GetFloat64");
 
+    // Exercise SPEC-007 FMI 3.0 tunable parameters (VR 15..21) in 6-state mode
+    if (dsp_mode == 6) {
+        const fmi3ValueReference vr_sp7[7] = {15u, 16u, 17u, 18u, 19u, 20u, 21u};
+        const fmi3Float64 val_sp7_set[7] = {3.5e-12, 2.0e-8, 1.5, -62.0, 380.0, 12.0, 0.0025};
+        fmi3Float64 val_sp7_get[7] = {};
+        FMI_CHECK(fmi3SetFloat64(inst, vr_sp7, 7, val_sp7_set, 7) == fmi3OK, "set SPEC-007 float64");
+        FMI_CHECK(fmi3GetFloat64(inst, vr_sp7, 7, val_sp7_get, 7) == fmi3OK, "get SPEC-007 float64");
+        for (int idx = 0; idx < 7; ++idx) {
+            FMI_CHECK(std::fabs(val_sp7_get[idx] - val_sp7_set[idx]) < 1e-15, "SPEC-007 VR readback");
+        }
+    }
+
     const fmi3ValueReference vr_b[4] = {8u, 10u, 11u, 12u};
     const fmi3Boolean val_b_set[4] = {fmi3True, fmi3False, fmi3False, fmi3True};
     fmi3Boolean val_b_get[4] = {};

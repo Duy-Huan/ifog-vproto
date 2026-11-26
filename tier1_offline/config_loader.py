@@ -23,7 +23,59 @@ DEG_H_TO_RAD_S: float = 1.0 / RAD_S_TO_DEG_H
 DEG_S_TO_RAD_S: float = math.pi / 180.0
 RAD_S_TO_DEG_S: float = 180.0 / math.pi
 
-DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "configs" / "schema_v5.json"
+DEFAULT_SCHEMA_PATH = Path(__file__).resolve().parent.parent / "configs" / "schema_v6.json"
+
+DEFAULT_SPEC007_PHYSICS: dict[str, Any] = {
+    "en_spec007_physics": False,
+    "lut_version": 1,
+    "winding_pattern": "quadrupole",
+    "n_turns": 3200,
+    "n_layers": 32,
+    "flange_offset_m": 0.0,
+    "C_eo_per_Pa": 0.0,
+    "stress_rate_Pa_per_K": 0.0,
+    "alpha_bobbin_ppm_K": 0.0,
+    "alpha_lambda_pm_K": 0.0,
+    "kappa_back_m_per_W": 0.0,
+    "P_back_W": 0.0,
+    "beta_V_per_K": 0.0,
+    "gamma_pol_rad_per_K": 0.0,
+    "alpha_vpi_ppm_K": 0.0,
+    "delta_T_sld_ratio": 0.0,
+    "delta_T_mioc_ratio": 0.0,
+    "C_xtalk_F": 0.0,
+    "G_xtalk_S": 0.0,
+    "R_facet_dB": -200.0,
+    "alpha_R_per_m": 0.0,
+    "S_capture": 0.0,
+    "tau_env_s": 1.0,
+    "sigma_theta_env_rad": 0.0,
+    "mioc_f_elec_Hz": 0.0,
+    "mioc_f_acoustic_Hz": 0.0,
+    "mioc_zeta_acoustic": 0.1,
+    "mioc_g_acoustic": 0.0,
+}
+
+
+def get_spec007_physics(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Return resolved spec007_physics dict, defaulting omitted v4/v5 fields to zero/ideal."""
+    out = copy.deepcopy(DEFAULT_SPEC007_PHYSICS)
+    raw = cfg.get("spec007_physics")
+    if isinstance(raw, dict):
+        out.update(raw)
+    return out
+
+
+def compute_backscatter_sigma_rad(
+    R_facet_dB: float,
+    alpha_R_per_m: float,
+    S_capture: float,
+    delta_nu_eff_Hz: float,
+) -> float:
+    """Compute coherent cavity facet + Rayleigh backscattering phase RMS sigma_phi,back [rad] (EQ-52)."""
+    r_facet = 10.0 ** (R_facet_dB / 10.0) if R_facet_dB > -199.0 else 0.0
+    l_coh = C_LIGHT / delta_nu_eff_Hz
+    return 2.0 * math.sqrt(max(0.0, r_facet + 0.5 * alpha_R_per_m * S_capture * l_coh))
 
 
 def deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
@@ -38,7 +90,7 @@ def deep_merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any
 
 
 def load_schema(schema_path: Path | str = DEFAULT_SCHEMA_PATH) -> dict[str, Any]:
-    """Load the normative JSON Schema (v5.0, backward-compatible with v4.0)."""
+    """Load the normative JSON Schema (v6.0, backward-compatible with v4.0 & v5.0)."""
     with Path(schema_path).open("r", encoding="utf-8") as fh:
         return json.load(fh)
 
@@ -46,7 +98,7 @@ def load_schema(schema_path: Path | str = DEFAULT_SCHEMA_PATH) -> dict[str, Any]
 def validate_config(
     cfg: dict[str, Any], schema_path: Path | str = DEFAULT_SCHEMA_PATH
 ) -> dict[str, Any]:
-    """Validate configuration dict against schema_v5.json (or v4.0) plus physical bounds.
+    """Validate configuration dict against schema_v6.json (or v4.0/v5.0) plus physical bounds.
 
     Enforces Rule 11 (fail-closed validation):
       - JSON Schema draft 2020-12 compliance
@@ -55,6 +107,7 @@ def validate_config(
       - ADC voltage rails: V_min_V < V_max_V
       - Jury stability: 0 < K_tot_1 < 1
       - 4-state / 6-state dual-loop separation: K_tot_2 <= 0.1 * K_tot_1 when en_vpi_loop is True
+      - SPEC-007 winding topology: n_turns >= n_layers when spec007_physics is present
     """
     schema = load_schema(schema_path)
     jsonschema.validate(instance=cfg, schema=schema)
@@ -84,6 +137,13 @@ def validate_config(
             raise ValueError(
                 f"Loop-2 bandwidth separation violated (EQ-22/EQ-34): "
                 f"K_tot_2 ({dsp['K_tot_2']}) > 0.1 * K_tot_1 ({0.1 * dsp['K_tot_1']})"
+            )
+
+    if "spec007_physics" in cfg:
+        sp7 = get_spec007_physics(cfg)
+        if int(sp7["n_turns"]) < int(sp7["n_layers"]):
+            raise ValueError(
+                f"Invalid SPEC-007 winding map: n_turns ({sp7['n_turns']}) < n_layers ({sp7['n_layers']})"
             )
 
     return cfg
