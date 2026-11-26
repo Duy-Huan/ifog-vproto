@@ -593,3 +593,68 @@ def plot_dyn_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
 
     return generated
 
+
+def plot_fmi_gate(fmi_data: dict[str, Any], run_dir: Path | str, out_path: Path | str) -> Path:
+    """Generate 300-DPI 3-panel FMI 3.0 FMU Verification Gate figure (IFOG-SIM-SPEC-006 Gate 6)."""
+    out = Path(out_path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    rdir = Path(run_dir)
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(14.5, 4.4), dpi=300)
+
+    # Panel 1: Black-Box FMU vs Standalone Tier 2 Trajectory Equivalence (< 1e-12 rad/s)
+    eq4 = fmi_data["equivalence"]["modes"]["4state"]
+    eq6 = fmi_data["equivalence"]["modes"]["6state"]
+    t_ms = np.asarray(eq4["time_s"], dtype=np.float64) * 1.0e3
+    ax1.plot(t_ms, eq4["standalone_omega_out_rad_per_s"], color="#1B365D", lw=2.2, label="Standalone 4s")
+    ax1.plot(t_ms, eq4["fmu_omega_out_rad_per_s"], "o", ms=3.5, color="#DD6B20", label="FMU 4s")
+    ax1.plot(t_ms, eq6["standalone_omega_out_rad_per_s"], color="#0E6251", lw=1.6, ls="--", label="Standalone 6s")
+    ax1.plot(t_ms, eq6["fmu_omega_out_rad_per_s"], "^", ms=3.2, color="#38A169", label="FMU 6s")
+    ax1.set_xlabel("Time [ms]")
+    ax1.set_ylabel("$\\Omega_{\\mathrm{out}}$ [rad/s]")
+    ax1.set_title(
+        f"Gate 6B: FMU vs Standalone\n(Max Err = {fmi_data['equivalence']['max_final_omega_err_rad_per_s']:.2e} rad/s)"
+    )
+    ax1.grid(True, alpha=0.3)
+    ax1.legend(fontsize=7.5, loc="lower right")
+
+    # Panel 2: FMU Slow Rate Ramp Deadband (enable_dither=False vs True)
+    db = fmi_data["deadband"]
+    r_in = np.asarray(db["rates_in_deg_per_s"], dtype=np.float64)
+    err_off = (np.asarray(db["dither_off_out_deg_per_s"], dtype=np.float64) - r_in) * 3600.0
+    err_on = (np.asarray(db["dither_on_out_deg_per_s"], dtype=np.float64) - r_in) * 3600.0
+    ax2.plot(r_in, err_off, "o-", color="#C53030", lw=1.5, ms=3.5, label="enable_dither=False")
+    ax2.plot(r_in, err_on, "s-", color="#0E6251", lw=1.6, ms=3.5, label="enable_dither=True")
+    ax2.axhline(0.0, color="#4A5568", ls=":", lw=0.9)
+    ax2.set_xlabel("Input Rate $\\Omega_{\\mathrm{in}}$ [deg/s]")
+    ax2.set_ylabel("Calibrated Rate Error [deg/h]")
+    ax2.set_title(f"Gate 6C: FMU Deadband Sweep\n(Reduction = {db['deadband_reduction_pct']:.1f}%)")
+    ax2.grid(True, alpha=0.3)
+    ax2.legend(fontsize=8)
+
+    # Panel 3: FMU -> Tier 3 Dual-Regime 5-Region IEEE 952 Overlapping AVAR
+    avar_npz = rdir / "fmi_avar" / "avar_curve.npz"
+    av = fmi_data["avar"]
+    if avar_npz.exists():
+        npz = np.load(avar_npz)
+        ax3.loglog(npz["taus_fast"], npz["adev_fast_deg_h"], "o-", color="#1B365D", ms=2.8, lw=1.3, label="FMU Fast-Scale")
+        ax3.loglog(npz["taus_slow"], npz["adev_slow_deg_h"], "s-", color="#0E6251", ms=2.5, lw=1.4, label="Tier-3 10h Slow")
+        ax3.axvspan(0.1, 5.0, color="#FEFCBF", alpha=0.45, label="Overlap [0.1, 5] s")
+        ax3.legend(fontsize=7.5)
+    ax3.set_xlabel("Averaging Time $T$ [s]")
+    ax3.set_ylabel("Overlapping ADEV [deg/h]")
+    ax3.set_title(
+        f"Gate 6D: FMU Dual-Regime AVAR\n(Overlap = {av['overlap_check']['max_relative_mismatch_pct']:.2f}% < 5%)"
+    )
+    ax3.grid(True, which="both", alpha=0.3)
+
+    fig.suptitle(
+        f"IFOG-SIM-SPEC-006 — Gate 6: FMI 3.0 Black-Box FMU Verification ({'PASS' if fmi_data['fmi_gate_pass'] else 'FAIL'})",
+        fontweight="bold",
+    )
+    fig.tight_layout()
+    fig.savefig(out, dpi=300)
+    plt.close(fig)
+    return out
+
+

@@ -10,9 +10,9 @@ permissions:
 
 jobs:
   release-verify-and-publish:
-    name: Verify Release Tag, Full Gates & Publish GitHub Release
+    name: Verify Release Tag, Full Gates (incl. FMI 3.0 FMU) & Publish GitHub Release
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       SYSTEMC_AMS_HOME: ${{ github.workspace }}/.cache/systemc-ams
     steps:
@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Enforce Rule 1, Rule 8 & Rule 16 — SemVer Tag, main Ancestry, Spec Lock & Doc Sync
+      - name: Enforce Rule 1, Rule 8 & Rule 16 — SemVer Tag, main Ancestry, Triple Spec Lock & Doc Sync
         run: |
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
@@ -34,11 +34,13 @@ jobs:
             echo "ERROR (Rule 8): Release tag '$TAG' must point to a commit on main!"
             exit 1
           fi
-          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256
+          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256
           test -s spec/IFOG-SIM-SPEC-004.pdf
           test -s spec/IFOG-SIM-SPEC-005.pdf
+          test -s spec/IFOG-SIM-SPEC-006.pdf
+          test -s spec/IFOG-SIM-SPEC-006.md
           python3 scripts/verify_doc_sync.py --expected-tag "${TAG}"
-          echo "Release tag $TAG validated on main with dual locked specs and Rule 16 synchronized docs."
+          echo "Release tag $TAG validated on main with triple locked specs and Rule 16 synchronized docs."
 
       - name: Install system toolchain
         run: |
@@ -63,20 +65,22 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Python dependencies & package
+      - name: Install Python dependencies (with FMPy) & package
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install numpy scipy matplotlib plotly jsonschema pytest pytest-cov pytest-xdist
+          python3 -m pip install numpy scipy matplotlib plotly jsonschema fmpy pytest pytest-cov pytest-xdist
           python3 -m pip install -e . --no-build-isolation --no-deps
 
-      - name: Build Tier 2 Release (-O3) & Verify 100% C++ Coverage
+      - name: Build Tier 2 Release (-O3, -fPIC), Package FMI 3.0 FMU & Verify 100% C++ Coverage
         run: |
           cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build -j"$(nproc)"
+          cmake --build build --target package_fmu
           ./build/ifog_cpp_tests
+          python3 -c "from fmpy.validation import validate_fmu; probs = validate_fmu('build/ifog_core.fmu'); assert not probs, probs"
           bash scripts/run_cpp_coverage.sh
 
-      - name: Verify 41 Formulas, 100% Python Coverage & Full Real 5-Gate + 11-Scenario Suite
+      - name: Verify 44 Formulas, 100% Python Coverage & Full Real 6-Gate + 15-Scenario Suite
         run: |
           python3 scripts/verify_formulas_ci.py --out-dir data/release_artifacts
           pytest tests/unit tests/formula_verification --cov --cov-report=term-missing
@@ -89,8 +93,11 @@ jobs:
           set -euo pipefail
           TAG="${GITHUB_REF_NAME}"
           mkdir -p data/release_bundle
+          cp build/ifog_core.fmu data/release_bundle/
           cp spec/IFOG-SIM-SPEC-004.pdf data/release_bundle/
           cp spec/IFOG-SIM-SPEC-005.pdf data/release_bundle/
+          cp spec/IFOG-SIM-SPEC-006.pdf data/release_bundle/
+          cp spec/IFOG-SIM-SPEC-006.md data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.pdf data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.md data/release_bundle/
           cp docs/IFOG_VPROTO_ARCHITECTURE.tex data/release_bundle/
@@ -104,25 +111,25 @@ jobs:
           cp data/release_artifacts/formula_verification_matrix.json data/release_bundle/
           cp data/cov_cpp_work/cpp_coverage_summary.json data/release_bundle/
           cat > data/release_bundle/RELEASE_BODY.md <<EOF
-          # Release ${TAG} — Closed-Loop IFOG Multi-Scale Virtual Prototype (\`IFOG-SIM-SPEC-005\`)
+          # Release ${TAG} — Closed-Loop IFOG Virtual Prototype & FMI 3.0 Co-Simulation FMU (\`IFOG-SIM-SPEC-006\`)
 
           ## Verified Release Gates (100% Passed on \`main\`)
-          - **Dual Specification Lock (Rule 7):** \`spec/IFOG-SIM-SPEC-004.tex\` & \`spec/IFOG-SIM-SPEC-005.tex\` SHA-256 verified + both compiled PDFs attached.
+          - **Standalone FMI 3.0 Co-Simulation FMU (\`ifog_core.fmu\`):** Attached tool-agnostic \`x86_64-linux\` FMI 3.0 FMU wrapping Accellera SystemC/SystemC-AMS Tier 2 (\`IfogTopModule\`) with 0 \`fmpy.validation.validate_fmu\` errors, \`canBeInstantiatedOnlyOncePerProcess="true"\`, bit-exact (\`0.00e+00 rad/s < 1e-12\`) equivalence vs standalone \`ifog_sim\` on both 4-state and 6-state DSP modes, \`>=90%\` Deadband reduction, and \`<5%\` Dual-Regime 5-Region IEEE Std 952 AVAR overlap continuity.
+          - **Triple Specification Lock (Rule 7):** \`spec/IFOG-SIM-SPEC-004.tex\`, \`spec/IFOG-SIM-SPEC-005.tex\`, and \`spec/IFOG-SIM-SPEC-006.{md,tex}\` SHA-256 verified + all compiled PDFs attached.
           - **Version–Document Synchronization (Rule 16):** \`pyproject.toml\`, \`docs/IFOG_VPROTO_ARCHITECTURE.{md,tex,pdf}\`, \`docs/IFOG_SIMULATION_SCENARIOS.{md,tex,pdf}\`, \`docs/RELEASE_NOTES.{md,tex,pdf}\`, \`docs/DOCS_BUILD.sha256\`, \`docs/CHANGELOG.md\`, and \`README.md\` strictly verified against tag \`${TAG}\`.
-          - **Formula Traceability (Rule 3):** All **41 / 41** normative formulas (\`EQ-01\` .. \`EQ-41\`) individually verified.
-          - **Dual-Domain 100% Coverage (Rules 2 & 14):** C++ SystemC-AMS core = **100.0%** line & function coverage (\`gcovr\`); Python Tier 1 / Tier 3 / Viz = **100.0%** line coverage (\`pytest-cov\`).
-          - **Full Real Simulations (Rule 5):** Gates 1–4 (Golden Linear, Deadband & Bunny Ears, 1/f Flicker & K-Matrix, 60 s Fast + 10 h Slow Dual-Regime AVAR), Gate 5 (Official 6-State Symmetric DSP \`+136.94 dB\` RAM/xtalk rejection & \`-33.3%\` peak MIOC voltage), all 6 Time-Domain scenarios (\`TD-01\`..\`TD-06\`), and all 5 System Engineering & Production scenarios (\`ENG-01\`..\`ENG-05\`, including concurrent 3-axis SystemC-AMS IMU \`+51.6 dB\` crosstalk rejection, 5-fault FPGA BIT/FDIR, and parallel Monte Carlo Yield + \`-40..+85 C\` Virtual Thermal Calibration).
+          - **Formula Traceability (Rule 3):** All **44 / 44** normative formulas (\`EQ-01\` .. \`EQ-44\`) individually verified.
+          - **Dual-Domain 100% Coverage (Rules 2 & 14):** C++ SystemC-AMS core + FMI 3.0 bridge (\`tier2_sysc_ams/\` & \`fmi_wrapper/src/\`) = **100.0%** line & function coverage (\`gcovr\`); Python Tier 1 / Tier 3 / FMI Master / Viz = **100.0%** line coverage (\`pytest-cov\`).
+          - **Full Real Simulations (Rule 5):** Gates 1–6 (Golden Linear, Deadband & Bunny Ears, 1/f Flicker & K-Matrix, 60 s Fast + 10 h Slow Dual-Regime AVAR, Official 6-State Symmetric DSP, and FMI 3.0 FMU Gate 6), all 6 Time-Domain scenarios (\`TD-01\`..\`TD-06\`), all 5 System Engineering scenarios (\`ENG-01\`..\`ENG-05\`), and all 4 Dynamic Response & Electro-Optic Probe scenarios (\`DYN-01\`..\`DYN-04\`).
 
-          See attached \`RELEASE_NOTES.pdf\`, \`IFOG_VPROTO_ARCHITECTURE.pdf\`, and \`IFOG_SIMULATION_SCENARIOS.pdf\` for complete details.
+          See attached \`IFOG-SIM-SPEC-006.pdf\`, \`RELEASE_NOTES.pdf\`, \`IFOG_VPROTO_ARCHITECTURE.pdf\`, and \`IFOG_SIMULATION_SCENARIOS.pdf\` for complete details.
           EOF
-          # Idempotent retry loop for release creation (resilient to transient GitHub API 500/502)
           for attempt in 1 2 3 4 5 6 7 8; do
             if gh release view "${TAG}" >/dev/null 2>&1; then
               echo "Release ${TAG} already exists; proceeding to asset upload."
               break
             fi
             if gh release create "${TAG}" \
-              --title "Release ${TAG} — IFOG Virtual Prototype (IFOG-SIM-SPEC-005)" \
+              --title "Release ${TAG} — IFOG Virtual Prototype & FMI 3.0 FMU (IFOG-SIM-SPEC-006)" \
               --notes-file data/release_bundle/RELEASE_BODY.md; then
               echo "Created GitHub Release ${TAG} on attempt ${attempt}."
               break
@@ -135,10 +142,12 @@ jobs:
             sleep 10
           done
 
-          # Upload each release bundle asset with --clobber and per-asset retry
           for asset in \
+            data/release_bundle/ifog_core.fmu \
             data/release_bundle/IFOG-SIM-SPEC-004.pdf \
             data/release_bundle/IFOG-SIM-SPEC-005.pdf \
+            data/release_bundle/IFOG-SIM-SPEC-006.pdf \
+            data/release_bundle/IFOG-SIM-SPEC-006.md \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.pdf \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.md \
             data/release_bundle/IFOG_VPROTO_ARCHITECTURE.tex \

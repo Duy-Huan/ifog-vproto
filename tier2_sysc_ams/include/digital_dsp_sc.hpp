@@ -30,13 +30,15 @@ public:
         const IfogConfig& cfg,
         const std::string& bin_out_path,
         MicroTraceCollector* micro_trace = nullptr,
-        DspTraceCollector* dsp_trace = nullptr
+        DspTraceCollector* dsp_trace = nullptr,
+        const ExternalDriveState* ext_drive = nullptr
     );
 
     ~DigitalDSP_SC() override;
 
     void on_adc_sample();
     void flush_records();
+    void reset_step_accumulator();
 
     double init_dac_code() const { return init_dac_code_; }
     double init_v_drv() const { return init_v_drv_; }
@@ -46,10 +48,12 @@ public:
     uint64_t flyback_count() const { return flyback_count_; }
     uint64_t anti_windup_count() const { return anti_windup_count_; }
     double final_omega_out() const { return omega_out_; }
+    double step_mean_omega_out() const;
     double final_delta_phi_step() const { return delta_phi_step_; }
     double final_g_dac() const { return g_dac_; }
     double mean_omega_second_half() const;
     double S_alpha() const { return s_alpha_; }
+    uint16_t current_bit_fault_code() const { return last_bit_fault_code_; }
     uint16_t bit_first_fault_code() const { return bit_first_fault_code_; }
     double bit_alert_time_s() const { return bit_alert_time_s_; }
     double bit_time_to_alert_s() const { return bit_time_to_alert_s_; }
@@ -135,8 +139,11 @@ private:
     uint64_t second_half_count_;
     double e_asym_sq_sum_;
     uint64_t e_asym_count_;
+    double step_omega_sum_;
+    uint64_t step_omega_count_;
     MicroTraceCollector* micro_trace_;
     DspTraceCollector* dsp_trace_;
+    const ExternalDriveState* ext_drive_;
 };
 
 }  // namespace ifog

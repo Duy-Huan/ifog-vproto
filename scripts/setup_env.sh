@@ -127,7 +127,7 @@ if [ "${SKIP_PYTHON}" -eq 0 ]; then
     fi
     "${VENV_DIR}/bin/python3" -m pip install --upgrade pip setuptools wheel
     "${VENV_DIR}/bin/python3" -m pip install \
-        "numpy>=1.26" "scipy>=1.12" "matplotlib>=3.8" "plotly>=5.18" "jsonschema>=4.20" \
+        "numpy>=1.26" "scipy>=1.12" "matplotlib>=3.8" "plotly>=5.18" "jsonschema>=4.20" "fmpy>=0.3.20" \
         "pytest>=8.0" "pytest-cov>=4.1" "pytest-xdist>=3.5"
     if [ "${SKIP_EDITABLE}" -eq 0 ] && [ -f "${REPO_ROOT}/pyproject.toml" ]; then
         "${VENV_DIR}/bin/python3" -m pip install -e "${REPO_ROOT}" --no-build-isolation --no-deps
@@ -159,15 +159,17 @@ echo "[setup_env] Wrote environment activation file: ${PREFIX}/env.sh"
 source "${PREFIX}/env.sh"
 
 if [ "${BUILD_TIER2}" -eq 1 ]; then
-    echo "[setup_env] Building Tier 2 SystemC-AMS Core (Release -O3)..."
+    echo "[setup_env] Building Tier 2 SystemC-AMS Core (Release -O3) & FMI 3.0 FMU..."
     cmake -S "${REPO_ROOT}/tier2_sysc_ams" -B "${REPO_ROOT}/build" -DCMAKE_BUILD_TYPE=Release
     cmake --build "${REPO_ROOT}/build" -j"$(nproc)"
+    cmake --build "${REPO_ROOT}/build" --target package_fmu
 fi
 
 if [ "${VERIFY}" -eq 1 ]; then
     echo "[setup_env] Verifying installed environment..."
     "${REPO_ROOT}/build/ifog_cpp_tests"
-    (cd "${REPO_ROOT}" && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256)
+    python3 -c "from fmpy.validation import validate_fmu; probs = validate_fmu('${REPO_ROOT}/build/ifog_core.fmu'); assert not probs, probs"
+    (cd "${REPO_ROOT}" && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256)
     python3 "${REPO_ROOT}/scripts/verify_doc_sync.py"
 fi
 

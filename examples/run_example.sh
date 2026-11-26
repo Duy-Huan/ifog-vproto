@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # Reproducibly run the COMPLETE IFOG Virtual Prototype Official Scenario Suite
-# (IFOG-SIM-SPEC-005: Gates 1..4 + Gate 5 6-State DSP + TD-01..06 + ENG-01..05 + DYN-01..04, MC=500)
+# (IFOG-SIM-SPEC-006: Gates 1..4 + Gate 5 6-State DSP + Gate 6 FMI 3.0 FMU + TD-01..06 + ENG-01..05 + DYN-01..04, MC=500)
 # on any Linux host (after scripts/setup_env.sh) or inside Docker/Podman,
-# automatically generating report.md, interactive Plotly report.html (19 charts), all 20 300-DPI PNG plots,
+# automatically generating report.md, interactive Plotly report.html (20 charts), all 21 300-DPI PNG plots,
 # virtual_calibration_dataset.csv, and report/index.{md,html}.
 #
 # Usage:
@@ -58,7 +58,8 @@ if [ "${SYNC_EXAMPLE}" -eq 1 ]; then
     fi
     for jf in phys_params.json shupe_summary.json sim_summary.json gate1_metrics.json \
               sweep_results.json nonlinearity_summary.json k_matrix.json gate3_metrics.json avar_metrics.json \
-              dsp6_compare.json td01_blanking.json td02_step_sine.json td03_vpi_shock.json \
+              dsp6_compare.json fmi_gate_summary.json \
+              td01_blanking.json td02_step_sine.json td03_vpi_shock.json \
               td04_high_rate.json td05_shupe_shock.json td06_limit_cycles.json td_summary.json \
               eng01_hw_sizing.json eng02_imu_3axis.json eng03_vre_faraday.json \
               eng04_fault_bit.json eng05_mc_yield_cal.json eng_summary.json \

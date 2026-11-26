@@ -487,7 +487,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
     assert len(ms["gate_statuses"]) == 4
     assert all(g["status"] == "PASS" for g in ms["gate_statuses"])
 
-    # Complete SPEC-005 All-Scenarios curated example (Gates 1-5 + 6 TD + 5 ENG + 4 DYN = 20 PASS, 20 300-DPI PNGs)
+    # Complete SPEC-006 All-Scenarios curated example (Gates 1-6 + 6 TD + 5 ENG + 4 DYN = 21 PASS, 21 300-DPI PNGs)
     ex_all = REPO_ROOT / "examples" / "full_all_scenarios"
     for fname in (
         "README.md",
@@ -505,6 +505,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "gate3_metrics.json",
         "avar_metrics.json",
         "dsp6_compare.json",
+        "fmi_gate_summary.json",
         "td01_blanking.json",
         "td02_step_sine.json",
         "td03_vpi_shock.json",
@@ -525,6 +526,7 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "figures/psd_flicker.png",
         "figures/avar_5regions.png",
         "figures/dsp6_compare.png",
+        "figures/fmi_fmu_gate.png",
         "figures/td01_blanking.png",
         "figures/td02_step_bode.png",
         "figures/td03_vpi_shock.png",
@@ -546,10 +548,11 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
 
     ms_all = json.loads((ex_all / "metrics_summary.json").read_text(encoding="utf-8"))
     assert ms_all["report_meta"]["overall_status"] == "PASS"
-    assert len(ms_all["gate_statuses"]) == 20
+    assert len(ms_all["gate_statuses"]) == 21
     assert all(g["status"] == "PASS" for g in ms_all["gate_statuses"])
     html_all = (ex_all / "report.html").read_text(encoding="utf-8")
     assert "Interactive Telemetry — Core Acceptance Gates" in html_all
+    assert "Gate 6" in html_all
     assert "Interactive Telemetry — Group A: 6 Time-Domain Scenarios" in html_all
     assert "Interactive Telemetry — Group B: 5 System Engineering Scenarios" in html_all
     assert "Interactive Telemetry — Group C: Dynamic Response, Output PSD & Electro-Optic Probe" in html_all

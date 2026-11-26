@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-EXPECTED_FORMULAS = [f"EQ-{i:02d}" for i in range(1, 42)]
+EXPECTED_FORMULAS = [f"EQ-{i:02d}" for i in range(1, 45)]
 
 FORMULA_DESCRIPTIONS = {
     "EQ-01": "Sec 1 Eq. (1): 4-state bias phase sequence [+(pi-a), -(pi-a), -(pi+a), +(pi+a)]",
@@ -60,11 +60,14 @@ FORMULA_DESCRIPTIONS = {
     "EQ-39": "SPEC-005 Sec 5.4: Real-time FPGA BIT/FDIR 5-fault classification thresholds & TTA",
     "EQ-40": "SPEC-005 Sec 5.5: Monte Carlo Production Yield, Wilson 95% CI & process capability C_pk",
     "EQ-41": "SPEC-005 Sec 5.5: Thermal drift model (lambda(T), V_pi(T)), 2D poly & EKF bias compensation",
+    "EQ-42": "SPEC-006 Sec 4.1: FMI 3.0 multi-rate ZOH alignment N_tau & anti-aliased macro-step average",
+    "EQ-43": "SPEC-006 Sec 4.2: FMI 3.0 Loop-2 residual V_pi phase error e_Vpi_res [rad] & 6-bit bit_status",
+    "EQ-44": "SPEC-006 Sec 4.3: Black-box FMU vs standalone Tier 2 < 1e-12 equivalence & singleton contract",
 }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Verify all 41 IFOG-SIM-SPEC-005 formulas in CI")
+    parser = argparse.ArgumentParser(description="Verify all 44 IFOG-SIM-SPEC-006 formulas in CI")
     parser.add_argument("--out-dir", default="data/ci_formula_report", help="Report output directory")
     args = parser.parse_args()
 
@@ -116,7 +119,7 @@ def main() -> int:
     failed = [eq for eq in EXPECTED_FORMULAS if results.get(eq, {}).get("status") != "PASS"]
 
     report_json = {
-        "spec_id": "IFOG-SIM-SPEC-005",
+        "spec_id": "IFOG-SIM-SPEC-006",
         "total_expected": len(EXPECTED_FORMULAS),
         "total_verified": len(results),
         "missing": missing,
@@ -129,9 +132,9 @@ def main() -> int:
     )
 
     lines = [
-        "# IFOG-SIM-SPEC-005 Formula Verification Traceability Matrix (CI/CD)",
+        "# IFOG-SIM-SPEC-006 Formula Verification Traceability Matrix (CI/CD)",
         "",
-        f"- **Expected Formulas:** {len(EXPECTED_FORMULAS)} (`EQ-01` .. `EQ-41`)",
+        f"- **Expected Formulas:** {len(EXPECTED_FORMULAS)} (`EQ-01` .. `EQ-44`)",
         f"- **Verified & Passed:** {len(EXPECTED_FORMULAS) - len(failed)} / {len(EXPECTED_FORMULAS)}",
         f"- **Overall Status:** {'PASS' if report_json['all_passed'] else 'FAIL'}",
         "",
@@ -152,7 +155,7 @@ def main() -> int:
         print(f"ERROR: Formula verification failed! missing={missing}, failed={failed}", file=sys.stderr)
         return 1
 
-    print(f"SUCCESS: All {len(EXPECTED_FORMULAS)} formulas (EQ-01 .. EQ-41) individually verified and PASSED!")
+    print(f"SUCCESS: All {len(EXPECTED_FORMULAS)} formulas (EQ-01 .. EQ-44) individually verified and PASSED!")
     return 0
 
 

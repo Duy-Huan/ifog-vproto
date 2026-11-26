@@ -41,6 +41,7 @@ from tier3_analysis.scenarios_engineering import (
     run_eng_mc_yield_cal,
     run_eng_vre_faraday,
 )
+from tier3_analysis.fmi_master_runner import DEFAULT_FMU, run_fmi_gate_suite
 from tier3_analysis.scenarios_time_domain import (
     run_all_time_domain_scenarios,
     run_dsp6_comparison,
@@ -67,6 +68,7 @@ ALL_MODES = (
     "full",
     "sweep",
     "dsp6_compare",
+    "fmi_gate",
     "td_blanking",
     "td_step_sine",
     "td_vpi_shock",
@@ -110,6 +112,29 @@ def ensure_sim_binary(
     )
     subprocess.run(["cmake", "--build", str(build_dir), "-j"], check=True)
     return bpath
+
+
+def ensure_fmu_archive(
+    fmu_path: Path | str,
+    repo_root: Path = REPO_ROOT,
+    auto_build: bool = False,
+) -> Path:
+    """Ensure standalone FMI 3.0 FMU archive exists (optionally packaging via CMake package_fmu)."""
+    fpath = Path(fmu_path)
+    if fpath.exists():
+        return fpath
+    if not auto_build:
+        raise FileNotFoundError(
+            f"FMI 3.0 FMU not found at {fpath}. Build it with: "
+            "cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --target package_fmu"
+        )
+    build_dir = fpath.parent
+    subprocess.run(
+        ["cmake", "-S", str(repo_root / "tier2_sysc_ams"), "-B", str(build_dir), "-DCMAKE_BUILD_TYPE=Release"],
+        check=True,
+    )
+    subprocess.run(["cmake", "--build", str(build_dir), "--target", "package_fmu", "-j"], check=True)
+    return fpath
 
 
 def _run_tier1_stage(cfg: dict[str, Any], run_dir: Path) -> tuple[dict[str, Any], Path, Path]:
@@ -444,6 +469,7 @@ def run_simulation_workflow(
     mode: str,
     cfg_path: Path | str = DEFAULT_CFG,
     bin_path: Path | str = DEFAULT_BIN,
+    fmu_path: Path | str = DEFAULT_FMU,
     data_root: Path | str = REPO_ROOT / "data",
     report_root: Path | str = REPO_ROOT / "report",
     run_id: str | None = None,
@@ -505,6 +531,17 @@ def run_simulation_workflow(
             (run_dir / "nonlinearity_summary.json").write_text(json.dumps(nl, indent=2), encoding="utf-8")
     elif mode == "dsp6_compare":
         run_dsp6_comparison(resolved_bin, cfg, run_dir)
+    elif mode == "fmi_gate":
+        resolved_fmu = ensure_fmu_archive(fmu_path, auto_build=auto_build)
+        run_fmi_gate_suite(
+            fmu_path=resolved_fmu,
+            bin_path=resolved_bin,
+            out_dir=run_dir,
+            fast_avar_duration_s=fast_duration_s,
+            fast_ensemble=fast_ensemble,
+            slow_ensemble=slow_ensemble,
+            max_workers=workers,
+        )
     elif mode == "td_blanking":
         run_td_blanking(resolved_bin, cfg, run_dir)
     elif mode == "td_step_sine":
@@ -572,6 +609,16 @@ def run_simulation_workflow(
             workers=workers,
         )
         run_dsp6_comparison(resolved_bin, cfg, run_dir)
+        resolved_fmu = ensure_fmu_archive(fmu_path, auto_build=auto_build)
+        run_fmi_gate_suite(
+            fmu_path=resolved_fmu,
+            bin_path=resolved_bin,
+            out_dir=run_dir,
+            fast_avar_duration_s=fast_duration_s,
+            fast_ensemble=fast_ensemble,
+            slow_ensemble=slow_ensemble,
+            max_workers=workers,
+        )
         run_all_time_domain_scenarios(resolved_bin, cfg, run_dir, workers=workers)
         run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
         run_all_dynamic_probe_scenarios(resolved_bin, cfg, run_dir, workers=workers)
@@ -589,37 +636,39 @@ def run_simulation_workflow(
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for unified IFOG simulation & automatic report generation."""
     parser = argparse.ArgumentParser(
-        description="IFOG-SIM-SPEC-005 Unified Simulation Runner (auto-generates report/<run_id>/{report.md, report.html})"
+        description="IFOG-SIM-SPEC-006 Unified Simulation Runner (auto-generates report/<run_id>/{report.md, report.html})"
     )
     parser.add_argument(
         "--mode",
         default="single",
         choices=list(ALL_MODES),
-        help="Simulation workflow mode (4-Gate, 6-State DSP, TD-01..06, ENG-01..05, or all_scenarios)",
+        help="Simulation workflow mode (4-Gate, 6-State DSP, FMI 3.0 FMU Gate 6, TD-01..06, ENG-01..05, DYN-01..04, or all_scenarios)",
     )
     parser.add_argument("--cfg", default=str(DEFAULT_CFG), help="Baseline config JSON")
     parser.add_argument("--sweep", default=str(DEFAULT_SWEEP), help="Sweep JSON or directory (for gate2/sweep/full)")
     parser.add_argument("--bin", default=str(DEFAULT_BIN), help="Path to compiled Tier 2 binary (build/ifog_sim)")
+    parser.add_argument("--fmu", default=str(DEFAULT_FMU), help="Path to FMI 3.0 Co-Simulation FMU (build/ifog_core.fmu)")
     parser.add_argument("--data-dir", default=str(REPO_ROOT / "data"), help="Root directory for raw simulation data")
     parser.add_argument("--report-dir", default=str(REPO_ROOT / "report"), help="Root directory for auto-generated .md/.html reports")
     parser.add_argument("--run-id", default=None, help="Explicit run identifier (defaults to <mode>_YYYYMMDD_HHMMSS)")
     parser.add_argument("--duration-s", type=float, default=None, help="Optional duration override for --mode single")
-    parser.add_argument("--fast-duration-s", type=float, default=60.0, help="Fast-Scale duration for Gate 4 [s]")
-    parser.add_argument("--fast-ensemble", type=int, default=4, help="Parallel Fast-Scale Monte Carlo runs for Gate 4")
-    parser.add_argument("--slow-ensemble", type=int, default=12, help="Slow-Scale Monte Carlo runs for Gate 4")
+    parser.add_argument("--fast-duration-s", type=float, default=60.0, help="Fast-Scale duration for Gate 4 / Gate 6 [s]")
+    parser.add_argument("--fast-ensemble", type=int, default=4, help="Parallel Fast-Scale Monte Carlo runs for Gate 4 / Gate 6")
+    parser.add_argument("--slow-ensemble", type=int, default=12, help="Slow-Scale Monte Carlo runs for Gate 4 / Gate 6")
     parser.add_argument("--slow-duration-hours", type=float, default=None, help="Optional Slow-Scale duration override [h]")
     parser.add_argument("--gate3-duration-s", type=float, default=2.0, help="Gate 3 PSD simulation duration [s]")
     parser.add_argument("--k-duration-s", type=float, default=0.1, help="K-matrix tone injection duration [s]")
     parser.add_argument("--mc-runs", type=int, default=64, help="Monte Carlo unit count for ENG-05 Yield (e.g., 64, 500, 1000)")
     parser.add_argument("--dsp-mode", choices=["2state", "4state", "6state"], default=None, help="Optional DSP mode override")
     parser.add_argument("--workers", type=int, default=None, help="Parallel worker count")
-    parser.add_argument("--auto-build", action="store_true", help="Automatically build Tier 2 binary if missing")
+    parser.add_argument("--auto-build", action="store_true", help="Automatically build Tier 2 binary & package FMU if missing")
     args = parser.parse_args(argv)
 
     summary = run_simulation_workflow(
         mode=args.mode,
         cfg_path=args.cfg,
         bin_path=args.bin,
+        fmu_path=args.fmu,
         data_root=args.data_dir,
         report_root=args.report_dir,
         run_id=args.run_id,

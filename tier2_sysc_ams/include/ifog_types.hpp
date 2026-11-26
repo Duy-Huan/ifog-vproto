@@ -48,6 +48,26 @@ constexpr uint16_t BIT_MIOC_OPEN = 3u;
 constexpr uint16_t BIT_ADC_SAT = 4u;
 constexpr uint16_t BIT_DSP_SEU = 5u;
 
+// FMI 3.0 UInt32 BIT/FDIR & Saturation Status Bitmask (IFOG-SIM-SPEC-006 EQ-43)
+constexpr uint32_t BIT_MASK_SLD_DROP = 1u << 0;
+constexpr uint32_t BIT_MASK_FIBER_BREAK = 1u << 1;
+constexpr uint32_t BIT_MASK_MIOC_OPEN = 1u << 2;
+constexpr uint32_t BIT_MASK_ADC_SAT = 1u << 3;
+constexpr uint32_t BIT_MASK_DSP_SEU = 1u << 4;
+constexpr uint32_t BIT_MASK_ANTI_WINDUP = 1u << 5;
+
+// Optional zero-overhead external FMI 3.0 ZOH drive & live tunable parameter state (SPEC-006)
+struct ExternalDriveState {
+    bool use_external_omega = false;
+    double omega_in_rad_per_s = 0.0;
+    bool use_external_shupe = false;
+    double shupe_phase_rad = 0.0;
+    bool use_live_params = false;
+    double eps_vpi_live = 0.02;
+    double k_xtalk_live_A_per_V = 1.0e-8;
+    bool enable_dither_live = true;
+};
+
 // Optional micro-sample waveform diagnostic record (64 bytes, local window dump for plot_waveforms.py)
 #pragma pack(push, 1)
 struct MicroRecord {

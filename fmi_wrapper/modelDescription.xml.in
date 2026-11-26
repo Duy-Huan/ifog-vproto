@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  fmiVersion="3.0"
+  modelName="ifog_core"
+  instantiationToken="@IFOG_FMI_INSTANTIATION_TOKEN@"
+  description="Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-006 — IEEE 1666.1 SystemC/SystemC-AMS Co-Simulation FMU)"
+  author="ifog-vproto engineering"
+  version="@IFOG_PROJECT_VERSION@"
+  generationTool="ifog-vproto CMake FMI 3.0 Packager"
+  generationDateAndTime="@IFOG_FMU_BUILD_TIMESTAMP@"
+  variableNamingConvention="flat">
+
+  <CoSimulation
+    modelIdentifier="ifog_core"
+    canHandleVariableCommunicationStepSize="true"
+    canBeInstantiatedOnlyOncePerProcess="true"
+    hasEventMode="false"
+    providesIntermediateUpdate="false"/>
+
+  <UnitDefinitions>
+    <Unit name="s">
+      <BaseUnit s="1"/>
+    </Unit>
+    <Unit name="rad">
+      <BaseUnit rad="1"/>
+    </Unit>
+    <Unit name="rad/s">
+      <BaseUnit rad="1" s="-1"/>
+    </Unit>
+    <Unit name="1">
+      <BaseUnit/>
+    </Unit>
+    <Unit name="A/V">
+      <BaseUnit kg="-1" m="-2" s="3" A="2"/>
+    </Unit>
+  </UnitDefinitions>
+
+  <LogCategories>
+    <Category name="logEvents" description="Log FMI 3.0 lifecycle and initialization events"/>
+    <Category name="logStatusError" description="Log FMI 3.0 errors and invalid API arguments"/>
+  </LogCategories>
+
+  <DefaultExperiment startTime="0.0" stopTime="1.0" stepSize="1.0e-3"/>
+
+  <ModelVariables>
+    <Float64 name="time" valueReference="0" causality="independent" variability="continuous" unit="s" description="Independent simulation time"/>
+    <Float64 name="omega_in" valueReference="1" causality="input" variability="continuous" unit="rad/s" start="0.0" description="External angular rate input Omega_in(t) held ZOH across macro communication step"/>
+    <Float64 name="shupe_phase_in" valueReference="2" causality="input" variability="continuous" unit="rad" start="0.0" description="External thermal Shupe non-reciprocal phase perturbation Delta_phi_Shupe(t)"/>
+    <Float64 name="omega_out" valueReference="3" causality="output" variability="continuous" initial="calculated" unit="rad/s" description="Instantaneous closed-loop digital angular rate output Omega_out(t)"/>
+    <Float64 name="e_vpi_res" valueReference="4" causality="output" variability="continuous" initial="calculated" unit="rad" description="Loop-2 residual 2*pi flyback V_pi phase error 2*pi*eps_Vpi_eff"/>
+    <UInt32 name="bit_status" valueReference="5" causality="output" variability="discrete" initial="calculated" description="Real-time FPGA BIT/FDIR and saturation status bitmask (0 = healthy)"/>
+    <Float64 name="eps_vpi" valueReference="6" causality="parameter" variability="tunable" unit="1" start="0.02" description="MIOC half-wave voltage fractional scale error eps_Vpi"/>
+    <Float64 name="k_xtalk" valueReference="7" causality="parameter" variability="tunable" unit="A/V" start="1.0e-8" description="DAC-to-TIA resistive crosstalk conductance k_xtalk"/>
+    <Boolean name="enable_dither" valueReference="8" causality="parameter" variability="tunable" start="true" description="Enable 32-bit LFSR PRBS dither for deadband suppression"/>
+    <Int32 name="dsp_mode" valueReference="9" causality="parameter" variability="fixed" start="4" description="Digital demodulation mode: 2 (2-state), 4 (4-state Lefevre), or 6 (6-state symmetric)"/>
+    <Boolean name="en_white_noise" valueReference="10" causality="parameter" variability="fixed" start="true" description="Enable 6-component TIA shot, RIN, thermal, and op-amp white noise (EQ-15)"/>
+    <Boolean name="en_pink_noise" valueReference="11" causality="parameter" variability="fixed" start="false" description="Enable 5-pole IIR 1/f flicker noise in TIA, DAC, and crosstalk"/>
+    <Boolean name="en_vpi_loop" valueReference="12" causality="parameter" variability="fixed" start="true" description="Enable Loop-2 V_pi closed-loop gain tracking"/>
+    <Int32 name="seed" valueReference="13" causality="parameter" variability="fixed" start="42004" description="Deterministic PRNG and LFSR seed matching baseline_1km.json"/>
+    <Float64 name="omega_out_avg" valueReference="14" causality="output" variability="continuous" initial="calculated" unit="rad/s" description="Anti-aliased macro-step interval-averaged angular rate output (EQ-42)"/>
+  </ModelVariables>
+
+  <ModelStructure>
+    <Output valueReference="3"/>
+    <Output valueReference="4"/>
+    <Output valueReference="5"/>
+    <Output valueReference="14"/>
+    <InitialUnknown valueReference="3"/>
+    <InitialUnknown valueReference="4"/>
+    <InitialUnknown valueReference="5"/>
+    <InitialUnknown valueReference="14"/>
+  </ModelStructure>
+</fmiModelDescription>

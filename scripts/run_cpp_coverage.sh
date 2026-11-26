@@ -161,10 +161,38 @@ assert res_unw.returncode != 0
 print("All C++ coverage scenarios executed cleanly.")
 PY
 
-# 4. Compute and enforce strict 100.0% C++ line coverage with gcovr
+# 3b. Exercise every branch of fmi_wrapper/src/fmi3_bridge.cpp and IfogTopModule (SPEC-006)
+FMU_COV_RES="${COV_WORK}/fmu_cov_res"
+mkdir -p "${FMU_COV_RES}"
+cp "${COV_WORK}/phys_params.json" "${FMU_COV_RES}/phys_params.json"
+cp "${COV_WORK}/shupe_lut.bin" "${FMU_COV_RES}/shupe_lut.bin"
+cp "${REPO_ROOT}/configs/baseline_1km.json" "${FMU_COV_RES}/baseline_cfg.json"
+for fmi_mode in 4 6 2 4noterm fault bitfault; do
+    "${BUILD_COV}/ifog_fmi_tests" "${FMU_COV_RES}" "${fmi_mode}"
+done
+# Also cover instantiation when optional shupe_lut.bin is absent
+FMU_COV_NOSHUPE="${COV_WORK}/fmu_cov_noshupe"
+mkdir -p "${FMU_COV_NOSHUPE}"
+cp "${COV_WORK}/phys_params.json" "${FMU_COV_NOSHUPE}/phys_params.json"
+cp "${REPO_ROOT}/configs/baseline_1km.json" "${FMU_COV_NOSHUPE}/baseline_cfg.json"
+"${BUILD_COV}/ifog_fmi_tests" "${FMU_COV_NOSHUPE}" 4
+# Verify dlopen + sc_main stub on the compiled FMI 3.0 shared library
+python3 - "${BUILD_COV}" <<'PY'
+import ctypes, pathlib, sys
+so_list = list((pathlib.Path(sys.argv[1]) / "binaries").rglob("ifog_core.so"))
+assert len(so_list) == 1, f"Expected 1 ifog_core.so, found {so_list}"
+lib = ctypes.CDLL(str(so_list[0]))
+lib.fmi3GetVersion.restype = ctypes.c_char_p
+assert lib.fmi3GetVersion() == b"3.0"
+assert lib.sc_main(0, None) == 0
+PY
+
+# 4. Compute and enforce strict 100.0% C++ line coverage with gcovr (Tier 2 + FMI 3.0 wrapper)
 gcovr -r "${REPO_ROOT}" "${BUILD_COV}" \
     --filter "${REPO_ROOT}/tier2_sysc_ams/(src|include)/" \
+    --filter "${REPO_ROOT}/fmi_wrapper/src/" \
     --exclude "${REPO_ROOT}/tier2_sysc_ams/src/cpp_unit_tests\.cpp" \
+    --exclude "${REPO_ROOT}/tier2_sysc_ams/src/fmi_unit_tests\.cpp" \
     --exclude-unreachable-branches \
     --txt-metric line \
     --print-summary \
@@ -172,4 +200,4 @@ gcovr -r "${REPO_ROOT}" "${BUILD_COV}" \
     --json-summary "${COV_WORK}/cpp_coverage_summary.json" \
     --html-details "${COV_WORK}/cpp_coverage.html"
 
-echo "C++ 100.0% line coverage verified!"
+echo "C++ 100.0% line coverage verified (Tier 2 + FMI 3.0 wrapper)!"

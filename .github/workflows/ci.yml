@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   governance-and-spec-lock:
-    name: Governance, Branch Policy & Spec Immutability
+    name: Governance, Branch Policy & Triple Spec Immutability
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository (full history)
@@ -49,13 +49,15 @@ jobs:
           fi
           echo "PR branch policy OK: dev -> main."
 
-      - name: Enforce Rule 7 — Dual Spec SHA-256 Immutability & PDF Presence
+      - name: Enforce Rule 7 — Triple Spec SHA-256 Immutability & PDF Presence
         run: |
           set -euo pipefail
-          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256
+          sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256
           test -s spec/IFOG-SIM-SPEC-004.pdf
           test -s spec/IFOG-SIM-SPEC-005.pdf
-          echo "Both spec checksums (SPEC-004 & SPEC-005) and compiled PDFs verified."
+          test -s spec/IFOG-SIM-SPEC-006.pdf
+          test -s spec/IFOG-SIM-SPEC-006.md
+          echo "All three spec checksums (SPEC-004, SPEC-005, SPEC-006) and compiled PDFs verified."
 
       - name: Enforce Rule 6 — Governance & Project Skills Presence
         run: |
@@ -67,13 +69,14 @@ jobs:
             ifog-tier1-optical-thermal \
             ifog-tier2-sysc-ams-core \
             ifog-6state-and-scenarios \
+            ifog-fmi3-cosim-fmu \
             ifog-tier3-dual-regime-avar \
             ifog-reporting-and-doc-sync \
             ifog-portable-container-env \
             ifog-cicd-release-workflow; do
             test -s "skills/${skill}/SKILL.md"
           done
-          echo "AGENT.md and all 8 project skills verified."
+          echo "AGENT.md and all 9 project skills verified."
 
       - name: Enforce Rule 16 — Mandatory Version-Document Synchronization
         run: |
@@ -81,10 +84,10 @@ jobs:
           python3 scripts/verify_doc_sync.py
 
   build-and-verify:
-    name: Build SystemC-AMS, 41 Formulas, 100% C++/Py Coverage & Full Real Scenarios
+    name: Build SystemC-AMS & FMI 3.0 FMU, 44 Formulas, 100% C++/Py Coverage & Full Real Scenarios
     needs: governance-and-spec-lock
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       SYSTEMC_AMS_HOME: ${{ github.workspace }}/.cache/systemc-ams
     steps:
@@ -114,22 +117,24 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Python dependencies & editable package
+      - name: Install Python dependencies (with FMPy) & editable package
         run: |
           python3 -m pip install --upgrade pip setuptools wheel
-          python3 -m pip install numpy scipy matplotlib plotly jsonschema pytest pytest-cov pytest-xdist
+          python3 -m pip install numpy scipy matplotlib plotly jsonschema fmpy pytest pytest-cov pytest-xdist
           python3 -m pip install -e . --no-build-isolation --no-deps
 
-      - name: Build Tier 2 SystemC-AMS Core (Release -O3) & run C++ Unit Tests
+      - name: Build Tier 2 SystemC-AMS Core (-O3, -fPIC), Package FMI 3.0 FMU & Run C++ Unit Tests
         run: |
           cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build -j"$(nproc)"
+          cmake --build build --target package_fmu
           ./build/ifog_cpp_tests
+          python3 -c "from fmpy.validation import validate_fmu; probs = validate_fmu('build/ifog_core.fmu'); assert not probs, probs; print('FMI 3.0 FMU validation OK!')"
 
-      - name: Gate A — C++ 100.0% Line Coverage Verification (gcovr)
+      - name: Gate A — C++ 100.0% Line Coverage Verification (Tier 2 + fmi_wrapper, gcovr)
         run: bash scripts/run_cpp_coverage.sh
 
-      - name: Gate B — Per-Formula Verification Matrix (EQ-01 .. EQ-41, Rule 3)
+      - name: Gate B — Per-Formula Verification Matrix (EQ-01 .. EQ-44, Rule 3)
         run: |
           python3 scripts/verify_formulas_ci.py --out-dir data/ci_formula_report
           cat data/ci_formula_report/formula_verification_matrix.md
@@ -139,7 +144,7 @@ jobs:
           pytest tests/unit tests/formula_verification \
             --cov --cov-report=term-missing --cov-report=xml:data/python_coverage.xml
 
-      - name: Gate D — Full Real 5-Gate + 11-Scenario & Regression Simulations (No Smoke Tests, Rule 5)
+      - name: Gate D — Full Real 6-Gate (incl. FMI 3.0 FMU) + 15-Scenario & Regression Simulations (Rule 5)
         run: pytest tests/system -v -s
 
       - name: Upload CI Verification Artifacts
@@ -148,6 +153,7 @@ jobs:
         with:
           name: ifog-ci-verification-artifacts
           path: |
+            build/ifog_core.fmu
             data/ci_formula_report/formula_verification_matrix.md
             data/ci_formula_report/formula_verification_matrix.json
             data/cov_cpp_work/cpp_coverage_summary.json
@@ -155,7 +161,7 @@ jobs:
           if-no-files-found: warn
 
   container-build-and-verify:
-    name: Build OCI Containerfile (Git SystemC/SC-AMS) & Run Live In-Container Sim
+    name: Build OCI Containerfile (Git SystemC/SC-AMS + FMI 3.0 FMU) & Run Live In-Container Sim
     needs: governance-and-spec-lock
     runs-on: ubuntu-24.04
     timeout-minutes: 25
@@ -176,11 +182,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Verify live in-container simulation (Gate 1 & Gate 5 6-State DSP) & auto-reporting
+      - name: Verify live in-container simulation (Gate 5 6-State DSP & FMI 3.0 FMU) & auto-reporting
         run: |
           set -euo pipefail
           ./scripts/container_run.sh --engine docker --tag ifog-vproto:ci sim --mode dsp6_compare --run-id ci_container_dsp6
           test -s report/ci_container_dsp6/report.md
           test -s report/ci_container_dsp6/report.html
           test -s report/index.html
-          echo "Container build & live 6-State DSP auto-report PASSED!"
+          docker run --rm ifog-vproto:ci python3 -c "from tier3_analysis.fmi_master_runner import validate_fmu_package; r = validate_fmu_package('build/ifog_core.fmu'); assert r['validation_pass'], r; print('In-container FMI 3.0 FMU validation PASSED!')"
+          echo "Container build, live 6-State DSP auto-report & FMI 3.0 FMU check PASSED!"

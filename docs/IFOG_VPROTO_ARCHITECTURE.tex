@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-ARCH-001}
-\newcommand{\DocVersion}{v2.2.0}
+\newcommand{\DocVersion}{v3.0.0}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -51,9 +51,9 @@
 
 % --- Title Banner ---
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=10pt,bottom=10pt]
-{\color{white}\Large\bfseries Closed-Loop IFOG Multi-Scale Virtual Prototype}\\[4pt]
+{\color{white}\Large\bfseries Closed-Loop IFOG Multi-Scale Virtual Prototype \& FMI 3.0 FMU}\\[4pt]
 {\color{white}\large System Architecture \& Implementation Specification}\\[6pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-005} v5.0 / \texttt{SPEC-004} v4.0 \quad|\quad Date: \DocDate}
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Version: \texttt{\DocVersion} \quad|\quad Normative Spec: \texttt{IFOG-SIM-SPEC-006} v6.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
 \section{Document Control \& Revision History}
@@ -65,10 +65,10 @@
 \midrule
 Document Identifier & \texttt{\DocID} \\
 Current Version & \texttt{\DocVersion} (Synchronized with \texttt{pyproject.toml} per \texttt{AGENT.md} Rule 16) \\
-Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 41-Formula \& 5-Gate + 11-Scenario Verified}} \\
-Normative Authority & \texttt{spec/IFOG-SIM-SPEC-005.tex} (v5.0) \& \texttt{spec/IFOG-SIM-SPEC-004.tex} (v4.0) (both SHA-256 locked) \\
+Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 44-Formula, FMI 3.0 FMU \& 21-Scenario Verified}} \\
+Normative Authority & \texttt{spec/IFOG-SIM-SPEC-006.\{md,tex\}} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (triple SHA-256 locked) \\
 Scenarios Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}} (\DocVersion) \\
-Reference Standards & IEEE Std 952-2020 (IFOG Test \& AVAR); IEEE Std 1666.1-2016 (SystemC-AMS) \\
+Reference Standards & FMI Standard 3.0.2; IEEE Std 952-2020 (IFOG Test \& AVAR); IEEE Std 1666.1-2016 (SystemC-AMS) \\
 Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \bottomrule
 \end{tabularx}
@@ -84,6 +84,7 @@ Markdown Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.md} \\
 \texttt{v2.0.0} & 2026-11-25 & \texttt{SPEC-005} 6-State DSP \& 11 Scenarios & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-005} v5.0 (41/41 formulas \texttt{EQ-01}--\texttt{EQ-41}); implemented official 6-state symmetric DSP ($+136.94\text{ dB}$ RAM/xtalk rejection, $-33.3\%$ $V_{\text{peak}}$), 64 B \texttt{dsp\_trace.bin}, real-time FPGA BIT/FDIR, ADC aperture jitter, VRE/Faraday, concurrent 3-axis SystemC-AMS IMU (\texttt{--imu3axis}), 6 Time-Domain + 5 Engineering scenarios (\texttt{scripts/run\_all\_scenarios.sh}, 22 CLI modes), and \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}. \\
 \texttt{v2.1.0} & 2026-11-25 & All-Scenarios Example \& 15-Chart HTML & Upgraded \texttt{viz/export\_report.py} with full Gate 5 / TD / ENG Markdown tables, \textbf{15 interactive Plotly HTML5 charts}, and all 16 300-DPI PNG figures; updated \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to execute all 16 gates \& scenarios (\texttt{MC=500}) by default; executed and committed complete curated bundle \texttt{examples/full\_all\_scenarios/}. \\
 \texttt{v2.2.0} & 2026-11-26 & Group C Dynamic, PSD \& Electro-Optic Probe & Added \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py} (\texttt{DYN-01} Step Response, \texttt{DYN-02} Full Bode Magnitude/Phase/Group Delay, \texttt{DYN-03} Broadband Output Rate PSD/ASD \& Cumulative RMS, \texttt{DYN-04} Sinusoidal Input Internal Chain \texttt{PD}, $V_{\text{fb,MIOC}}$, Sagnac phase, $V_{\text{TIA}}$, ADC blanking); expanded CLI to 27 modes, 20 official gates/scenarios, 20 300-DPI PNGs, and 19 interactive Plotly HTML5 charts; refreshed \texttt{examples/full\_all\_scenarios/} (\texttt{20/20} PASS). \\
+\texttt{v3.0.0} & 2026-11-26 & \texttt{SPEC-006} FMI 3.0 Co-Simulation FMU & Upgraded normative spec to \texttt{IFOG-SIM-SPEC-006} v6.0 (44/44 formulas \texttt{EQ-01}--\texttt{EQ-44}); wrapped unmodified Tier 2 SystemC/SystemC-AMS core (\texttt{IfogTopModule}) into standalone FMI 3.0 FMU \texttt{build/ifog\_core.fmu} via vendorized FMI 3.0 C headers, 75-symbol \texttt{fmi3\_bridge.cpp}, 15-variable \texttt{modelDescription.xml.in} (\texttt{canBeInstantiatedOnlyOncePerProcess="true"}), and CMake \texttt{package\_fmu} target; added subprocess-isolated FMPy master orchestrator (\texttt{fmi\_master\_runner.py}, Gate 6: 0 XSD errors, $0.00\times 10^{0}\text{ rad/s}$ bit-exact equivalence, 97.42\% deadband reduction, 3.83\% 5-region AVAR overlap), 100.0\% C++ (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}) \& Python coverage, and refreshed \texttt{examples/full\_all\_scenarios/} (\texttt{21/21} PASS). \\
 \bottomrule
 \end{tabularx}
 \normalsize

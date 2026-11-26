@@ -10,7 +10,8 @@ DigitalDSP_SC::DigitalDSP_SC(
     const IfogConfig& cfg,
     const std::string& bin_out_path,
     MicroTraceCollector* micro_trace,
-    DspTraceCollector* dsp_trace
+    DspTraceCollector* dsp_trace,
+    const ExternalDriveState* ext_drive
 )
     : sc_core::sc_module(name),
       adc_code_in("adc_code_in"),
@@ -66,8 +67,11 @@ DigitalDSP_SC::DigitalDSP_SC(
       second_half_count_(0),
       e_asym_sq_sum_(0.0),
       e_asym_count_(0),
+      step_omega_sum_(0.0),
+      step_omega_count_(0),
       micro_trace_(micro_trace),
-      dsp_trace_(dsp_trace) {
+      dsp_trace_(dsp_trace),
+      ext_drive_(ext_drive) {
     // EQ-22 & EQ-34: Loop-1 & Loop-2 gains calibrated directly from K_tot_1 and K_tot_2
     double init_bias = 0.0;
     if (cfg_.dsp_mode == DspMode::SixState) {
@@ -93,9 +97,11 @@ DigitalDSP_SC::DigitalDSP_SC(
     }
 
     record_buf_.reserve(4096);
-    bin_ofs_.open(bin_out_path, std::ios::binary | std::ios::trunc);
-    if (!bin_ofs_.is_open()) {
-        throw std::runtime_error("Cannot open sim_out.bin for writing: " + bin_out_path);
+    if (!bin_out_path.empty()) {
+        bin_ofs_.open(bin_out_path, std::ios::binary | std::ios::trunc);
+        if (!bin_ofs_.is_open()) {
+            throw std::runtime_error("Cannot open sim_out.bin for writing: " + bin_out_path);
+        }
     }
 
     SC_METHOD(on_adc_sample);
@@ -303,10 +309,16 @@ void DigitalDSP_SC::on_adc_sample() {
 
     // EQ-23: Closed-loop angular rate output Omega_out = Delta_phi_step / SF_CL (SF_CL = K_opt)
     omega_out_ = delta_phi_step_ / cfg_.K_opt;
+    step_omega_sum_ += omega_out_;
+    ++step_omega_count_;
 
     // Update frame-constant PRBS dither at start of each modulation frame so Loop-2 cancels identically.
+    const bool dither_enabled =
+        (ext_drive_ != nullptr && ext_drive_->use_live_params)
+            ? ext_drive_->enable_dither_live
+            : cfg_.en_prbs_dither;
     if (emit_state_ == 0) {
-        if (cfg_.en_prbs_dither && cfg_.prbs_amplitude_rad > 0.0) {
+        if (dither_enabled && cfg_.prbs_amplitude_rad > 0.0) {
             int dir = lfsr_.next_bit_signed();
             if (phi_dither_ > 0.25 * PI) {
                 dir = -1;
@@ -370,8 +382,8 @@ void DigitalDSP_SC::on_adc_sample() {
         ++second_half_count_;
     }
 
-    // Buffered binary logging at decimation_tau
-    if ((step_idx_ % cfg_.decimation_tau) == 0u) {
+    // Buffered binary logging at decimation_tau (skipped in headless FMU mode when bin_ofs_ is unopened)
+    if (bin_ofs_.is_open() && (step_idx_ % cfg_.decimation_tau) == 0u) {
         uint32_t flags = 0u;
         if (flyback) {
             flags |= FLAG_FLYBACK_RESET;
@@ -384,7 +396,7 @@ void DigitalDSP_SC::on_adc_sample() {
         if (cfg_.en_vpi_loop) {
             flags |= FLAG_VPI_LOOP_EN;
         }
-        if (cfg_.en_prbs_dither) {
+        if (dither_enabled) {
             flags |= FLAG_PRBS_DITHER_EN;
         }
         if (last_bit_fault_code_ != BIT_OK) {
@@ -421,6 +433,17 @@ void DigitalDSP_SC::flush_records() {
     if (dsp_trace_ != nullptr) {
         dsp_trace_->flush();
     }
+}
+
+void DigitalDSP_SC::reset_step_accumulator() {
+    step_omega_sum_ = 0.0;
+    step_omega_count_ = 0;
+}
+
+double DigitalDSP_SC::step_mean_omega_out() const {
+    return (step_omega_count_ > 0u)
+        ? (step_omega_sum_ / static_cast<double>(step_omega_count_))
+        : omega_out_;
 }
 
 double DigitalDSP_SC::mean_omega_second_half() const {

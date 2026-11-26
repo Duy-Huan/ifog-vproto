@@ -2,6 +2,22 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [3.0.0] - 2026-11-26
+
+### Added
+- **Owner-Authorized Normative Spec Upgrade — `IFOG-SIM-SPEC-006` (v6.0):** Added checksum-locked `spec/IFOG-SIM-SPEC-006.{md,tex,pdf,sha256}` (while keeping `SPEC-004` and `SPEC-005` untouched and checksum-locked) formalizing FMI 3.0 Co-Simulation FMU architecture, 15-variable `modelDescription.xml` interface contract, 3 new equations (`EQ-42`–`EQ-44`), and **Gate 6 (FMI 3.0 Compliance & Black-Box Equivalence Gate)**.
+- **Standalone FMI 3.0 Co-Simulation FMU Subsystem (`fmi_wrapper/`, `build/ifog_core.fmu`):**
+  - Vendorized official BSD-2-Clause FMI 3.0 C headers (`fmi3Functions.h`, `fmi3FunctionTypes.h`, `fmi3PlatformTypes.h`) under `fmi_wrapper/include/fmi3/`.
+  - Implemented reusable `IfogTopModule` (`SC_MODULE`) in `tier2_sysc_ams/{include,src}/ifog_top_module.{hpp,cpp}` wrapping the exact unmodified Accellera SystemC/SystemC-AMS closed-loop core with optional zero-overhead external ZOH drive, anti-aliased macro-step rate accumulator (`omega_out_avg`), residual $V_\pi$ phase error (`e_vpi_res`), and post-blanking BIT/FDIR status bitmask (`bit_status`).
+  - Implemented full 75-symbol FMI 3.0 Co-Simulation C-API bridge (`fmi_wrapper/src/fmi3_bridge.cpp`), `fmi_wrapper/modelDescription.xml.in` (`fmiVersion="3.0"`, `canBeInstantiatedOnlyOncePerProcess="true"`), and cross-platform CMake packager (`fmi_wrapper/package_fmu.cmake`, target `package_fmu`) bundling `modelDescription.xml`, `binaries/x86_64-linux/ifog_core.so` (`-fPIC`), and Tier 1 `resources/{phys_params.json, shupe_lut.bin, baseline_cfg.json}` into `build/ifog_core.fmu`.
+  - Added C++ FMI 3.0 unit test binary (`tier2_sysc_ams/src/fmi_unit_tests.cpp`) achieving **100.0% C++ line & function coverage** across both `tier2_sysc_ams/` and `fmi_wrapper/src/`.
+- **FMPy Master Orchestrator & Gate 6 Verification (`tier3_analysis/fmi_master_runner.py`, `--mode fmi_gate`):**
+  - Subprocess-isolated FMPy master orchestrator honoring `canBeInstantiatedOnlyOncePerProcess="true"`, executing official `fmpy.validation.validate_fmu` (0 errors), bit-exact (`0.00e+00 rad/s < 1e-12`) standalone vs FMU equivalence on 4-state & 6-state modes, Slow Rate Ramp deadband sweep (`97.42%` reduction, `99.59%` Bunny Ears SF reduction), and seamless FMU -> Tier 3 Dual-Regime 5-Region IEEE Std 952 Overlapping AVAR (`3.83% < 5%` overlap, all 5 WLS parameters $\le 10\%$).
+  - Added 300-DPI 3-panel `plot_fmi_gate()` in `viz/plot_scenarios.py`, interactive Plotly Gate 6 chart + scorecard row in `viz/export_report.py`, `tests/formula_verification/test_formulas_spec006.py` (`EQ-42`..`EQ-44`), `tests/unit/test_fmi_master_unit.py`, `tests/system/test_fmi3_fmu_system.py`, and new project skill `skills/ifog-fmi3-cosim-fmu/SKILL.md` (9 skills total).
+
+### Changed
+- Expanded CI formula verification matrix to **44 / 44 equations (`EQ-01`..`EQ-44`)**, CLI runner to **28 modes** (`--mode fmi_gate`, `--fmu`), `all_scenarios` / `examples/full_all_scenarios/` to **21 official gates & scenarios** (**21 300-DPI PNGs**, **20 interactive Plotly HTML5 charts**), and updated `pyproject.toml`, `scripts/setup_env.sh`, `Containerfile`, `Dockerfile`, `compose.yaml`, `.github/workflows/{ci,release}.yml` (uploading `ifog_core.fmu` + `IFOG-SIM-SPEC-006.{pdf,md}` as release assets), `AGENT.md`, `README.md`, and all `docs/*.{md,tex,pdf}` to `v3.0.0`.
+
 ## [2.2.0] - 2026-11-26
 
 ### Added
