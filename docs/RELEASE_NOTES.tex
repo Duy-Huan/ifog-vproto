@@ -2,8 +2,8 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v2.1.0}
-\newcommand{\DocDate}{2026-11-25}
+\newcommand{\DocVersion}{v2.2.0}
+\newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
 \setmainfont{Noto Sans}
@@ -49,18 +49,20 @@
 {\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-005} v5.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
-\section{Release v2.1.0 (2026-11-25)}
+\section{Release v2.2.0 (2026-11-26)}
 
 \subsection{Key New Features}
 \begin{enumerate}
-    \item \textbf{Complete Real All-Scenarios Curated Example (\texttt{examples/full\_all\_scenarios/}):}
-    Executed end-to-end via \texttt{./examples/run\_example.sh --sync-example} with zero mocks and zero smoke tests: \textbf{Gates 1--4} ($4\times 60\text{ s}$ Fast-Scale SystemC-AMS + $12\times 10\text{ h}$ / $3.6\times 10^6$-sample Slow-Scale AVAR) + \textbf{Gate 5 Official 6-State DSP} + \textbf{6 Time-Domain (\texttt{TD-01}..\texttt{TD-06})} + \textbf{5 System Engineering \& Production (\texttt{ENG-01}..\texttt{ENG-05}, \texttt{MC=500})} = \textbf{16 / 16 PASS}. Committed complete \texttt{README.md}, \texttt{report.md}, interactive \texttt{report.html}, all \textbf{16 300-DPI PNG figures}, \texttt{virtual\_calibration\_dataset.csv}, and all Gate/TD/ENG JSONs.
-    \item \textbf{15-Chart Interactive Plotly HTML5 \& Full Scenario Markdown Engine (\texttt{viz/export\_report.py}):}
-    Upgraded \texttt{\_build\_interactive\_html()} with \texttt{\_build\_plotly\_sections()} rendering \textbf{15 interactive multi-panel Plotly HTML5 charts} covering Core Gates (2, 3, 4, 5), Group A (\texttt{TD-01}..\texttt{TD-06}), and Group B (\texttt{ENG-01}..\texttt{ENG-05}) alongside the 16-plot 300-DPI gallery. Expanded \texttt{\_build\_markdown\_report()} with dedicated Gate 5, TD, ENG, 5-fault BIT/FDIR, and Monte Carlo Yield / Virtual Calibration tables.
-    \item \textbf{All-Scenarios Default Across All Runner \& Container Scripts:}
-    Updated \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh} (default \texttt{--mc-runs 500}), and \texttt{scripts/container\_run.sh example} to execute all 16 official gates \& scenarios and automatically generate \texttt{report.md}, interactive \texttt{report.html}, all 16 300-DPI PNG plots, CSV calibration data, and \texttt{report/index.\{md,html\}}.
-    \item \textbf{Governance, 100\% Dual Coverage \& Rule 16 Sync:}
-    Verified 100.0\% C++ ($1{,}546/1{,}546$ lines, $109/109$ functions) and 100.0\% Python line coverage, 41/41 formulas, updated \texttt{skills/ifog-reporting-and-doc-sync/SKILL.md}, and synchronized all 3 \texttt{docs/*.\{md,tex,pdf\}} bundles, \texttt{Containerfile}/\texttt{Dockerfile}/\texttt{compose.yaml}, and \texttt{README.md} to \texttt{\DocVersion}.
+    \item \textbf{Group C --- Dedicated Dynamic Response, Broadband Output PSD \& Internal Electro-Optic Probe (\texttt{DYN-01}..\texttt{DYN-04}):}
+    Implemented \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py} adding four essential closed-loop characterization scenarios backed by real SystemC-AMS Tier 2 simulations:
+    \texttt{DYN-01} (\texttt{dyn\_step\_response}: 10 \& $100^\circ/\text{s}$ steps, 4-State vs 6-State, $K_{\text{tot},1}\in\{0.15,0.25,0.45\}$ sweep, Sagnac vs feedback phase);
+    \texttt{DYN-02} (\texttt{dyn\_freq\_response}: 15-pt $20\text{ Hz}$--$10\text{ kHz}$ Bode Magnitude/Phase/Group Delay comparing 4-State $2{,}544\text{ Hz}$ / $65.2\ \mu\text{s}$ and 6-State $1{,}642\text{ Hz}$ / $103.3\ \mu\text{s}$ against half-frame Z-domain theory);
+    \texttt{DYN-03} (\texttt{dyn\_output\_psd}: broadband $3\text{ Hz}$--$25\text{ kHz}$ output rate PSD/ASD \& cumulative RMS noise confirming \texttt{EQ-15} ARW $0.000352$ vs $0.000363\,^\circ/\sqrt{\text{h}}$ and $+29.2\text{ dB}$ 6-State LF suppression);
+    and \texttt{DYN-04} (\texttt{dyn\_sine\_electro\_optic}: $50^\circ/\text{s}$ @ $250\text{ Hz}$ sinusoidal excitation exposing $\Omega_{\text{in}}/\Omega_{\text{out}}$ [THD $-67.5\text{ dB}$, SFDR $43.6\text{ dB}$], Sagnac phase $\pm 1.180\text{ rad}$, $V_{\text{fb,MIOC}}$ [$391$ $2\pi$ wraps], Photodiode $P_{\text{PD}}/I_{\text{PD}}$ [$r=0.9960$], $V_{\text{TIA}}$, and $60\ \mu\text{s}$ sub-$\tau$ ADC blanking zoom).
+    \item \textbf{20-Scenario Default Official Flow, 19-Chart Interactive HTML5 \& Refreshed Curated Example:}
+    Expanded \texttt{sim\_runner\_cli.py} to 27 CLI modes, \texttt{viz/plot\_scenarios.py} to 20 300-DPI PNG figures, and \texttt{viz/export\_report.py} to Section 10 Group C Markdown tables + \textbf{19 interactive multi-panel Plotly HTML5 charts}. Re-ran \texttt{./examples/run\_example.sh --sync-example} (\textbf{20 / 20 PASS}) and committed the complete bundle in \texttt{examples/full\_all\_scenarios/}.
+    \item \textbf{Governance, 100\% Dual Coverage, 9 Real System Tests \& Rule 16 Sync:}
+    Verified 100.0\% C++ ($1{,}546/1{,}546$ lines, $109/109$ functions) and 100.0\% Python line coverage, 41/41 verified formulas, 9/9 real system tests, updated \texttt{skills/}, and synchronized all 3 \texttt{docs/*.\{md,tex,pdf\}}, \texttt{Containerfile}/\texttt{Dockerfile}/\texttt{compose.yaml}, and \texttt{README.md} to \texttt{\DocVersion}.
 \end{enumerate}
 
 \subsection{Verified Quality Gates \& Attached Release Assets}
@@ -70,7 +72,7 @@
 \midrule
 Dual Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004} \& \texttt{SPEC-005} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
 Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% ($1{,}546/1{,}546$ lines, $109/109$ fn) \& Python \texttt{pytest-cov} 100.0\% & \textcolor{TealDark}{\textbf{PASS}} \\
-41-Formula \& 16-Scenario Suite & 41 / 41 formulas (\texttt{EQ-01}..\texttt{EQ-41}) + Gates 1--5 + 6 TD + 5 ENG + committed \texttt{full\_all\_scenarios} & \textcolor{TealDark}{\textbf{PASS}} \\
+41-Formula \& 20-Scenario Suite & 41 / 41 formulas + Gates 1--5 + 6 TD + 5 ENG + 4 DYN + committed \texttt{full\_all\_scenarios} & \textcolor{TealDark}{\textbf{PASS}} \\
 Container Build \& In-Container Sim & Live \texttt{Containerfile} build from Git + in-container \texttt{ifog\_cpp\_tests} \& 6-State DSP report & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
@@ -78,6 +80,7 @@ Container Build \& In-Container Sim & Live \texttt{Containerfile} build from Git
 \section{Previous Releases}
 
 \begin{itemize}
+    \item \textbf{Release v2.1.0 (2026-11-25):} Upgraded \texttt{viz/export\_report.py} with 15 interactive Plotly HTML5 charts and full scenario Markdown tables; switched \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to all-scenarios default (\texttt{MC=500}); committed initial \texttt{examples/full\_all\_scenarios/} bundle.
     \item \textbf{Release v2.0.0 (2026-11-25):} Owner-authorized \texttt{IFOG-SIM-SPEC-005} v5.0 (41/41 verified formulas), official 6-state symmetric DSP ($+136.94\text{ dB}$ RAM/xtalk rejection, $-33.3\%$ $V_{\text{peak}}$), 6 Time-Domain scenarios (\texttt{TD-01}..\texttt{TD-06}), 5 System Engineering scenarios (\texttt{ENG-01}..\texttt{ENG-05}, concurrent 3-axis SystemC-AMS IMU \texttt{--imu3axis}, 5-fault FPGA BIT/FDIR, parallel MC Yield + $-40..+85^\circ\text{C}$ calibration), \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.\{md,tex,pdf\}}, and resilient \texttt{release.yml}.
     \item \textbf{Release v1.2.0 (2026-11-25):} Portable Docker/Podman container suite, distro-independent Git-source installers for SystemC 2.3.4 / SystemC-AMS 2.3.4 / \texttt{nlohmann/json} / Python venv, and committed 4-Gate baseline example (\texttt{examples/full\_4gate\_baseline/}).
     \item \textbf{Release v1.1.0 (2026-11-25):} Automated Markdown \& interactive HTML reporting + dashboard index under \texttt{report/}, unified simulation runner, synchronized architecture/release docs, and mandatory Rule 16 version--document sync CI gate.

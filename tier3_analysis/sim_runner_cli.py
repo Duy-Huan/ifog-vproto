@@ -26,6 +26,13 @@ from tier3_analysis.binary_io import compute_welch_psd, fit_loglog_slope, read_s
 from tier3_analysis.dual_regime_avar import run_dual_regime_avar
 from tier3_analysis.extract_k_matrix import extract_k_matrix
 from tier3_analysis.run_sweep_parallel import run_slow_rate_ramp_sweep, run_sweep_path
+from tier3_analysis.scenarios_dynamic_probe import (
+    run_all_dynamic_probe_scenarios,
+    run_dyn_freq_response,
+    run_dyn_output_psd,
+    run_dyn_sine_electro_optic,
+    run_dyn_step_response,
+)
 from tier3_analysis.scenarios_engineering import (
     run_all_engineering_scenarios,
     run_eng_fault_bit,
@@ -73,6 +80,11 @@ ALL_MODES = (
     "eng_fault_bit",
     "eng_mc_yield_cal",
     "eng_all",
+    "dyn_step_response",
+    "dyn_freq_response",
+    "dyn_output_psd",
+    "dyn_sine_electro_optic",
+    "dyn_all",
     "all_scenarios",
 )
 
@@ -519,6 +531,16 @@ def run_simulation_workflow(
         run_eng_mc_yield_cal(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
     elif mode == "eng_all":
         run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
+    elif mode == "dyn_step_response":
+        run_dyn_step_response(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "dyn_freq_response":
+        run_dyn_freq_response(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "dyn_output_psd":
+        run_dyn_output_psd(resolved_bin, cfg, run_dir, workers=workers)
+    elif mode == "dyn_sine_electro_optic":
+        run_dyn_sine_electro_optic(resolved_bin, cfg, run_dir)
+    elif mode == "dyn_all":
+        run_all_dynamic_probe_scenarios(resolved_bin, cfg, run_dir, workers=workers)
     elif mode == "full":
         run_gate1_stage(resolved_bin, cfg, run_dir)
         run_gate2_stage(resolved_bin, cfg_p, Path(sweep_path), run_dir, workers=workers)
@@ -552,6 +574,7 @@ def run_simulation_workflow(
         run_dsp6_comparison(resolved_bin, cfg, run_dir)
         run_all_time_domain_scenarios(resolved_bin, cfg, run_dir, workers=workers)
         run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
+        run_all_dynamic_probe_scenarios(resolved_bin, cfg, run_dir, workers=workers)
 
     summary = export_run_report(
         run_dir,

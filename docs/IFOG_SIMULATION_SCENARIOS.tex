@@ -2,8 +2,8 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-SCEN-001}
-\newcommand{\DocVersion}{v2.1.0}
-\newcommand{\DocDate}{2026-11-25}
+\newcommand{\DocVersion}{v2.2.0}
+\newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
 \setmainfont{Noto Sans}
@@ -79,6 +79,7 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 \midrule
 \texttt{v2.0.0} & 2026-11-25 & \texttt{IFOG-SIM-SPEC-005} Official Scenarios \& 6-State DSP & Initial normative engineering guide for Official 6-State Symmetric DSP (\texttt{EQ-31}--\texttt{EQ-34}, Gate 5), 6 Time-Domain scenarios (\texttt{TD-01}..\texttt{TD-06}), 5 System Engineering \& Production scenarios (\texttt{ENG-01}..\texttt{ENG-05}, \texttt{EQ-35}--\texttt{EQ-41}), unified CLI/batch orchestration (\texttt{scripts/run\_sim.sh}, \texttt{scripts/run\_all\_scenarios.sh}), and verified real SystemC-AMS benchmark results. \\
 \texttt{v2.1.0} & 2026-11-25 & All-Scenarios Curated Example \& 15-Chart HTML & Upgraded \texttt{viz/export\_report.py} with full Gate 5 / TD / ENG Markdown tables, 15 interactive Plotly HTML5 charts, and 16 300-DPI PNG figures; updated \texttt{examples/run\_example.sh}, \texttt{scripts/run\_all\_scenarios.sh}, and \texttt{scripts/container\_run.sh example} to execute all 16 gates \& scenarios (\texttt{MC=500}) by default; committed full curated example \texttt{examples/full\_all\_scenarios/}. \\
+\texttt{v2.2.0} & 2026-11-26 & Group C Dynamic, PSD \& Electro-Optic Probe (\texttt{20/20}) & Added Group C (\texttt{tier3\_analysis/scenarios\_dynamic\_probe.py}, 5 CLI modes): dedicated multi-amplitude/gain-sweep Step Response (\texttt{DYN-01}), 15-pt Bode Magnitude/Phase/Group Delay (\texttt{DYN-02}), broadband Output Rate PSD/ASD \& Cumulative RMS (\texttt{DYN-03}), and Sinusoidal Internal Electro-Optic Probe exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $P_{\text{PD}}/I_{\text{PD}}$, $V_{\text{TIA}}$, and ADC blanking (\texttt{DYN-04}); expanded suite to 20 gates/scenarios, 20 PNGs, and 19 interactive Plotly HTML5 charts. \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -89,45 +90,50 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 
 \section{Official Scenario Taxonomy \& Execution Architecture}
 
-Under \textbf{\texttt{IFOG-SIM-SPEC-005} (v5.0)}, the \texttt{ifog-vproto} verification platform organizes its official simulation flow into four orthogonal layers, runnable individually by CLI mode, by functional group, or end-to-end via \texttt{./scripts/run\_all\_scenarios.sh}:
+Under \textbf{\texttt{IFOG-SIM-SPEC-005} (v5.0)}, the \texttt{ifog-vproto} verification platform organizes its official simulation flow into five orthogonal layers (\textbf{20 gates \& scenarios}), runnable individually by CLI mode, by functional group, or end-to-end via \texttt{./scripts/run\_all\_scenarios.sh}:
 
 \begin{enumerate}
     \item \textbf{Core Acceptance Gates (Gates 1--4, \texttt{--mode full}):} Golden linear baseline \& $2\pi$ flyback (\texttt{gate1}), Deadband \& Bunny Ears mitigation (\texttt{gate2}), $1/f$ Flicker PSD \& $100\text{ Hz}$ $\mathbf{K}$-matrix (\texttt{gate3}), and 60 s Fast-Scale + 10 h Slow-Scale Dual-Regime Overlapping AVAR (\texttt{gate4}).
     \item \textbf{Gate 5 --- Official 6-State Symmetric DSP (\texttt{--mode dsp6\_compare}):} Direct quantitative validation of the anti-periodic 6-state symmetric modulation/demodulation law (\texttt{EQ-31}--\texttt{EQ-34}, $\alpha^* = \pi/3$) against 4-state Lef\`evre modulation under identical RAM, crosstalk, and MIOC $\gamma_{\text{nl}}$ distortion.
     \item \textbf{Group A --- 6 Time-Domain Scenarios (\texttt{TD-01}..\texttt{TD-06}, \texttt{--mode td\_all}):} Exercises unmodified Tier 2 physics with sub-$\tau$ waveform logging (\texttt{micro\_waveforms.bin}) and DSP register logging (\texttt{dsp\_trace.bin}).
     \item \textbf{Group B --- 5 System Engineering \& Production Scenarios (\texttt{ENG-01}..\texttt{ENG-05}, \texttt{--mode eng\_all}):} Leverages the compiled C++17 \texttt{-O3} SystemC-AMS engine for BOM sizing, concurrent 3-axis IMU crosstalk (\texttt{--imu3axis}), VRE \& dynamic Faraday/Mu-metal sizing, 5-mode real-time FPGA BIT/FDIR fault injection, and parallel Monte Carlo production yield ($C_{pk}$) + $-40..+85^\circ\text{C}$ virtual thermal calibration.
+    \item \textbf{Group C --- 4 Dynamic Response, Output PSD \& Internal Electro-Optic Probe Scenarios (\texttt{DYN-01}..\texttt{DYN-04}, \texttt{--mode dyn\_all}):} Dedicated closed-loop step characterization, full 15-point Bode Magnitude/Phase/Group Delay, broadband output angular-rate PSD/ASD/cumulative RMS noise, and sinusoidal rate excitation exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $V_{\text{MIOC}}$, Photodiode $P_{\text{PD}}/I_{\text{PD}}$, and $V_{\text{TIA}}$.
 \end{enumerate}
 
 \begin{figure}[h!]
 \centering
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
-    node distance=0.85cm and 0.9cm,
-    cli/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=NavyBlue!12,thick,align=center,font=\footnotesize,minimum width=9.6cm,minimum height=0.95cm,inner sep=5pt},
-    grp/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=SlateBg,thick,align=center,font=\scriptsize,minimum width=3.55cm,minimum height=2.2cm,inner sep=5pt},
-    rep/.style={rectangle,rounded corners=3pt,draw=TealDark,fill=TealDark!12,thick,align=center,font=\footnotesize,minimum width=11.5cm,minimum height=0.95cm,inner sep=5pt},
+    node distance=0.85cm and 0.6cm,
+    cli/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=NavyBlue!12,thick,align=center,font=\footnotesize,minimum width=12.4cm,minimum height=0.95cm,inner sep=5pt},
+    grp/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=SlateBg,thick,align=center,font=\scriptsize,minimum width=3.1cm,minimum height=2.25cm,inner sep=4pt},
+    rep/.style={rectangle,rounded corners=3pt,draw=TealDark,fill=TealDark!12,thick,align=center,font=\footnotesize,minimum width=13.4cm,minimum height=0.95cm,inner sep=5pt},
     arr/.style={-{Stealth[length=2.2mm]},thick,NavyBlue},
     tarr/.style={-{Stealth[length=2.2mm]},thick,TealDark}
 ]
-\node[cli] (top) {\textbf{Official Unified CLI \& Batch Orchestrator}\\\texttt{./scripts/run\_sim.sh --mode <mode>} \quad|\quad \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}};
+\node[cli] (top) {\textbf{Official Unified CLI \& Batch Orchestrator (27 Modes / 20 Official Gates \& Scenarios)}\\\texttt{./scripts/run\_sim.sh --mode <mode>} \quad|\quad \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}};
 
-\node[grp,below left=1.0cm and 0.9cm of top.south] (core) {\textbf{Core Gates + Gate 5}\\{\scriptsize\texttt{gate1..gate4}, \texttt{full}}\\{\scriptsize\texttt{dsp6\_compare} (EQ-31..34)}\\[3pt]10 h Dual-Regime AVAR\\\& 4s vs 6s Benchmark};
+\node[grp,below=1.0cm of top.south,xshift=-5.1cm] (core) {\textbf{Core + Gate 5}\\{\scriptsize\texttt{gate1..4}, \texttt{full}}\\{\scriptsize\texttt{dsp6\_compare}}\\[3pt]10 h Dual AVAR\\\& 6-State DSP};
 
-\node[grp,below=1.0cm of top.south] (td) {\textbf{Group A: Time-Domain}\\{\scriptsize\texttt{td\_all} / \texttt{td\_blanking}}\\{\scriptsize\texttt{td\_step\_sine}, \texttt{td\_vpi\_shock}}\\{\scriptsize\texttt{td\_high\_rate}, \texttt{td\_shupe\_shock}}\\{\scriptsize\texttt{td\_limit\_cycles}}};
+\node[grp,below=1.0cm of top.south,xshift=-1.7cm] (td) {\textbf{Group A: Time-Dom.}\\{\scriptsize\texttt{td\_all} (\texttt{TD-01..06})}\\Blanking, Bode, $V_\pi$\\700 deg/s, Shupe\\Limit Cycles / PRBS};
 
-\node[grp,below right=1.0cm and 0.9cm of top.south] (eng) {\textbf{Group B: System Eng.}\\{\scriptsize\texttt{eng\_all} / \texttt{eng\_hw\_sizing}}\\{\scriptsize\texttt{eng\_imu\_3axis} (3-Axis SC-AMS)}\\{\scriptsize\texttt{eng\_vre\_faraday}, \texttt{eng\_fault\_bit}}\\{\scriptsize\texttt{eng\_mc\_yield\_cal} ($C_{pk}$+CSV)}};
+\node[grp,below=1.0cm of top.south,xshift=1.7cm] (eng) {\textbf{Group B: Sys. Eng.}\\{\scriptsize\texttt{eng\_all} (\texttt{ENG-01..05})}\\ENOB/Jitter, 3-Axis\\VRE/Faraday, BIT\\MC Yield $C_{pk}$ + Cal};
 
-\node[rep,below=1.0cm of td] (out) {\textbf{Automated Reporting Engine (\texttt{viz/export\_report.py} + \texttt{viz/plot\_scenarios.py})}\\\texttt{report/<run\_id>/\{report.md, report.html, figures/*.png, metrics\_summary.json, virtual\_calibration\_dataset.csv\}} + \texttt{report/index.\{md,html\}}};
+\node[grp,below=1.0cm of top.south,xshift=5.1cm] (dyn) {\textbf{Group C: Dyn./Probe}\\{\scriptsize\texttt{dyn\_all} (\texttt{DYN-01..04})}\\Step, Bode M/P/GD\\Output PSD \& ASD\\Sine $\to$ PD, $V_{\text{fb}}$, $\Delta\phi_S$};
+
+\node[rep,below=1.0cm of td.south,xshift=1.7cm] (out) {\textbf{Automated Reporting Engine (\texttt{viz/export\_report.py} + \texttt{viz/plot\_scenarios.py})}\\\texttt{report/<run\_id>/\{report.md, report.html (19 Plotly charts), figures/*.png (20 plots), CSV\}} + \texttt{report/index.\{md,html\}}};
 
 \draw[arr] (top.south) -| (core.north);
-\draw[arr] (top.south) -- (td.north);
+\draw[arr] (top.south) -| (td.north);
 \draw[arr] (top.south) -| (eng.north);
+\draw[arr] (top.south) -| (dyn.north);
 \draw[tarr] (core.south) |- (out.west);
-\draw[tarr] (td.south) -- (out.north);
-\draw[tarr] (eng.south) |- (out.east);
+\draw[tarr] (td.south) -- (out.north -| td.south);
+\draw[tarr] (eng.south) -- (out.north -| eng.south);
+\draw[tarr] (dyn.south) |- (out.east);
 \end{tikzpicture}%
 }
-\caption{Official \texttt{IFOG-SIM-SPEC-005} Scenario Orchestration, Individual/Batch CLI Routing, and Automated Report Pipeline.}
+\caption{Official 5-Layer \texttt{IFOG-SIM-SPEC-005} Scenario Orchestration (20 Gates \& Scenarios), CLI Routing, and Automated Report Pipeline.}
 \end{figure}
 
 \subsection{Unified CLI Execution Reference Table}
@@ -137,7 +143,7 @@ Under \textbf{\texttt{IFOG-SIM-SPEC-005} (v5.0)}, the \texttt{ifog-vproto} verif
 \toprule
 \textbf{ID} & \textbf{CLI Mode (\texttt{--mode})} & \textbf{Equations} & \textbf{Official Reproducible Command} \\
 \midrule
-ALL & \texttt{all\_scenarios} & \texttt{EQ-01..41} & \texttt{./scripts/run\_all\_scenarios.sh --run-id full\_spec005 --mc-runs 500} \\
+ALL & \texttt{all\_scenarios} & \texttt{EQ-01..41} & \texttt{./scripts/run\_all\_scenarios.sh --run-id full\_all\_scenarios --mc-runs 500} \\
 Gates 1--4 & \texttt{full} (\texttt{gate1..4}) & \texttt{EQ-01..30} & \texttt{./scripts/run\_sim.sh --mode full --run-id core\_4gates} \\
 Gate 5 & \texttt{dsp6\_compare} & \texttt{EQ-31..34} & \texttt{./scripts/run\_sim.sh --mode dsp6\_compare --run-id gate5\_6state} \\
 Group A & \texttt{td\_all} & \texttt{TD-01..06} & \texttt{./scripts/run\_sim.sh --mode td\_all --run-id td\_suite} \\
@@ -153,6 +159,11 @@ ENG-02 & \texttt{eng\_imu\_3axis} & \texttt{EQ-36} & \texttt{./scripts/run\_sim.
 ENG-03 & \texttt{eng\_vre\_faraday} & \texttt{EQ-10,18,37,38} & \texttt{./scripts/run\_sim.sh --mode eng\_vre\_faraday --run-id eng03} \\
 ENG-04 & \texttt{eng\_fault\_bit} & \texttt{EQ-39} & \texttt{./scripts/run\_sim.sh --mode eng\_fault\_bit --run-id eng04} \\
 ENG-05 & \texttt{eng\_mc\_yield\_cal} & \texttt{EQ-40,41} & \texttt{./scripts/run\_sim.sh --mode eng\_mc\_yield\_cal --run-id eng05 --mc-runs 500} \\
+Group C & \texttt{dyn\_all} & \texttt{EQ-06..23,31..34} & \texttt{./scripts/run\_sim.sh --mode dyn\_all --run-id dyn\_suite} \\
+DYN-01 & \texttt{dyn\_step\_response} & \texttt{EQ-20,22,23,34} & \texttt{./scripts/run\_sim.sh --mode dyn\_step\_response --run-id dyn01} \\
+DYN-02 & \texttt{dyn\_freq\_response} & \texttt{EQ-22,23,34} & \texttt{./scripts/run\_sim.sh --mode dyn\_freq\_response --run-id dyn02} \\
+DYN-03 & \texttt{dyn\_output\_psd} & \texttt{EQ-15,19,26,33} & \texttt{./scripts/run\_sim.sh --mode dyn\_output\_psd --run-id dyn03} \\
+DYN-04 & \texttt{dyn\_sine\_electro\_optic} & \texttt{EQ-06..19,21,31..34} & \texttt{./scripts/run\_sim.sh --mode dyn\_sine\_electro\_optic --run-id dyn04} \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -239,6 +250,28 @@ All six scenarios execute directly on the unmodified Tier 2 physical core using 
     \emph{Verified Result ($N=500$):} Yield $= \mathbf{97.2\%}$ ($486/500$, 95\% Wilson CI $[95.36\%, 98.32\%]$, $C_{pk} = 0.604$); thermal drift RMS drops from $326.33\,^\circ/\text{h}$ to $\mathbf{0.050\,^\circ/\text{h}}$ ($\mathbf{99.98\%}$ poly reduction) and $\mathbf{0.170\,^\circ/\text{h}}$ ($\mathbf{99.95\%}$ 4-state EKF reduction) (\textbf{PASS}).
 \end{enumerate}
 
+\section{Group C: 4 Dynamic Response, Output PSD \& Electro-Optic Probe Scenarios (\texttt{DYN-01}--\texttt{DYN-04})}
+
+Implemented in \texttt{tier3\_analysis/scenarios\_dynamic\_probe.py}, Group C adds dedicated closed-loop control characterization and internal electro-optic signal-chain probing using genuine Tier 2 C++ SystemC-AMS runs:
+
+\begin{enumerate}
+    \item \textbf{\texttt{DYN-01} --- Dedicated Closed-Loop Step Response (\texttt{dyn\_step\_response}):}
+    Evaluates small-signal ($0 \to 10^\circ/\text{s}$) and large-signal tactical ($0 \to 100^\circ/\text{s}$, $\Delta\phi_S = 2.36\text{ rad}$) steps for 4-State vs Official 6-State DSP plus a Loop-1 gain sweep ($K_{\text{tot},1} \in \{0.15, 0.25, 0.45\}$), recording $t_d, t_r, t_{s,2\%}, t_{s,0.1\%}$, overshoot, tracking error convergence, and Sagnac $\Delta\phi_S(t)$ vs feedback $\Delta\phi_{\text{step}}(t)$.\\
+    \emph{Verified Result:} 6-State $t_r = 0.206\text{ ms}$ ($10^\circ/\text{s}$) and $0.294\text{ ms}$ ($100^\circ/\text{s}$, $0.00\%$ overshoot, $0.0000\%$ steady-state error); gain sweep monotonically reduces $t_r$: $0.382 \to 0.206 \to 0.118\text{ ms}$ (\textbf{PASS}).
+
+    \item \textbf{\texttt{DYN-02} --- Full Closed-Loop Frequency Response: Bode Magnitude, Phase \& Group Delay (\texttt{dyn\_freq\_response}):}
+    Sweeps 15 log-spaced tones ($20\text{ Hz}$--$10\text{ kHz}$) in parallel for 4-State and Official 6-State DSP, extracting $|H(f)|$ [dB], unwrapped $\angle H(f)$ [deg], and group delay $\tau_g(f)$ [$\mu\text{s}$], overlaid against the exact half-frame-centered Z-domain FRF $H(f) = \frac{K_{\text{tot},1}}{1 - (1-K_{\text{tot},1})e^{-j2\pi f T_f}} e^{-j\pi f T_f}$.\\
+    \emph{Verified Result:} 4-State BW $= \mathbf{2{,}544\text{ Hz}}$ ($\tau_{g,0} = 65.2\ \mu\text{s}$); 6-State BW $= \mathbf{1{,}642\text{ Hz}}$ ($\tau_{g,0} = 103.3\ \mu\text{s}$ vs theory $102.8\ \mu\text{s}$); exact $1.55\times$ ratio (\textbf{PASS}).
+
+    \item \textbf{\texttt{DYN-03} --- Broadband Output Angular-Rate PSD, ASD \& Cumulative RMS Noise (\texttt{dyn\_output\_psd}):}
+    Measures one-sided Welch output rate PSD $[(\text{deg/h})^2/\text{Hz}]$, ASD $[\text{deg/h}/\sqrt{\text{Hz}}]$, and cumulative RMS noise across $3\text{ Hz}$--$25\text{ kHz}$ for linear white-noise floor vs analytical \texttt{EQ-15}/\texttt{EQ-19} ARW, full-impairment 4-State, and full-impairment Official 6-State.\\
+    \emph{Verified Result:} White-floor ARW $= \mathbf{0.000352\,^\circ/\sqrt{\text{h}}}$ vs analytical $0.000363\,^\circ/\sqrt{\text{h}}$ ($0.970\times$), HF roll-off $-13.5\text{ dB}$, and 6-State low-frequency ($5$--$40\text{ Hz}$) $1/f$ suppression $= \mathbf{+29.2\text{ dB}}$ (\textbf{PASS}).
+
+    \item \textbf{\texttt{DYN-04} --- Sinusoidal Angular-Rate Input \& Internal Electro-Optic Probe (\texttt{dyn\_sine\_electro\_optic}):}
+    Drives $\Omega_{\text{in}}(t) = 50^\circ/\text{s}\cdot\sin(2\pi\cdot 250\text{ Hz}\cdot t)$ ($16\text{ ms}$ + $8.2\text{ ms}$ full sub-$\tau$ $K=16$ trace) in Official 6-State DSP, directly plotting $\Omega_{\text{in}}$ vs $\Omega_{\text{out}}$ (THD/SFDR), Sagnac phase $\Delta\phi_S(t)$ vs feedback $\Delta\phi_{\text{fb}}(t)$ \& residual $\Delta\phi_{\text{err}}(t)$, MIOC serrodyne voltage $V_{\text{fb,MIOC}}(t)$ \& total $V_{\text{MIOC}}(t)$, Photodiode $P_{\text{PD}}(t)/I_{\text{PD}}(t)$ \& demodulated $\Delta P_{\text{PD}}(t)$, TIA $V_{\text{TIA}}(t)$, and $60\ \mu\text{s}$ sub-$\tau$ ADC blanking zoom.\\
+    \emph{Verified Result:} Gain $= 0.9889$, phase lag $-9.36^\circ$, THD $= \mathbf{-67.5\text{ dB}}$, SFDR $= \mathbf{43.6\text{ dB}}$, $\Delta\phi_{S,\max} = 1.1800\text{ rad}$, $391$ $2\pi$ serrodyne resets, $r(\Delta P_{\text{PD,demod}}, \Delta\phi_{\text{err}}) = \mathbf{0.9960}$ (\textbf{PASS}).
+\end{enumerate}
+
 \section{Summary of Verified Official Scenario Acceptance Results}
 
 \scriptsize
@@ -258,6 +291,10 @@ ENG-02 & \texttt{eng\_imu\_3axis} & Concurrent 3-axis IMU: rail droop $92.4\text
 ENG-03 & \texttt{eng\_vre\_faraday} & Pure $G_2$ VRE $R^2=0.9998$; Faraday $0.183\,^\circ/\text{h/G}$; Mu-metal req. $25.25\text{ dB}$ & \textcolor{TealDark}{\textbf{PASS}} \\
 ENG-04 & \texttt{eng\_fault\_bit} & $5/5$ faults detected (max TTA $30.0\ \mu\text{s} < 200\ \mu\text{s}$), SEU FDIR soft-rollback recovered & \textcolor{TealDark}{\textbf{PASS}} \\
 ENG-05 & \texttt{eng\_mc\_yield\_cal} & $N=500$ MC Yield $= 97.2\%$ ($C_{pk}=0.604$); $-40..+85^\circ\text{C}$ Poly $99.98\%$ / EKF $99.95\%$ & \textcolor{TealDark}{\textbf{PASS}} \\
+DYN-01 & \texttt{dyn\_step\_response} & 10 \& $100^\circ/\text{s}$ 4s/6s step ($t_r=0.206/0.294\text{ ms}$, OS $0.00\%$); $K_{\text{tot},1}$ monotonic speedup & \textcolor{TealDark}{\textbf{PASS}} \\
+DYN-02 & \texttt{dyn\_freq\_response} & 15-pt Bode Mag/Phase/GD: 4s $2{,}544\text{ Hz}$ ($65.2\ \mu\text{s}$), 6s $1{,}642\text{ Hz}$ ($103.3\ \mu\text{s}$), ratio $1.55\times$ & \textcolor{TealDark}{\textbf{PASS}} \\
+DYN-03 & \texttt{dyn\_output\_psd} & Output PSD ARW $0.000352\,^\circ/\sqrt{\text{h}}$ ($0.97\times$ EQ-15), 6s LF suppression $+29.2\text{ dB}$, HF $-13.5\text{ dB}$ & \textcolor{TealDark}{\textbf{PASS}} \\
+DYN-04 & \texttt{dyn\_sine\_electro\_optic} & $50^\circ/\text{s}$ @ $250\text{ Hz}$: THD $-67.5\text{ dB}$, SFDR $43.6\text{ dB}$, $\Delta\phi_S=1.18\text{ rad}$, $391$ wraps, $r(\text{PD},\Delta\phi_{\text{err}})=0.9960$ & \textcolor{TealDark}{\textbf{PASS}} \\
 \bottomrule
 \end{tabularx}
 \normalsize

@@ -11,6 +11,7 @@ from pathlib import Path
 import pytest
 
 from tier1_offline.config_loader import load_config
+from tier3_analysis.scenarios_dynamic_probe import run_all_dynamic_probe_scenarios
 from tier3_analysis.scenarios_engineering import run_all_engineering_scenarios
 from tier3_analysis.scenarios_time_domain import run_all_time_domain_scenarios, run_dsp6_comparison
 from viz.export_report import export_run_report
@@ -68,3 +69,25 @@ def test_all_5_engineering_scenarios_system(tmp_path: Path) -> None:
     assert rep["report_meta"]["overall_status"] == "PASS"
     assert (tmp_path / "rep" / "virtual_calibration_dataset.csv").exists()
     assert json.loads((tmp_path / "rep" / "metrics_summary.json").read_text())["spec_id"] == "IFOG-SIM-SPEC-005"
+
+
+@pytest.mark.system
+def test_all_4_dynamic_probe_scenarios_system(tmp_path: Path) -> None:
+    """Real full execution of Group C Dynamic Response, Output PSD & Sinusoidal Electro-Optic Probe (DYN-01..DYN-04)."""
+    cfg = load_config(BASELINE_CFG)
+    res = run_all_dynamic_probe_scenarios(SIM_BIN, cfg, tmp_path, psd_duration_s=1.0)
+    assert res["all_passed"] is True
+    for sid in ("DYN-01", "DYN-02", "DYN-03", "DYN-04"):
+        assert res[sid]["pass"] is True, f"{sid} failed: {res[sid]}"
+    assert res["DYN-02"]["bw_ratio_4state_to_6state"] > 1.3
+    assert res["DYN-03"]["low_freq_6state_suppression_dB"] > 10.0
+    assert res["DYN-04"]["pd_demod_to_phi_err_corr"] > 0.90
+    rep = export_run_report(tmp_path, formats=("png", "md", "html"), report_dir=tmp_path / "rep")
+    assert rep["report_meta"]["overall_status"] == "PASS"
+    for png in (
+        "dyn01_step_response.png",
+        "dyn02_freq_response.png",
+        "dyn03_output_psd.png",
+        "dyn04_sine_electro_optic.png",
+    ):
+        assert (tmp_path / "rep" / "figures" / png).exists()

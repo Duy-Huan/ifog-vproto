@@ -4,18 +4,18 @@
 # from Git + isolated Python 3.12 virtual environment + Tier 2 Release (-O3) core.
 #
 # Build:
-#   docker build -t ifog-vproto:2.1.0 .
-#   podman build -f Containerfile -t ifog-vproto:2.1.0 .
+#   docker build -t ifog-vproto:2.2.0 .
+#   podman build -f Containerfile -t ifog-vproto:2.2.0 .
 #
 # Run:
-#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:2.1.0 \
+#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:2.2.0 \
 #     ./scripts/run_all_scenarios.sh --run-id docker_all_scenarios
 
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="ifog-vproto" \
       org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype (IFOG-SIM-SPEC-005 / SPEC-004)" \
-      org.opencontainers.image.version="2.1.0" \
+      org.opencontainers.image.version="2.2.0" \
       org.opencontainers.image.source="https://github.com/Duy-Huan/ifog-vproto"
 
 ENV DEBIAN_FRONTEND=noninteractive \

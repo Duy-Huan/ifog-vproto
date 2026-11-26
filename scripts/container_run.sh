@@ -11,12 +11,12 @@ set -euo pipefail
 #   build              Build the OCI container image (SystemC 2.3.4 + SystemC-AMS 2.3.4 + Python venv + Tier 2)
 #   shell              Start an interactive bash shell with data/ and report/ mounted
 #   sim [args...]      Run ./scripts/run_sim.sh inside the container (outputs appear in host report/ & data/)
-#   example            Run ALL official scenarios (Gates 1-5 + 6 TD + 5 ENG, MC=500) inside the container -> report/
+#   example            Run ALL 20 official scenarios (Gates 1-5 + 6 TD + 5 ENG + 4 DYN, MC=500) inside the container -> report/
 #   test               Run unit tests, 41 formulas, 100% C++ & Python coverage inside the container
 #   verify             Run full verification including all real system scenario tests inside the container
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:2.1.0}"
+IMAGE_TAG="${IFOG_IMAGE_TAG:-ifog-vproto:2.2.0}"
 ENGINE="${CONTAINER_ENGINE:-}"
 
 while [ "$#" -gt 0 ]; do

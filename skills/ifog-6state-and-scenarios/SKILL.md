@@ -42,3 +42,15 @@ description: Official 6-state symmetric DSP modulation/demodulation (EQ-31..EQ-3
   - When `sld_drop_50pct` or `fiber_break` injects mid-frame, 1 sample drops before the full 6-sample frame average `y_mean` crosses threshold, which would falsely trip `BIT_DSP_SEU` if only `y_mean` were checked. Checking `y_min < ratio * y_nom && y_max <= 1.05 * y_nom` classifies optical drops cleanly on the exact frame (`TTA = 0.62 us`) while keeping `BIT_MIOC_OPEN` (`vpi_err_threshold = 20000`, above startup `~5,500` counts) and `BIT_DSP_SEU` (`TTA = 30.0 us` + automatic soft-rollback recovery) 100% distinct.
 - **4-State Thermal EKF (`ENG-05`, `EQ-41`):**
   - A 3-state EKF `[1, dT, dT_dt]` misses the quadratic $c_2 \Delta T^2$ thermal polarization curvature; always use a 4-state EKF `[1, dT, dT^2, dT_dt]` so both 2D polynomial (`99.98%`) and online EKF (`99.95%`) remove thermal bias cleanly across $-40..+85^\circ\text{C}$.
+
+## 4. Group C Dynamic Characterization, Output PSD & Electro-Optic Probe Lessons (`DYN-01`..`DYN-04`)
+- **Rule 11 $K_{\text{tot},2}$ Scaling During Loop-1 Gain Sweeps (`DYN-01`):**
+  - When sweeping $K_{\text{tot},1} \in \{0.15, 0.25, 0.45\}$, always scale $K_{\text{tot},2} = \min(K_{\text{tot},2,\text{base}},\,0.08\,K_{\text{tot},1})$ so `ifog_sim`'s fail-closed Rule 11 check ($K_{\text{tot},2} \le 0.1\,K_{\text{tot},1}$) never rejects low-gain steps.
+- **Exact Half-Frame-Centered Z-Domain FRF for Bode Phase & Group Delay (`DYN-02`):**
+  - Because `DigitalDSP_SC` averages $M$ slots per frame ($T_f = M\tau$) before integrating, the exact small-signal closed-loop transfer function matching SystemC-AMS magnitude, unwrapped phase, AND group delay to ~1–2° across `20 Hz..10 kHz` is:
+    $$H_{\text{theory}}(f) = \frac{K_{\text{tot},1}}{1 - (1 - K_{\text{tot},1}) e^{-j 2\pi f T_f}}\,e^{-j \pi f T_f}, \qquad \tau_{g,0} = \left(\frac{1 - K_{\text{tot},1}}{K_{\text{tot},1}} + \frac{1}{2}\right) T_f$$
+  - Matches measured low-frequency group delay (`103.3 us` vs `102.8 us` in 6-state, `65.2 us` vs `68.6 us` in 4-state) and proves exact $f_{-3\text{dB}}^{(4\text{s})} / f_{-3\text{dB}}^{(6\text{s})} \approx 1.55\times$ frame-rate scaling.
+- **IEEE Std 952 ARW-to-PSD Exact Unit Conversion (`DYN-03`):**
+  - One-sided white rate PSD in $[(\text{deg/h})^2/\text{Hz}]$ relates to ARW $N$ $[\text{deg}/\sqrt{\text{h}}]$ by $S_\Omega^{\text{white}} = 2 (60 N)^2 = 7200 N^2$, and inversely $N = \sqrt{S_\Omega / 2} / 60$. Verified ratio `0.970×` (`0.000352` vs analytical `EQ-15` `0.000363 deg/rt-h`).
+- **Sinusoidal Internal Electro-Optic Probe Startup Trim (`DYN-04`):**
+  - The very first $t = 0$ cluster before the fiber transit delay ring buffer fills yields an uninitialized $P_{\text{PD}} = P_{\text{peak}}$ spike. Always trim $t < 0.05\text{ ms}$ (macro) and $t < 0.08\text{ ms}$ (frame-demodulated $\Delta P_{\text{PD}}$) so the bow-tie Photodiode modulation envelope ($r(\Delta P_{\text{PD,demod}}, \Delta\phi_{\text{err}}) = 0.9960$) and reversing serrodyne $V_{\text{fb,MIOC}}(t)$ render without startup y-axis distortion.

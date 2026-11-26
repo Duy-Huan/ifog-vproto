@@ -206,6 +206,11 @@ def test_sim_runner_cli_all_spec005_mode_dispatches(tmp_path: Path, monkeypatch:
         "run_eng_fault_bit",
         "run_eng_mc_yield_cal",
         "run_all_engineering_scenarios",
+        "run_dyn_step_response",
+        "run_dyn_freq_response",
+        "run_dyn_output_psd",
+        "run_dyn_sine_electro_optic",
+        "run_all_dynamic_probe_scenarios",
     ):
         monkeypatch.setattr(sim_runner_cli, fn_name, _make_stub(fn_name))
 
@@ -224,6 +229,11 @@ def test_sim_runner_cli_all_spec005_mode_dispatches(tmp_path: Path, monkeypatch:
         "eng_fault_bit",
         "eng_mc_yield_cal",
         "eng_all",
+        "dyn_step_response",
+        "dyn_freq_response",
+        "dyn_output_psd",
+        "dyn_sine_electro_optic",
+        "dyn_all",
         "all_scenarios",
     ]
     for m in modes:
@@ -264,6 +274,11 @@ def test_sim_runner_cli_all_spec005_mode_dispatches(tmp_path: Path, monkeypatch:
         "run_eng_fault_bit",
         "run_eng_mc_yield_cal",
         "run_all_engineering_scenarios",
+        "run_dyn_step_response",
+        "run_dyn_freq_response",
+        "run_dyn_output_psd",
+        "run_dyn_sine_electro_optic",
+        "run_all_dynamic_probe_scenarios",
     ):
         assert expected in called
 
