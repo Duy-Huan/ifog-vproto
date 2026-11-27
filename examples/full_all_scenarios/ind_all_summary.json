@@ -1,0 +1,12 @@
+{
+  "spec_id": "IFOG-VPROTO-v4.1.0-GROUP-E",
+  "scenarios": {
+    "IND-01": true,
+    "IND-02": true,
+    "IND-03": true,
+    "IND-04": true,
+    "IND-05": true,
+    "IND-06": true
+  },
+  "all_pass": true
+}

@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 option(IFOG_ENABLE_COVERAGE "Enable GCC gcov instrumentation for 100% coverage verification" OFF)
 
 get_filename_component(IFOG_REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
-set(IFOG_PROJECT_VERSION "4.0.0")
+set(IFOG_PROJECT_VERSION "4.1.0")
 set(IFOG_FMI_INSTANTIATION_TOKEN "{6e9c4b1a-7f20-4f06-9a5c-000000000006}")
 
 # Locate SystemC 2.3.4 (SYSTEMC_HOME, portable ifog-env prefix, or distro libsystemc-dev)
@@ -235,5 +235,69 @@ add_custom_target(package_fmu
     COMMENT "Packaging standalone FMI 3.0 Co-Simulation FMU -> ${IFOG_FMU_OUTPUT}"
 )
 
+# ==============================================================================
+# v4.1.0 (IND-05): Multi-Instance Pure-C++17 FMI 3.0.2 Source-Code FMU
+# Zero SystemC singleton -> canBeInstantiatedOnlyOncePerProcess="false"
+# ==============================================================================
+add_library(ifog_core_multi_fmu SHARED
+    ${IFOG_REPO_ROOT}/fmi_wrapper/src/fmi3_multi_bridge.cpp
+)
+target_include_directories(ifog_core_multi_fmu
+    PRIVATE
+        ${IFOG_REPO_ROOT}/fmi_wrapper/include
+)
+target_compile_options(ifog_core_multi_fmu PRIVATE -Wall -Wextra -Wpedantic)
+if(IFOG_ENABLE_COVERAGE)
+    target_compile_options(ifog_core_multi_fmu PRIVATE --coverage -O0 -g)
+    target_link_options(ifog_core_multi_fmu PRIVATE --coverage)
+endif()
+target_link_libraries(ifog_core_multi_fmu PRIVATE m)
+set_target_properties(ifog_core_multi_fmu PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "ifog_core_multi"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/binaries_multi/${FMI3_PLATFORM_TUPLE}"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/binaries_multi/${FMI3_PLATFORM_TUPLE}"
+)
+
+add_executable(ifog_fmi_multi_tests
+    src/fmi_multi_unit_tests.cpp
+    ${IFOG_REPO_ROOT}/fmi_wrapper/src/fmi3_multi_bridge.cpp
+)
+target_include_directories(ifog_fmi_multi_tests
+    PRIVATE
+        ${IFOG_REPO_ROOT}/fmi_wrapper/include
+)
+target_compile_options(ifog_fmi_multi_tests PRIVATE -Wall -Wextra -Wpedantic)
+if(IFOG_ENABLE_COVERAGE)
+    target_compile_options(ifog_fmi_multi_tests PRIVATE --coverage -O0 -g)
+    target_link_options(ifog_fmi_multi_tests PRIVATE --coverage)
+endif()
+target_link_libraries(ifog_fmi_multi_tests PRIVATE m)
+
+set(IFOG_MODEL_DESC_MULTI_XML "${CMAKE_BINARY_DIR}/fmu_generated_multi/modelDescription.xml")
+configure_file(
+    "${IFOG_REPO_ROOT}/fmi_wrapper/modelDescription_multi.xml.in"
+    "${IFOG_MODEL_DESC_MULTI_XML}"
+    @ONLY
+)
+set(IFOG_FMU_MULTI_OUTPUT "${CMAKE_BINARY_DIR}/ifog_core_multi.fmu")
+
+add_custom_target(package_fmu_multi
+    DEPENDS ifog_core_multi_fmu
+    COMMAND "${CMAKE_COMMAND}"
+            "-DFMU_STAGING_DIR=${CMAKE_BINARY_DIR}/fmu_staging_multi"
+            "-DFMU_OUTPUT_PATH=${IFOG_FMU_MULTI_OUTPUT}"
+            "-DFMU_XML_PATH=${IFOG_MODEL_DESC_MULTI_XML}"
+            "-DFMU_BUILD_DESC_XML=${IFOG_REPO_ROOT}/fmi_wrapper/buildDescription.xml"
+            "-DFMU_BINARY_PATH=$<TARGET_FILE:ifog_core_multi_fmu>"
+            "-DFMU_PLATFORM_DIR=${FMI3_PLATFORM_TUPLE}"
+            "-DFMU_SOURCE_CPP=${IFOG_REPO_ROOT}/fmi_wrapper/src/fmi3_multi_bridge.cpp"
+            "-DFMU_INCLUDE_FMI3_DIR=${IFOG_REPO_ROOT}/fmi_wrapper/include/fmi3"
+            -P "${IFOG_REPO_ROOT}/fmi_wrapper/package_fmu_multi.cmake"
+    WORKING_DIRECTORY "${IFOG_REPO_ROOT}"
+    COMMENT "Packaging Multi-Instance Source-Code FMI 3.0 FMU -> ${IFOG_FMU_MULTI_OUTPUT}"
+)
+
 enable_testing()
 add_test(NAME ifog_cpp_unit_tests COMMAND ifog_cpp_tests)
+add_test(NAME ifog_fmi_multi_unit_tests COMMAND ifog_fmi_multi_tests)

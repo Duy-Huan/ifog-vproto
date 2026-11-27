@@ -66,7 +66,10 @@ if [ "${SYNC_EXAMPLE}" -eq 1 ]; then
               eng01_hw_sizing.json eng02_imu_3axis.json eng03_vre_faraday.json \
               eng04_fault_bit.json eng05_mc_yield_cal.json eng_summary.json \
               dyn01_step_response.json dyn02_freq_response.json dyn03_output_psd.json \
-              dyn04_sine_electro_optic.json dyn_summary.json; do
+              dyn04_sine_electro_optic.json dyn_summary.json \
+              ind01_lab_validation.json ind02_fixed_point_rtl.json ind03_fem_3d.json \
+              ind04_random_vib_psd.json ind05_fmu_multi_instance.json ind06_pvt_aging_corners.json \
+              ind_all_summary.json lab_validation_report.json; do
         if [ -f "${REPO_ROOT}/data/full_all_scenarios/${jf}" ]; then
             cp "${REPO_ROOT}/data/full_all_scenarios/${jf}" "${DST}/"
         fi

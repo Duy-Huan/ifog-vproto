@@ -2,8 +2,8 @@
 \documentclass[aspectratio=169,8pt]{beamer}
 
 \newcommand{\DocID}{IFOG-VPROTO-SLIDE-001}
-\newcommand{\DocVersion}{v4.0.1}
-\newcommand{\DocDate}{2026-11-26}
+\newcommand{\DocVersion}{v4.1.0}
+\newcommand{\DocDate}{2026-11-27}
 
 % --- Fonts & Vietnamese UTF-8 Support (LuaLaTeX) ---
 \usepackage{fontspec}
@@ -1162,16 +1162,14 @@
 % ==============================================================================
 \section{VI. Thực nghiệm \& Kết luận}
 
-% SLIDE 18: THỰC NGHIỆM (1/11) — TD-01: ĐÁP ỨNG XUNG QUÁ ĐỘ SUB-TAU & ADC BLANKING
-\begin{frame}{Kết quả Thực nghiệm (1/11): Đáp ứng Xung Quá độ Sub-$\tau$ \& Cửa sổ Blanking}{\texttt{TD-01} (\texttt{td01\_blanking.png}) \enspace|\enspace Suy giảm sai số xác lập LTF TIA theo chỉ số mẫu con $k\in[0, K-1]$}
-\begin{center}
-  \includegraphics[width=0.88\textwidth,height=0.43\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/td01_blanking.png}
-\end{center}
-\vspace{0.02cm}
+% SLIDE 18: THỰC NGHIỆM (1/17) — TD-01: ĐÁP ỨNG XUNG QUÁ ĐỘ SUB-TAU & ADC BLANKING
+\begin{frame}[t]{Kết quả Thực nghiệm (1/17): Đáp ứng Xung Quá độ Sub-$\tau$ \& Cửa sổ Blanking}{\texttt{TD-01} (\texttt{td01\_blanking.png}) \enspace|\enspace Suy giảm sai số xác lập LTF TIA theo chỉ số mẫu con $k\in[0, K-1]$}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.96\textwidth,height=0.46\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/td01_blanking.png}\par}
+\vspace{0.06cm}
 \begin{columns}[T]
   \begin{column}{0.52\textwidth}
     \begin{eqbox}[Cách đọc Đồ thị \& Bản chất Vật lý (LTF TIA)]
-      \begin{itemize}\setlength\itemsep{1.6pt}
+      \begin{itemize}\setlength\itemsep{1.2pt}
         \item \textbf{Trục X/Y:} Chỉ số mẫu con $k\in[0,15]$ trong 1 chu kỳ truyền $\tau=4.90\,\mu\text{s}$ vs sai số xác lập cực đại của điện áp TIA [\%] (thang logarit).
         \item \textbf{Bản chất vật lý:} Tại $k=0..3$, gai chuyển mạch DAC + xuyên nhiễu $C_{\text{xtalk}}\dot{V}$ qua LTF $H_{\text{TIA}}(s)$ gây sai số rất lớn ($10^2\text{--}10^5\%$); sau $k=4$ sóng tắt dần xuống dưới ngưỡng đỏ $0.5\%$ (vùng tô xanh \emph{ADC Blanking Window} $[4..15]$).
       \end{itemize}
@@ -1179,7 +1177,7 @@
   \end{column}
   \begin{column}{0.46\textwidth}
     \begin{remarkbox}[Kết luận Kỹ thuật \& Điều được Chứng minh]
-      \begin{itemize}\setlength\itemsep{1.6pt}
+      \begin{itemize}\setlength\itemsep{1.2pt}
         \item Thời gian xác lập TIA $0.1\%$: \textbf{$t_s = 174.1\text{ ns}$}.
         \item Điểm mở cửa sổ Blanking tối ưu: \textbf{$k^*_{\text{start}} = 5$} (sai số vùng sạch \textbf{2.98\%}, hệ số tăng ARW $1/\sqrt{\eta_b}$ chỉ $\times\mathbf{1.155}$).
         \item \textbf{Giá trị:} Định cỡ chính xác số xung nhịp FPGA cần che gai chuyển mạch mà không làm suy giảm tỷ số tín hiệu/nhiễu (SNR).
@@ -1189,176 +1187,174 @@
 \end{columns}
 \end{frame}
 
-% SLIDE 19: THỰC NGHIỆM (2/11) — DYN-01: ĐÁP ỨNG BƯỚC VÒNG KÍN
-\begin{frame}{Kết quả Thực nghiệm (2/11): Đáp ứng Bước Vòng kín (Step Response)}{\texttt{DYN-01} (\texttt{dyn01\_step\_response.png}) \enspace|\enspace Nhảy bậc $0\to 10^\circ/\text{s}$ \& $100^\circ/\text{s}$ (4-State vs 6-State \& quét $K_{\text{tot},1}$)}
+% SLIDE 19: THỰC NGHIỆM (2/17) — DYN-01: ĐÁP ỨNG BƯỚC VÒNG KÍN (2/4/6-STATE)
+\begin{frame}{Kết quả Thực nghiệm (2/17): Đáp ứng Bước Vòng kín — Đầy đủ 2 / 4 / 6-State}{\texttt{DYN-01} (\texttt{dyn01\_step\_response.png}) \enspace|\enspace Nhảy bậc $0\to 10^\circ/\text{s}$ \& $100^\circ/\text{s}$ (2-State vs 4-State vs 6-State \& quét $K_{\text{tot},1}$)}
 \begin{columns}[c]
-  \begin{column}{0.66\textwidth}
+  \begin{column}{0.69\textwidth}
     \centering
-    \includegraphics[width=\linewidth,height=0.77\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn01_step_response.png}
+    \includegraphics[width=\linewidth,height=0.79\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn01_step_response.png}
   \end{column}
-  \begin{column}{0.32\textwidth}
-    \begin{eqbox}[Giải thích Đồ thị \& Ý nghĩa Vật lý]
-      \begin{itemize}\setlength\itemsep{2.8pt}
-        \item \textbf{Cách đọc:} Trục hoành là thời gian [ms]; đường nét đứt là tốc độ góc bước nhảy đầu vào $\Omega_{\text{in}}(t)$; các đường màu là đầu ra vòng kín $\Omega_{\text{out}}(t)$ khi đổi kiến trúc DSP và hệ số vòng $K_{\text{tot},1}$.
-        \item \textbf{Bản chất vật lý:} Hệ tích phân loại I với trễ pipeline $d=2$ ($L_1(z)=K_{\text{tot},1}/[z^2(z-1)]$) quyết định trực tiếp độ nhanh ($t_r$) và mức vọt lố (OS): tăng $K_{\text{tot},1}$ làm vòng phản hồi nhanh hơn nhưng tiến gần biên ổn định Jury.
-        \item \textbf{Chứng minh (6-State chuẩn):} Thời gian tăng $t_r = \mathbf{0.206\text{ ms}}$ ($10^\circ/\text{s}$) và $\mathbf{0.294\text{ ms}}$ ($100^\circ/\text{s}$), độ vọt lố \textbf{0.00\%}, sai số xác lập \textbf{0.0000\%} (bám tuyệt đối không sai số tĩnh).
+  \begin{column}{0.29\textwidth}
+    \begin{eqbox}[Giải thích Đồ thị (2/4/6s)]
+      \begin{itemize}\setlength\itemsep{2.2pt}
+        \item \textbf{Cách đọc:} Đường nét đứt là tốc độ góc bước nhảy $\Omega_{\text{in}}(t)$; các đường màu đối chiếu trực tiếp \textbf{2-State}, \textbf{4-State} và \textbf{6-State} cùng phép quét hệ số vòng $K_{\text{tot},1}$.
+        \item \textbf{Bản chất vật lý:} 2-State cập nhật cửa sổ trượt mỗi $1\tau$ nên đáp ứng nhanh nhất ($t_r = \mathbf{0.015\text{ ms}}$), tiếp theo là 4-State ($t_r = \mathbf{0.137\text{ ms}}$) và 6-State ($t_r = \mathbf{0.206\text{ ms}}$ tại $10^\circ/\text{s}$).
+        \item \textbf{Chứng minh:} Cả 3 tầng 2/4/6-State đạt vọt lố \textbf{0.00\%} và sai số xác lập \textbf{0.0000\%}.
       \end{itemize}
     \end{eqbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 20: THỰC NGHIỆM (3/11) — DYN-02: ĐÁP ỨNG TẦN SỐ (BODE MAG, PHASE & GROUP DELAY)
-\begin{frame}{Kết quả Thực nghiệm (3/11): Đáp ứng Tần số Vòng kín (Bode \& Group Delay)}{\texttt{DYN-02} (\texttt{dyn02\_freq\_response.png}) \enspace|\enspace Quét 15 tần số $10\text{ Hz}\dots 5\text{ kHz}$: Biên độ, Pha \& Độ trễ nhóm}
+% SLIDE 20: THỰC NGHIỆM (3/17) — DYN-02: ĐÁP ỨNG TẦN SỐ (BODE 2/4/6-STATE)
+\begin{frame}{Kết quả Thực nghiệm (3/17): Đáp ứng Tần số Vòng kín (Bode 2 / 4 / 6-State)}{\texttt{DYN-02} (\texttt{dyn02\_freq\_response.png}) \enspace|\enspace Quét $10\text{ Hz}\dots 20\text{ kHz}$: Biên độ, Pha \& Độ trễ nhóm}
 \begin{columns}[c]
-  \begin{column}{0.64\textwidth}
+  \begin{column}{0.68\textwidth}
     \centering
-    \includegraphics[width=\linewidth,height=0.79\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn02_freq_response.png}
+    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn02_freq_response.png}
   \end{column}
-  \begin{column}{0.34\textwidth}
-    \begin{remarkbox}[Giải thích 3 Đồ thị Bode \& Ý nghĩa]
-      \begin{itemize}\setlength\itemsep{2.6pt}
-        \item \textbf{Trên (Biên độ [dB]):} Tỷ số $|\Omega_{\text{out}}/\Omega_{\text{in}}|$ phẳng $0\text{ dB}$ ở tần số thấp và giảm $-3\text{ dB}$ tại băng thông vòng kín $f_{-3\text{ dB}}$ (đặc tính lọc thông thấp của bộ tích phân số).
-        \item \textbf{Giữa (Pha [deg]):} Góc trễ pha tăng dần theo tần số do trễ khung điều biến ($4\tau$ hoặc $6\tau$) cộng trễ pipeline $d=2$.
-        \item \textbf{Dưới (Trễ nhóm $\tau_g=-\frac{d\phi}{d\omega}$):} Đo độ trễ truyền tín hiệu thực tới máy tính dẫn đường GNC.
-        \item \textbf{Chứng minh định lượng:} 4-State đạt \textbf{$f_{-3\text{dB}}=2544\text{ Hz}$} ($\tau_g=65.2\,\mu\text{s}$), 6-State đạt \textbf{$1642\text{ Hz}$} ($\tau_g=103.3\,\mu\text{s}$); tỷ số thực đo \textbf{$1.55\times$} khớp sát tỷ số khung lý thuyết $6\tau/4\tau = 1.50\times$.
+  \begin{column}{0.30\textwidth}
+    \begin{remarkbox}[Giải thích 3 Đồ thị Bode (2/4/6s)]
+      \begin{itemize}\setlength\itemsep{2.2pt}
+        \item \textbf{Trên (Biên độ [dB]):} Tỷ số $|\Omega_{\text{out}}/\Omega_{\text{in}}|$ phẳng $0\text{ dB}$ ở tần số thấp và cắt $-3\text{ dB}$ theo đúng chu kỳ cập nhật của từng tầng DSP.
+        \item \textbf{Giữa \& Dưới (Pha \& Trễ nhóm):} Trễ khung ($2\tau$, $4\tau$, $6\tau$) quyết định trực tiếp trễ pha và độ trễ nhóm tới GNC.
+        \item \textbf{Chứng minh định lượng:}
+          \begin{itemize}\setlength\itemsep{0.5pt}
+            \item \textbf{2-State:} $f_{-3\text{dB}}=\mathbf{17.13\text{ kHz}}$
+            \item \textbf{4-State:} $f_{-3\text{dB}}=\mathbf{2{,}544\text{ Hz}}$ ($\tau_g=65.2\,\mu\text{s}$)
+            \item \textbf{6-State:} $f_{-3\text{dB}}=\mathbf{1{,}642\text{ Hz}}$ ($\tau_g=103.3\,\mu\text{s}$, tỷ số $1.55\times$)
+          \end{itemize}
       \end{itemize}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 21: THỰC NGHIỆM (4/11) — DYN-03: PHỔ PSD ĐẦU RA & NHIỄU RMS TÍCH LŨY
-\begin{frame}{Kết quả Thực nghiệm (4/11): Phổ Mật độ Công suất Đầu ra (Output PSD / ASD)}{\texttt{DYN-03} (\texttt{dyn03\_output\_psd.png}) \enspace|\enspace Phân bố năng lượng nhiễu theo tần số \& Kiểm chứng nền ARW}
-\begin{center}
-  \includegraphics[width=0.94\textwidth,height=0.43\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn03_output_psd.png}
-\end{center}
-\vspace{0.02cm}
+% SLIDE 21: THỰC NGHIỆM (4/17) — DYN-03: PHỔ PSD ĐẦU RA (2/4/6-STATE)
+\begin{frame}[t]{Kết quả Thực nghiệm (4/17): Phổ Công suất Đầu ra (Output PSD — 2 / 4 / 6-State)}{\texttt{DYN-03} (\texttt{dyn03\_output\_psd.png}) \enspace|\enspace Phân bố năng lượng nhiễu theo tần số \& Kiểm chứng nền ARW}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.98\textwidth,height=0.46\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn03_output_psd.png}\par}
+\vspace{0.06cm}
 \begin{columns}[T]
   \begin{column}{0.51\textwidth}
-    \begin{eqbox}[Cách đọc Đồ thị \& Bản chất Vật lý]
-      \begin{itemize}\setlength\itemsep{1.6pt}
-        \item \textbf{Hình trái (PSD $[(^\circ/\text{h})^2/\text{Hz}]$):} Đường đỏ (4-State) mang sườn $1/f$ cao ở tần số thấp do rò ký sinh; đường xanh (6-State) triệt mạnh tần thấp; đường xanh đậm nằm sát nền nhiễu trắng giải tích \texttt{EQ-15} và dốc xuống khi $f > f_{-3\text{dB}}$.
+    \begin{eqbox}[Cách đọc Đồ thị \& Bản chất Vật lý (2/4/6s)]
+      \begin{itemize}\setlength\itemsep{1.2pt}
+        \item \textbf{Hình trái (PSD $[(^\circ/\text{h})^2/\text{Hz}]$):} Đối chiếu phổ đầu ra của \textbf{2-State}, \textbf{4-State} và \textbf{6-State}: 2-State có băng thông rộng nhất nhưng rò $1/f$ cao nhất; 6-State triệt mạnh tần thấp và bám sát nền giải tích \texttt{EQ-15}.
         \item \textbf{Hình phải (ASD \& Nhiễu RMS tích lũy):} Đường liền nét là phổ biên độ ASD; đường nét đứt (trục phải) cho tổng nhiễu RMS tích lũy theo băng thông $[f_{\min},f]$.
       \end{itemize}
     \end{eqbox}
   \end{column}
   \begin{column}{0.47\textwidth}
     \begin{remarkbox}[Kết luận Kỹ thuật \& Điều được Chứng minh]
-      \begin{itemize}\setlength\itemsep{1.6pt}
-        \item Nền trắng đo từ phổ PSD khớp lý thuyết ARW $= \mathbf{0.0004^\circ/\sqrt{\text{h}}}$ (tỷ số thực đo/lý thuyết $= \mathbf{0.97}$).
-        \item Kiến trúc 6-State triệt tiêu nhiễu tần thấp vượt trội \textbf{$29.2\text{ dB}$} so với 4-State và tự lọc suy giảm tần cao \textbf{$-13.5\text{ dB}$}.
-        \item \textbf{Chứng minh:} Đảm bảo tính nhất quán tuyệt đối giữa miền tần số (PSD) và miền thời gian (Allan Variance).
+      \begin{itemize}\setlength\itemsep{1.2pt}
+        \item Nền trắng đo từ phổ PSD khớp lý thuyết ARW $= \mathbf{0.00035^\circ/\sqrt{\text{h}}}$ (tỷ số thực đo/lý thuyết $= \mathbf{0.97}$).
+        \item Kiến trúc 6-State triệt tiêu nhiễu tần thấp vượt trội \textbf{$+29.2\text{ dB}$} so với 4-State và tự lọc suy giảm tần cao \textbf{$-13.5\text{ dB}$}.
+        \item \textbf{Chứng minh:} Nhất quán tuyệt đối giữa miền tần số (PSD) và miền thời gian (AVAR) trên cả 3 tầng DSP.
       \end{itemize}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 22: THỰC NGHIỆM (5/11) — DYN-04: CHUỖI ĐIỆN–QUANG HÌNH SIN
-\begin{frame}{Kết quả Thực nghiệm (5/11): Soi Toàn chuỗi Điện–Quang Dưới Kích thích Hình Sin}{\texttt{DYN-04} (\texttt{dyn04\_sine\_electro\_optic.png}) \enspace|\enspace $\Omega_{\text{in}}(t) = 50^\circ/\text{s}\,\sin(2\pi\cdot 250t)$ qua 6 nút vật lý}
+% SLIDE 22: THỰC NGHIỆM (5/17) — DYN-04: CHUỖI ĐIỆN–QUANG HÌNH SIN
+\begin{frame}{Kết quả Thực nghiệm (5/17): Soi Toàn chuỗi Điện–Quang Dưới Kích thích Hình Sin}{\texttt{DYN-04} (\texttt{dyn04\_sine\_electro\_optic.png}) \enspace|\enspace $\Omega_{\text{in}}(t) = 50^\circ/\text{s}\,\sin(2\pi\cdot 250t)$ qua 6 nút vật lý}
 \begin{columns}[c]
-  \begin{column}{0.68\textwidth}
+  \begin{column}{0.70\textwidth}
     \centering
-    \includegraphics[width=\linewidth,height=0.79\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn04_sine_electro_optic.png}
+    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dyn04_sine_electro_optic.png}
   \end{column}
-  \begin{column}{0.30\textwidth}
+  \begin{column}{0.28\textwidth}
     \begin{remarkbox}[Hướng dẫn Đọc 6 Biểu đồ (A–F)]
-      \begin{itemize}\setlength\itemsep{2.4pt}
-        \item \textbf{A (Tốc độ góc):} Đầu ra $\Omega_{\text{out}}$ bám khít sóng sin $250\text{ Hz}$ (THD \textbf{$-67.5\text{ dB}$}, SFDR \textbf{$43.6\text{ dB}$}), chứng tỏ vòng kín không méo hài.
-        \item \textbf{B (Pha Sagnac vs Hồi tiếp):} Pha $\Delta\phi_S=\pm 1.18\text{ rad}$ bị pha bù triệt tiêu sát $0$ (đường đỏ pha dư cực nhỏ).
-        \item \textbf{C (Điện áp MIOC $V_{\text{fb}}$):} Xuất hiện dạng răng cưa \emph{serrodyne} với \textbf{391 lần reset $2\pi$} mượt mà khi pha vượt biên.
-        \item \textbf{D (Công suất Photodiode):} Sóng mang cao tần điều biên theo pha dư với hệ số tương quan $r=\mathbf{0.9960}$.
-        \item \textbf{E \& F (Zoom sub-$\tau$):} Soi cận cảnh 6 bậc điều biến, gai TIA và vùng tô xám cửa sổ ADC Blanking.
+      \begin{itemize}\setlength\itemsep{2.0pt}
+        \item \textbf{A (Tốc độ góc):} Bám khít sin $250\text{ Hz}$ (THD \textbf{$-67.5\text{ dB}$}, SFDR \textbf{$43.6\text{ dB}$}).
+        \item \textbf{B (Pha Sagnac/FB):} Pha $\Delta\phi_S=\pm 1.18\text{ rad}$ bị pha bù triệt sát $0$.
+        \item \textbf{C (MIOC $V_{\text{fb}}$):} Răng cưa \emph{serrodyne} với \textbf{391 lần reset $2\pi$}.
+        \item \textbf{D (Photodiode):} Sóng mang điều biên theo pha dư ($r=\mathbf{0.9960}$).
+        \item \textbf{E \& F (Zoom sub-$\tau$):} 6 bậc điều biến, gai TIA \& vùng ADC Blanking.
       \end{itemize}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 23: THỰC NGHIỆM (6/11) — GATE 2: DEADBAND & BUNNY EARS
-\begin{frame}{Kết quả Thực nghiệm (6/11): Khử Vùng chết (Deadband) \& Lỗi Tỷ lệ Bunny Ears}{Gate 2 (\texttt{bunny\_ears.png}) \enspace|\enspace Quét 23 điểm tốc độ siêu chậm $\Omega_{\text{in}}\in[-0.5,+0.5]^\circ/\text{s}$}
+% SLIDE 23: THỰC NGHIỆM (6/17) — GATE 2: DEADBAND & BUNNY EARS
+\begin{frame}{Kết quả Thực nghiệm (6/17): Khử Vùng chết (Deadband) \& Lỗi Tỷ lệ Bunny Ears}{Gate 2 (\texttt{bunny\_ears.png}) \enspace|\enspace Quét 23 điểm tốc độ siêu chậm $\Omega_{\text{in}}\in[-0.5,+0.5]^\circ/\text{s}$}
 \begin{columns}[c]
-  \begin{column}{0.67\textwidth}
+  \begin{column}{0.70\textwidth}
     \centering
-    \includegraphics[width=\linewidth,height=0.77\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/bunny_ears.png}
+    \includegraphics[width=\linewidth,height=0.79\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/bunny_ears.png}
   \end{column}
-  \begin{column}{0.31\textwidth}
-    \begin{eqbox}[Hướng dẫn Đọc Đồ thị Gate 2]
-      \begin{itemize}\setlength\itemsep{2.6pt}
-        \item \textbf{Đồ thị trên (Sai số tốc độ góc):} Trục X là vận tốc quay thực quanh $0$; trục Y là sai số $|\Omega_{\text{out}}-\Omega_{\text{in}}|$.
-        \item \textbf{Đồ thị dưới (Lỗi hệ số tỷ lệ [ppm]):} Khi tắt bù (đường đỏ), xuyên nhiễu PCB khóa dính vòng hồi tiếp quanh $0$ rồi bật vọt tạo hai đỉnh nhọn đối xứng gọi là \emph{Tai thỏ (Bunny Ears)}.
-        \item \textbf{Đường xanh (Bật Vòng 2 + Blanking + PRBS dither):} Nằm phẳng sát trục $0$ trên toàn dải đo.
-        \item \textbf{Chứng minh:} Giảm \textbf{98.85\%} đỉnh Deadband và \textbf{98.85\%} lỗi Bunny Ears (vượt chuẩn $\ge 90\%$).
+  \begin{column}{0.28\textwidth}
+    \begin{eqbox}[Hướng dẫn Đọc Gate 2]
+      \begin{itemize}\setlength\itemsep{2.2pt}
+        \item \textbf{Trên (Sai số tốc độ):} Trục X là vận tốc quay thực quanh $0$; trục Y là sai số $|\Omega_{\text{out}}-\Omega_{\text{in}}|$.
+        \item \textbf{Dưới (Lỗi tỷ lệ [ppm]):} Khi tắt bù (đỏ), xuyên nhiễu khóa dính quanh $0$ rồi bật vọt thành hai đỉnh \emph{Bunny Ears}.
+        \item \textbf{Xanh (Bật Vòng 2 + Blanking + PRBS):} Phẳng sát $0$ toàn dải.
+        \item \textbf{Chứng minh:} Giảm \textbf{98.85\%} Deadband \& Bunny Ears ($\ge 90\%$).
       \end{itemize}
     \end{eqbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 24: THỰC NGHIỆM (7/11) — GATE 4: ALLAN VARIANCE 5 VÙNG (10 GIỜ)
-\begin{frame}{Kết quả Thực nghiệm (7/11): Biểu đồ Allan Variance 5 Vùng Chế độ Kép (10 Giờ)}{Gate 4 (\texttt{avar\_5regions.png}) \enspace|\enspace Ghép nối $4\times 60\text{ s}$ SystemC-AMS (Tầng 2) + $12\times 10\text{ h}$ @ $100\text{ Hz}$ (Tầng 3)}
+% SLIDE 24: THỰC NGHIỆM (7/17) — GATE 4: ALLAN VARIANCE 5 VÙNG (10 GIỜ)
+\begin{frame}{Kết quả Thực nghiệm (7/17): Biểu đồ Allan Variance 5 Vùng Chế độ Kép (10 Giờ)}{Gate 4 (\texttt{avar\_5regions.png}) \enspace|\enspace Ghép nối $4\times 60\text{ s}$ SystemC-AMS (Tầng 2) + $12\times 10\text{ h}$ @ $100\text{ Hz}$ (Tầng 3)}
 \begin{columns}[c]
-  \begin{column}{0.67\textwidth}
+  \begin{column}{0.70\textwidth}
     \centering
-    \includegraphics[width=\linewidth,height=0.78\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/avar_5regions.png}
+    \includegraphics[width=\linewidth,height=0.80\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/avar_5regions.png}
   \end{column}
-  \begin{column}{0.31\textwidth}
-    \begin{remarkbox}[Cách đọc Biểu đồ Chữ U IEEE 952]
-      \begin{itemize}\setlength\itemsep{2.2pt}
-        \item \textbf{Trục X/Y (log--log):} Thời gian lấy trung bình $T_m$ [$10^{-5}\dots 10^4\text{ s}$] vs độ bất ổn định $\sigma(T_m)$ [$^\circ/\text{h}$].
+  \begin{column}{0.28\textwidth}
+    \begin{remarkbox}[Biểu đồ Chữ U IEEE 952]
+      \begin{itemize}\setlength\itemsep{1.8pt}
+        \item \textbf{Trục X/Y:} $T_m\in[10^{-5},10^4]\text{ s}$ vs $\sigma(T_m)$ [$^\circ/\text{h}$].
         \item \textbf{5 đoạn dốc lý thuyết:}
-          \begin{itemize}\setlength\itemsep{0.6pt}
-            \item Dốc $-1$: Lượng tử $Q=0.00213''$
-            \item Dốc $-\frac{1}{2}$: ARW $N=0.00383^\circ/\sqrt{\text{h}}$
-            \item Đáy phẳng $0$: BI $B=0.00446^\circ/\text{h}$
-            \item Dốc $+\frac{1}{2}$: RRW $K=0.02045^\circ/\text{h}^{3/2}$
-            \item Dốc $+1$: Trôi nhiệt $R=0.02732^\circ/\text{h}^2$
+          \begin{itemize}\setlength\itemsep{0.4pt}
+            \item $-1$: $Q=0.00213''$
+            \item $-\frac{1}{2}$: $N=0.00383^\circ/\sqrt{\text{h}}$
+            \item $0$: $B=0.00446^\circ/\text{h}$
+            \item $+\frac{1}{2}$: $K=0.02045^\circ/\text{h}^{3/2}$
+            \item $+1$: $R=0.02732^\circ/\text{h}^2$
           \end{itemize}
-        \item \textbf{Vùng tô vàng $[0.1,5]\text{ s}$:} Chấm xanh đậm (Tầng 2) và xanh lục (Tầng 3) nối khít nhau với sai lệch \textbf{2.42\%} ($<5\%$), chứng minh phép ghép 11 bậc thang thời gian bảo toàn vật lý.
+        \item \textbf{Vùng vàng $[0.1,5]\text{ s}$:} Tầng 2 và Tầng 3 nối khít với sai lệch \textbf{2.42\%} ($<5\%$).
       \end{itemize}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 25: THỰC NGHIỆM (8/11) — GATE 5: SO SÁNH 6-STATE vs 4-STATE DSP
-\begin{frame}{Kết quả Thực nghiệm (8/11): Thực nghiệm Khử Nhiễu Ký sinh — 6-State vs 4-State}{Gate 5 (\texttt{dsp6\_compare.png}) \enspace|\enspace Kiểm chứng thực tế độ lợi $+136.94\text{ dB}$ và giảm $-33.3\%$ áp đỉnh MIOC}
-\begin{center}
-  \includegraphics[width=0.90\textwidth,height=0.44\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dsp6_compare.png}
-\end{center}
-\vspace{0.02cm}
+% SLIDE 25: THỰC NGHIỆM (8/17) — GATE 5: SO SÁNH ĐẦY ĐỦ 2 / 4 / 6-STATE DSP
+\begin{frame}[t]{Kết quả Thực nghiệm (8/17): Thực nghiệm Khử Nhiễu Ký sinh — 2 / 4 / 6-State DSP}{Gate 5 (\texttt{dsp6\_compare.png}) \enspace|\enspace Đối chiếu trực tiếp 3 tầng DSP: $+136.94\text{ dB}$ khử RAM/xtalk \& $-33.3\%$ áp MIOC}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.95\textwidth,height=0.47\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/dsp6_compare.png}\par}
+\vspace{0.06cm}
 \begin{columns}[T]
   \begin{column}{0.51\textwidth}
-    \begin{eqbox}[Cách đọc 2 Biểu đồ Cột \& Bản chất Vật lý]
-      \begin{itemize}\setlength\itemsep{1.6pt}
-        \item \textbf{Cột trái (trục Y logarit [$^\circ/\text{h}$]):} Cùng bơm RAM + xuyên nhiễu PCB + $\gamma_{\text{nl}}$: 4-State (cột đỏ) bị trôi mạnh ($354.6^\circ/\text{h}$) do điện áp lái có trung bình DC $\bar{\psi}\ne 0$; 6-State (cột xanh) triệt tiêu về $5.04{\times}10^{-5}\,^\circ/\text{h}$.
-        \item \textbf{Cột phải (Biên độ áp đỉnh MIOC):} 6-State chỉ cần biên độ $0.667\,V_\pi$ so với $1.000\,V_\pi$ của 4-State (trong khi 2-State không có Vòng 2 khóa $V_\pi$).
+    \begin{eqbox}[Cách đọc 2 Biểu đồ Cột (2-State vs 4-State vs 6-State)]
+      \begin{itemize}\setlength\itemsep{1.2pt}
+        \item \textbf{Cột trái (trục Y logarit [$^\circ/\text{h}$]):} Cùng bơm RAM + xuyên nhiễu PCB + $\gamma_{\text{nl}}$: \textbf{2-State} trôi lớn nhất ($1{,}059^\circ/\text{h}$, không có Vòng 2), \textbf{4-State} trôi $354.6^\circ/\text{h}$ ($\bar{\psi}\ne 0$), còn \textbf{6-State} triệt tiêu về $5.04{\times}10^{-5}\,^\circ/\text{h}$.
+        \item \textbf{Cột phải (Biên độ áp đỉnh MIOC):} 2-State ($0.50\,V_\pi$, hở vòng $V_\pi$), 4-State ($1.00\,V_\pi$), 6-State chỉ cần $0.667\,V_\pi$ nhưng vẫn khóa chặt $V_\pi$!
       \end{itemize}
     \end{eqbox}
   \end{column}
   \begin{column}{0.47\textwidth}
     \begin{remarkbox}[Kết luận Kỹ thuật \& Giá trị Thiết kế]
-      \begin{itemize}\setlength\itemsep{1.6pt}
-        \item Độ lợi triệt tiêu sai số ký sinh đạt \textbf{$+136.94\text{ dB}$} (hơn $7$ triệu lần) mà không cần tăng chi phí phần cứng quang.
-        \item Giảm \textbf{$-33.3\%$} biên độ lái MIOC giúp tăng dư địa tuyến tính DAC, giảm công suất tiêu tán và hạ xuyên nhiễu IMU 3 trục xuống $+51.6\text{ dB}$.
+      \begin{itemize}\setlength\itemsep{1.2pt}
+        \item Độ lợi triệt tiêu sai số ký sinh 6-State đạt \textbf{$+136.94\text{ dB}$} so với 4-State (và $+146.5\text{ dB}$ so với 2-State) mà không tăng chi phí quang.
+        \item Giảm \textbf{$-33.3\%$} biên độ lái MIOC so với 4-State giúp mở rộng dư địa tuyến tính DAC và hạ xuyên nhiễu IMU 3 trục xuống $+51.6\text{ dB}$.
       \end{itemize}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 26: THỰC NGHIỆM (9/11) — GATE 6: FMI 3.0 BLACK-BOX FMU
-\begin{frame}{Kết quả Thực nghiệm (9/11): Kiểm chứng Đóng gói Hộp đen FMI 3.0 FMU}{Gate 6 (\texttt{fmi\_fmu\_gate.png}) \enspace|\enspace Chạy \texttt{build/ifog\_core.fmu} qua \texttt{FMPy} (\texttt{EQ-42..EQ-44})}
-\begin{center}
-  \includegraphics[width=0.95\textwidth,height=0.41\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fmi_fmu_gate.png}
-\end{center}
-\vspace{0.02cm}
+% SLIDE 26: THỰC NGHIỆM (9/17) — GATE 6: FMI 3.0 BLACK-BOX FMU
+\begin{frame}[t]{Kết quả Thực nghiệm (9/17): Kiểm chứng Đóng gói Hộp đen FMI 3.0 FMU}{Gate 6 (\texttt{fmi\_fmu\_gate.png}) \enspace|\enspace Chạy \texttt{build/ifog\_core.fmu} qua \texttt{FMPy} (\texttt{EQ-42..EQ-44})}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.98\textwidth,height=0.43\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fmi_fmu_gate.png}\par}
+\vspace{0.04cm}
 \begin{columns}[T]
   \begin{column}{0.53\textwidth}
     \begin{eqbox}[Cách đọc 3 Hình Kiểm chứng Hộp đen FMU]
-      \begin{itemize}\setlength\itemsep{1.5pt}
-        \item \textbf{Hình trái (Đáp ứng bước FMU vs Standalone):} Các điểm rời rạc của \texttt{ifog\_core.fmu} nằm chồng khít 100\% lên đường liên tục của lõi C++ \texttt{ifog\_sim} trên cả 4-State và 6-State.
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{Hình trái (Đáp ứng bước FMU vs Standalone):} Các điểm rời rạc của \texttt{ifog\_core.fmu} chồng khít 100\% lên đường liên tục của lõi C++ \texttt{ifog\_sim} trên cả 4-State và 6-State.
         \item \textbf{Hình giữa (Quét Deadband qua FMU):} Đường đỏ (tắt dither) hiện gai Deadband; đường xanh (bật dither) phẳng sát $0$.
         \item \textbf{Hình phải (AVAR 5 vùng từ FMU):} Ghép trực tiếp dữ liệu bước $H=1\text{ ms}$ từ FMU sang Tầng 3 10 giờ.
       \end{itemize}
@@ -1366,7 +1362,7 @@
   \end{column}
   \begin{column}{0.45\textwidth}
     \begin{remarkbox}[Kết luận Nghiệm thu Gate 6]
-      \begin{itemize}\setlength\itemsep{1.5pt}
+      \begin{itemize}\setlength\itemsep{1.1pt}
         \item Xác thực lược đồ XML XSD 3.0.2: \textbf{0 lỗi}.
         \item Sai lệch tương đương tối đa: \textbf{\texttt{0.00e+00 rad/s}} (tuyệt đối tới bit cuối cùng).
         \item Giảm Deadband qua FMU: \textbf{97.42\%}; sai lệch vùng chồng AVAR: \textbf{3.83\%} ($<5\%$) — sẵn sàng nhúng vào Simulink/GNC 6-DOF.
@@ -1376,46 +1372,42 @@
 \end{columns}
 \end{frame}
 
-% SLIDE 27: THỰC NGHIỆM (10/11) — PHY-01: VẬT LÝ DỰ BÁO SPEC-007
-\begin{frame}{Kết quả Thực nghiệm (10/11): Kiểm chứng Vật lý Dự báo \texttt{SPEC-007} (\texttt{PHY-01})}{Group D (\texttt{fig\_spec007\_physics\_winding\_mioc.png}) \enspace|\enspace Quấn Octupole, LUT v2 \& Gai MIOC + $C_{\text{xtalk}}$}
-\begin{center}
-  \includegraphics[width=0.95\textwidth,height=0.40\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_spec007_physics_winding_mioc.png}
-\end{center}
-\vspace{0.02cm}
+% SLIDE 27: THỰC NGHIỆM (10/17) — PHY-01: VẬT LÝ DỰ BÁO SPEC-007
+\begin{frame}[t]{Kết quả Thực nghiệm (10/17): Kiểm chứng Vật lý Dự báo \texttt{SPEC-007} (\texttt{PHY-01})}{Group D (\texttt{fig\_spec007\_physics\_winding\_mioc.png}) \enspace|\enspace Quấn Octupole, LUT v2 \& Gai MIOC + $C_{\text{xtalk}}$}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.98\textwidth,height=0.42\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_spec007_physics_winding_mioc.png}\par}
+\vspace{0.04cm}
 \begin{columns}[T]
   \begin{column}{0.53\textwidth}
     \begin{eqbox}[Cách đọc 3 Hiện tượng Vật lý Mới trên Hình]
-      \begin{itemize}\setlength\itemsep{1.5pt}
+      \begin{itemize}\setlength\itemsep{1.1pt}
         \item \textbf{Hình trái (Pha trôi nhiệt theo thời gian):} Đường đỏ (Quadrupole + Ứng suất) có đỉnh trôi lớn hơn rõ rệt so với đường xanh dương (Octupole 8 lớp) khi buồng nhiệt tăng tốc.
         \item \textbf{Hình giữa (LUT v2 động):} Hai trục tung biểu diễn đồng thời trôi hệ số tỷ lệ $\delta K_{\text{opt}}(t)$ [ppm] và điện áp $V_\pi(t)$ [V] tăng tuyến tính theo nhiệt độ.
-        \item \textbf{Hình phải (Zoom sub-$\tau$):} Đường đỏ (có MIOC bậc 2 + $C_{\text{xtalk}}\dot{V}$) bật gai xung nhọn hơn hẳn đường xanh nét đứt (mô hình lý tưởng cũ).
+        \item \textbf{Hình phải (Zoom sub-$\tau$):} Đường đỏ (MIOC bậc 2 + $C_{\text{xtalk}}\dot{V}$) bật gai xung nhọn hơn hẳn mô hình lý tưởng cũ.
       \end{itemize}
     \end{eqbox}
   \end{column}
   \begin{column}{0.45\textwidth}
     \begin{remarkbox}[Kết luận Kỹ thuật \texttt{PHY-01} (\texttt{EQ-45..52})]
-      \begin{itemize}\setlength\itemsep{1.5pt}
+      \begin{itemize}\setlength\itemsep{1.1pt}
         \item Quấn \textbf{Octupole giảm 47.69\%} đỉnh trôi nhiệt Shupe so với Quadrupole.
         \item Bảng \texttt{shupe\_lut.bin} v2 khôi phục chính xác 6 kênh động (sai số \texttt{0.0}, $\delta K_{\text{opt}}=85.59\text{ ppm}$).
-        \item Gai xuyên nhiễu điện dung + cộng hưởng MIOC đạt $\Delta V_{\text{TIA}}=\mathbf{0.583\text{ V}}$ — yếu tố then chốt để dự báo chính xác Deadband/Bunny Ears phần cứng.
+        \item Gai xuyên nhiễu điện dung + cộng hưởng MIOC đạt $\Delta V_{\text{TIA}}=\mathbf{0.583\text{ V}}$ — yếu tố then chốt dự báo Deadband phần cứng.
       \end{itemize}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 28: THỰC NGHIỆM (11/11) — CAL-01: HIỆU CHUẨN NGƯỢC (< 5% -> < 1%)
-\begin{frame}{Kết quả Thực nghiệm (11/11): Kiểm chứng Hiệu chuẩn Ngược \texttt{CAL-01} ($>40\% \to <1\%$)}{Khớp đồng thời 3 miền thí nghiệm (Static AVAR, Deadband Ramp, Thermal Chamber) đạt chuẩn $<5\%$}
-\begin{center}
-  \includegraphics[width=0.95\textwidth,height=0.36\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_spec007_calibration_validation.png}
-\end{center}
-\vspace{0.01cm}
+% SLIDE 28: THỰC NGHIỆM (11/17) — CAL-01: HIỆU CHUẨN NGƯỢC (< 5% -> < 1%)
+\begin{frame}[t]{Kết quả Thực nghiệm (11/17): Kiểm chứng Hiệu chuẩn Ngược \texttt{CAL-01} ($>40\% \to <1\%$)}{Khớp đồng thời 3 miền thí nghiệm (Static AVAR, Deadband Ramp, Thermal Chamber) đạt chuẩn $<5\%$}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.98\textwidth,height=0.38\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_spec007_calibration_validation.png}\par}
+\vspace{0.04cm}
 \begin{columns}[T]
   \begin{column}{0.46\textwidth}
     \begin{remarkbox}[Cách đọc 3 Hình \& Bảng Sai số Trước / Sau HC]
       {\tiny Chấm đen: mẫu thật; đường đỏ đứt: datasheet chưa HC ($>40\%$); đường liền nét: sau \texttt{InverseCalibrator} khớp sát mẫu thật.}
-      \vspace{1.5pt}
-      \tiny\renewcommand{\arraystretch}{1.04}
+      \vspace{1.0pt}
+      \tiny\renewcommand{\arraystretch}{1.00}
       \begin{tabularx}{\linewidth}{@{}X r r c@{}}
         \toprule
         \textbf{Miền đối chiếu} & \textbf{Chưa HC} & \textbf{Sau HC} & \textbf{Ngưỡng} \\
@@ -1430,82 +1422,234 @@
   \end{column}
   \begin{column}{0.52\textwidth}
     \begin{eqbox}[Ý nghĩa \& Kiểm chứng Chéo trên Lõi C++ Thật]
-      \begin{itemize}\setlength\itemsep{1.8pt}
-        \item \textbf{Ý nghĩa hình vẽ:} Chứng minh khi chỉ dùng thông số datasheet (đường đỏ), mô hình bỏ sót hoàn toàn biên độ Bunny Ears và trôi nhiệt thực tế; sau 3 giai đoạn TRF, đường mô phỏng trùng khít thực nghiệm trên cả 3 miền.
+      \begin{itemize}\setlength\itemsep{1.2pt}
+        \item \textbf{Ý nghĩa hình vẽ:} Khi chỉ dùng thông số datasheet (đường đỏ), mô hình bỏ sót biên độ Bunny Ears và trôi nhiệt thực; sau 3 giai đoạn TRF, đường mô phỏng trùng khít thực nghiệm trên cả 3 miền.
         \item \textbf{Hồi phục tham số ẩn:} Cả \textbf{10 / 10 tham số ký sinh} phục hồi trong sai số \textbf{$\le 2.18\%$}.
-        \item \textbf{Kiểm chứng chéo C++ Tầng 2:} Sai số dự báo tốc độ góc vòng kín đạt \textbf{0.034\%}, xuất sẵn \texttt{calibrated\_params.json} kèm 95\% CI.
+        \item \textbf{Kiểm chứng chéo C++ Tầng 2:} Sai số dự báo tốc độ vòng kín \textbf{0.034\%}, xuất sẵn \texttt{calibrated\_params.json} kèm 95\% CI.
       \end{itemize}
     \end{eqbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 29: MA TRẬN 23 KỊCH BẢN & TRIỂN KHAI TÁI LẬP
-\begin{frame}{Hệ thống 23 Kịch bản Chuẩn hóa, CLI \& Khả năng Tái lập Thực nghiệm}{Chạy độc lập từng bài toán vật lý hoặc toàn bộ 23/23 kịch bản trên Linux / Docker}
+% SLIDE 29: THỰC NGHIỆM (12/17) — GROUP E: IND-01 (PHYSICAL LAB CAS-4)
+\begin{frame}[t]{Kết quả Thực nghiệm (12/17): Xác thực Phần cứng Phòng thí nghiệm (\texttt{IND-01})}{Group E \texttt{v4.1.0} (\texttt{fig\_ind01\_lab\_validation.png}) \enspace|\enspace Nạp 3 Bộ Dữ liệu Lab CSV Thật (NASA-STD-7009A CAS-4 / ASME V\&V 20)}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.98\textwidth,height=0.45\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_ind01_lab_validation.png}\par}
+\vspace{0.05cm}
+\begin{columns}[T]
+  \begin{column}{0.52\textwidth}
+    \begin{eqbox}[Cách đọc 3 Tập Dữ liệu Phần cứng Thật (\texttt{--lab-dir})]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{(a) AVAR tĩnh 10h trên bàn đá:} Đối chiếu dải đo thực nghiệm (chấm đen kèm thanh sai số $u_D$) với mô hình chưa hiệu chuẩn (đỏ đứt) và sau hiệu chuẩn (xanh).
+        \item \textbf{(b) Bàn quay tốc độ chậm $[-2,+2]^\circ/\text{s}$:} Khớp chính xác hai đỉnh \emph{Bunny Ears} thực tế quanh vùng chết $0^\circ/\text{s}$.
+        \item \textbf{(c) Buồng nhiệt $-40..+85^\circ\text{C}$:} Tái lập đúng độ dốc trôi thiên lệch nhiệt đo trực tiếp từ phần cứng.
+      \end{itemize}
+    \end{eqbox}
+  \end{column}
+  \begin{column}{0.46\textwidth}
+    \begin{remarkbox}[Nghiệm thu NASA-STD-7009A CAS-4 \& ASME V\&V 20]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item Sai số cực đại giảm mạnh từ \textbf{$101.9\% \to 4.51\%$} ($<5\%$) trên dữ liệu phần cứng có nhiễu đo thực.
+        \item Tỷ số bất định kiểm chứng ASME V\&V 20: $\max|E|/u_{\text{val}} = \mathbf{0.723} < 1.0 \Rightarrow$ đạt \textbf{CAS Level 4 (TRL 7)}.
+        \item Kiểm chứng chéo lõi C++ Tầng 2: sai số tốc độ vòng kín \textbf{0.069\%}; xuất báo cáo \texttt{lab\_validation\_report.json}.
+      \end{itemize}
+    \end{remarkbox}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% SLIDE 30: THỰC NGHIỆM (13/17) — GROUP E: IND-02 (FPGA FIXED-POINT & SV-2012 RTL 2/4/6-STATE)
+\begin{frame}[t]{Kết quả Thực nghiệm (13/17): FPGA Dấu phẩy Tĩnh Bit-True \& SV-2012 RTL (\texttt{IND-02})}{Group E \texttt{v4.1.0} (\texttt{fig\_ind02\_fixed\_point\_rtl.png}) \enspace|\enspace Đối chiếu \texttt{Q16.32} (48-bit) vs \texttt{Q8.24} (32-bit) \& \texttt{rtl/ifog\_dsp\_6state.sv} trên 2/4/6-State}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_ind02_fixed_point_rtl.png}\par}
+\vspace{0.05cm}
+\begin{columns}[T]
+  \begin{column}{0.52\textwidth}
+    \begin{eqbox}[Cách đọc 2 Đồ thị Độ nhạy Thanh ghi \& Đáp ứng Bước]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{(a) Độ nhạy độ rộng thanh ghi (2 / 4 / 6-State):} So sánh sai số lượng tử hóa RMS [$^\circ/\text{h}$] (thang log) giữa kiến trúc \textbf{48-bit \texttt{Q16.32}} (cột xanh) và \textbf{32-bit \texttt{Q8.24}} (cột đỏ) trên cả 3 chế độ DSP.
+        \item \textbf{(b) Chồng phủ đáp ứng bước (Float64 vs Q16.32):} Đường dấu phẩy tĩnh \texttt{Q16.32} bám chồng khít hoàn toàn lên đường chuẩn IEEE-754 Float64 ở cả 2s, 4s và 6s.
+      \end{itemize}
+    \end{eqbox}
+  \end{column}
+  \begin{column}{0.46\textwidth}
+    \begin{remarkbox}[Kết luận Thiết kế Phần cứng FPGA (DO-254)]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item Khớp vi phân từng chu kỳ với RTL tổng hợp được \texttt{rtl/ifog\_dsp\_6state.sv}: sai lệch \textbf{0-LSB}, \textbf{0 lần tràn thanh ghi}.
+        \item \texttt{Q16.32} vs \texttt{Q8.24}: 2s \textbf{0.91} vs $6.51$; 4s \textbf{0.43} vs $13.87$; 6s \textbf{0.54} vs $211.5\,^\circ/\text{h}$.
+        \item \textbf{Giá trị:} Chứng minh định lượng thanh ghi 32-bit gây mất chính xác nặng ở 6-State và chốt chuẩn \textbf{48-bit \texttt{Q16.32}} cho FPGA thật.
+      \end{itemize}
+    \end{remarkbox}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% SLIDE 31: THỰC NGHIỆM (14/17) — GROUP E: IND-03 (3D ANSYS/COMSOL FEM -> SHUPE LUT v2)
+\begin{frame}[t]{Kết quả Thực nghiệm (14/17): Liên kết Lưới Nhiệt–Cơ 3D FEM (\texttt{IND-03})}{Group E \texttt{v4.1.0} (\texttt{fig\_ind03\_fem\_3d.png}) \enspace|\enspace Nạp Trường 3D ANSYS/COMSOL $(r,\theta,z,t)$ $\to$ \texttt{shupe\_lut.bin} v2 \& C++ Tầng 2}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_ind03_fem_3d.png}\par}
+\vspace{0.05cm}
+\begin{columns}[T]
+  \begin{column}{0.52\textwidth}
+    \begin{eqbox}[Cách đọc 2 Đồ thị Trường Nhiệt–Ứng suất 3D Bất đối xứng]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{(a) So sánh mô hình 1D vs 3D FEM:} Đường xám đứt (1D xuyên tâm) so với trường nhiệt bất đối xứng 3D do FPGA/SLD đặt lệch tâm: Quadrupole 3D (đỏ) vs Octupole 3D (xanh lục).
+        \item \textbf{(b) Phân rã pha Shupe 3D vs Ứng suất keo potting:} Tách biệt đóng góp pha quang–nhiệt $\Delta\phi_{\text{Shupe}}$ [$\mu$rad], pha ứng suất $\Delta\phi_{\text{stress}}$ và độ dịch hệ số tỷ lệ $\delta K_{\text{opt}}$ [ppm].
+      \end{itemize}
+    \end{eqbox}
+  \end{column}
+  \begin{column}{0.46\textwidth}
+    \begin{remarkbox}[Kết luận Kỹ thuật 3D FEM (\texttt{--fem-3d-csv})]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item Nội suy RBF trơn trên tọa độ trụ chuẩn hóa $(r,\theta,z,t)$ với chênh lệch không gian $\Delta T = 3.0\text{ K}$, ứng suất $\sigma = 4.49\text{ MPa}$.
+        \item Đóng gói thẳng vào định dạng nhị phân 56-byte \texttt{shupe\_lut.bin} v2 nạp không cần sửa lõi C++ Tầng 2.
+        \item \textbf{Chứng minh 3D:} Quấn Octupole ($0.0307\,^\circ/\text{h}$) triệt trôi nhiệt tốt gấp \textbf{5.16 lần} Quadrupole ($0.1583\,^\circ/\text{h}$) dưới nguồn nhiệt lệch tâm.
+      \end{itemize}
+    \end{remarkbox}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% SLIDE 32: THỰC NGHIỆM (15/17) — GROUP E: IND-04 (MIL-STD-810H / DO-160G RANDOM VIB PSD)
+\begin{frame}[t]{Kết quả Thực nghiệm (15/17): Rung Phổ rộng MIL-STD-810H / DO-160G (\texttt{IND-04})}{Group E \texttt{v4.1.0} (\texttt{fig\_ind04\_random\_vib\_psd.png}) \enspace|\enspace Nhiễu rung băng rộng $20\text{--}2000\text{ Hz}$ qua Khung Cộng hưởng 2-DOF}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_ind04_random_vib_psd.png}\par}
+\vspace{0.05cm}
+\begin{columns}[T]
+  \begin{column}{0.52\textwidth}
+    \begin{eqbox}[Cách đọc 2 Đồ thị Phổ Rung PSD \& Hàm truyền 2-DOF]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{(a) Phổ gia tốc PSD [$g^2/\text{Hz}$] ($20\text{--}2000\text{ Hz}$):} Đường đứt là phổ đầu vào MIL-STD-810H ($4.88\,g_{\text{rms}}$); đường đỏ là cuộn sợi gắn cứng bị khuếch đại tại cộng hưởng khung ($480\text{ Hz}$); đường xanh là khi lắp đế cách ly elastomer ($65\text{ Hz}$).
+        \item \textbf{(b) Hệ số truyền cơ học $|T_{\text{mech}}(f)|$:} So sánh đỉnh cộng hưởng $Q=12$ khi gắn cứng vs suy giảm mạnh tần cao nhờ bộ cách ly 2-DOF.
+      \end{itemize}
+    \end{eqbox}
+  \end{column}
+  \begin{column}{0.46\textwidth}
+    \begin{remarkbox}[Kết luận Kỹ thuật Cơ–Quang Hàng không]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item Gia tốc RMS tại cuộn sợi giảm từ $14.37 \to \mathbf{2.98\,g_{\text{rms}}}$ (\textbf{4.82 lần}), khớp sát phương trình Miles giải tích ($13.87\,g_{\text{rms}}$).
+        \item Thực chạy lõi C++ Tầng 2 với phổ rung lọc: sai số chỉnh lưu rung VRE giảm từ $11.11 \to \mathbf{0.46\,^\circ/\text{h}}$ (\textbf{24.20 lần}).
+        \item \textbf{Giá trị:} Cho phép định cỡ trực tiếp độ cứng \& hệ số cản đế cách ly IMU cho chuẩn hàng không/quốc phòng.
+      \end{itemize}
+    \end{remarkbox}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% SLIDE 33: THỰC NGHIỆM (16/17) — GROUP E: IND-05 (MULTI-INSTANCE SOURCE-CODE FMI 3.0.2 FMU)
+\begin{frame}[t]{Kết quả Thực nghiệm (16/17): FMU Thuần C++17 Đa thực thể 3 Trục (\texttt{IND-05})}{Group E \texttt{v4.1.0} (\texttt{fig\_ind05\_fmu\_multi\_instance.png}) \enspace|\enspace \texttt{ifog\_core\_multi.fmu} (\texttt{canBeInstantiatedOnlyOncePerProcess=false})}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_ind05_fmu_multi_instance.png}\par}
+\vspace{0.05cm}
+\begin{columns}[T]
+  \begin{column}{0.52\textwidth}
+    \begin{eqbox}[Cách đọc 2 Đồ thị Chạy Song song 3 Thực thể trong 1 Tiến trình]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{(a) Thực thi xen kẽ đồng bộ (Lockstep) 3 trục IMU:} 3 thực thể FMU độc lập chạy đồng thời trong \textbf{CÙNG 1 tiến trình OS} ở 3 chế độ DSP khác nhau: Trục X (6s, $+5^\circ/\text{s}$), Trục Y (4s, $-12^\circ/\text{s}$), Trục Z (2s, $+25^\circ/\text{s}$).
+        \item \textbf{(b) Kiểm chứng không nhiễu chéo giữa các thực thể:} Biểu đồ cột sai số bám xác lập của từng trục so với ngưỡng đỏ $0.5\%$.
+      \end{itemize}
+    \end{eqbox}
+  \end{column}
+  \begin{column}{0.46\textwidth}
+    \begin{remarkbox}[Nghiệm thu FMI 3.0.2 Source-Code + Binary FMU]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item Gói \texttt{build/ifog\_core\_multi.fmu} tích hợp sẵn mã nguồn C++17 + \texttt{sources/buildDescription.xml} hỗ trợ biên dịch Linux/Windows (Simulink) và \textbf{0 lỗi XSD}.
+        \item Xóa bỏ hoàn toàn giới hạn singleton \texttt{sc\_simcontext} của SystemC.
+        \item Sai số thực đo 3 trục đồng thời: X (6s) \textbf{0.014\%}, Y (4s) \textbf{0.041\%}, Z (2s) \textbf{0.149\%} — toàn bộ $< 0.15\%$.
+      \end{itemize}
+    \end{remarkbox}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% SLIDE 34: THỰC NGHIỆM (17/17) — GROUP E: IND-06 (12-CORNER PVT & 10-YR / 50 KRAD EOL)
+\begin{frame}[t]{Kết quả Thực nghiệm (17/17): Ma trận 12 Góc PVT \& Lão hóa 10 Năm / 50 krad (\texttt{IND-06})}{Group E \texttt{v4.1.0} (\texttt{fig\_ind06\_pvt\_aging\_corners.png}) \enspace|\enspace Quét Cực trị Nhiệt–Nguồn–Linh kiện ($\pm 3\sigma$) \& Độ tin cậy Dài hạn Vũ trụ}
+{\centering\vspace{-0.06cm}\includegraphics[width=0.96\textwidth,height=0.45\textheight,keepaspectratio]{../examples/full_all_scenarios/figures/fig_ind06_pvt_aging_corners.png}\par}
+\vspace{0.05cm}
+\begin{columns}[T]
+  \begin{column}{0.52\textwidth}
+    \begin{eqbox}[Cách đọc 2 Đồ thị Quét Góc PVT \& Suy giảm Tuổi thọ]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{(a) Quét 12 góc PVT cực trị:} Tổ hợp nhiệt độ ($-40/+25/+85^\circ\text{C}$), điện áp nguồn ($\pm 5\%$) và dung sai linh kiện (cột xanh chuẩn vs cột đỏ góc xấu $\pm 3\sigma$) đánh giá biên độ ARW [$^\circ/\sqrt{\text{h}}$].
+        \item \textbf{(b) Lão hóa 10 năm + Bức xạ $50\text{ krad(Si)}$:} Cột xanh lá là công suất quang SLD còn lại [\%]; đường tím (trục phải) là mức tăng ARW theo các mốc BOL $\to$ Mid-life $\to$ LEO $\to$ GEO EOL.
+      \end{itemize}
+    \end{eqbox}
+  \end{column}
+  \begin{column}{0.46\textwidth}
+    \begin{remarkbox}[Kết luận Độ tin cậy Sản xuất \& Không gian]
+      \begin{itemize}\setlength\itemsep{1.1pt}
+        \item \textbf{Góc PVT xấu nhất ($+85^\circ\text{C}, -5\%, 3\sigma$):} ARW $= \mathbf{0.00049^\circ/\sqrt{\text{h}}}$ vẫn giữ biên an toàn lớn cho dẫn đường chiến thuật/hàng hải.
+        \item \textbf{Cuối vòng đời (10 năm + $50\text{ krad(Si)}$ RIA):} Công suất quang còn $\sim 52\%$, ARW EOL $= \mathbf{0.00052^\circ/\sqrt{\text{h}}}$.
+        \item Đã xác thực thực tế \textbf{4/4 mốc thời gian} (0 / 2 / 5 / 10 năm) trên lõi C++ Tầng 2 đều bám tốc độ góc chính xác.
+      \end{itemize}
+    \end{remarkbox}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% SLIDE 35: MA TRẬN 29 KỊCH BẢN & TRIỂN KHAI TÁI LẬP
+\begin{frame}{Hệ thống 29 Kịch bản Chuẩn hóa (38 CLI Modes) \& Khả năng Tái lập Thực nghiệm}{Chạy độc lập từng bài toán vật lý hoặc toàn bộ 29/29 kịch bản trên Linux / Docker (Đạt chuẩn TRL 7--8 / DO-254)}
 \scriptsize
-\renewcommand{\arraystretch}{1.08}
-\begin{tabularx}{\textwidth}{@{}p{2.3cm} p{2.7cm} >{\raggedright\arraybackslash}X c@{}}
+\renewcommand{\arraystretch}{1.04}
+\begin{tabularx}{\textwidth}{@{}p{2.35cm} p{2.75cm} >{\raggedright\arraybackslash}X c@{}}
 \toprule
 \textbf{Nhóm Kịch bản} & \textbf{Lệnh CLI (\texttt{--mode})} & \textbf{Nội dung kiểm chứng khoa học chính} & \textbf{Kết quả} \\
 \midrule
 \textbf{Core Gates 1--4} & \texttt{full} (\texttt{gate1..4}) & Tuyến tính $2\pi$ flyback, Deadband/Bunny Ears, $1/f$ \& $\mathbf{K}$, AVAR 5 vùng 10h & \textcolor{AcadTeal}{\textbf{4/4 PASS}} \\
-\textbf{Gate 5 (6-State)} & \texttt{dsp6\_compare} & 6-State đối xứng ($\alpha^*=\pi/3$): $-33.3\%$ áp đỉnh, $+136.9\text{ dB}$ khử RAM/xtalk & \textcolor{AcadTeal}{\textbf{PASS}} \\
+\textbf{Gate 5 (2/4/6s)} & \texttt{dsp6\_compare} & So sánh 2/4/6-State ($\alpha^*=\pi/3$): $-33.3\%$ áp đỉnh, $+136.9\text{ dB}$ khử RAM/xtalk & \textcolor{AcadTeal}{\textbf{PASS}} \\
 \textbf{Gate 6 (FMI 3.0)} & \texttt{fmi\_gate} & XSD 0 lỗi, tương đương \texttt{0.00e+00 rad/s}, Deadband 97.4\%, AVAR 3.83\% & \textcolor{AcadTeal}{\textbf{PASS}} \\
 \textbf{Group A (TD)} & \texttt{td\_all} (\texttt{TD-01..06}) & Blanking $k^*=5$, Bode 2.54 kHz, sốc $V_\pi$, $700^\circ/\text{s}$ anti-windup, Shupe, PRBS & \textcolor{AcadTeal}{\textbf{6/6 PASS}} \\
 \textbf{Group B (ENG)} & \texttt{eng\_all} (\texttt{ENG-01..05}) & BOM ENOB/Jitter, IMU 3 trục ($+51.6\text{ dB}$), VRE/Mu-metal, 5 lỗi BIT, MC $N=500$ & \textcolor{AcadTeal}{\textbf{5/5 PASS}} \\
-\textbf{Group C (DYN)} & \texttt{dyn\_all} (\texttt{DYN-01..04}) & Đáp ứng bước, Bode Mag/Phase/GD 15 điểm, Output PSD, Sine soi PD/$V_{\text{fb}}$ & \textcolor{AcadTeal}{\textbf{4/4 PASS}} \\
+\textbf{Group C (DYN)} & \texttt{dyn\_all} (\texttt{DYN-01..04}) & Đáp ứng bước, Bode Mag/Phase/GD ($20\text{ kHz}$), PSD \textbf{2/4/6s}, Sine soi PD/$V_{\text{fb}}$ & \textcolor{AcadTeal}{\textbf{4/4 PASS}} \\
 \textbf{Group D (SPEC-007)} & \texttt{spec007\_all} (\texttt{PHY/CAL}) & Quấn Octupole ($-47.7\%$), LUT v2, MIOC+$C_{\text{xtalk}}$ \& Hiệu chuẩn ngược $<1\%$ & \textcolor{AcadTeal}{\textbf{2/2 PASS}} \\
+\textbf{Group E (TRL 7--8)} & \texttt{ind\_all} (\texttt{IND-01..06}) & Lab CAS-4, FPGA \texttt{Q16.32}/RTL (2/4/6s), 3D FEM, 810H PSD, Multi-FMU, PVT/EOL & \textcolor{AcadTeal}{\textbf{6/6 PASS}} \\
 \bottomrule
 \end{tabularx}
 
-\vspace{0.18cm}
+\vspace{0.14cm}
 \begin{columns}[T]
   \begin{column}{0.49\textwidth}
     \begin{eqbox}[Tái lập trực tiếp trên Linux (Native Build)]
       \texttt{bash scripts/setup\_env.sh --build-tier2 --verify}\\
       \texttt{source scripts/env.sh}\\
-      \texttt{./scripts/run\_sim.sh --mode spec007\_all}\\
+      \texttt{./scripts/run\_sim.sh --mode ind\_all}\\
       \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}
     \end{eqbox}
   \end{column}
   \begin{column}{0.49\textwidth}
     \begin{remarkbox}[Tái lập tức thì qua Container (Docker / Podman)]
       \texttt{./scripts/container\_run.sh build}\\
-      \texttt{./scripts/container\_run.sh sim --mode fmi\_gate}\\
+      \texttt{./scripts/container\_run.sh sim --mode ind\_all}\\
       \texttt{./scripts/container\_run.sh example}\\
-      {\scriptsize Tự động sinh \texttt{report/<id>/\{report.md, report.html, figures/*.png\}}.}
+      {\scriptsize Tự động sinh \texttt{report/<id>/\{report.md, report.html, figures/*.png (29)\}}.}
     \end{remarkbox}
   \end{column}
 \end{columns}
 \end{frame}
 
-% SLIDE 30: CHẤT LƯỢNG, CI/CD DIFF FILTER & TÀI LIỆU THAM KHẢO
-\begin{frame}{Đảm bảo Chất lượng, CI/CD Chọn lọc theo Diff \& Tài liệu Tham khảo}{Tổng kết kỹ thuật \texttt{ifog-vproto \DocVersion} và cơ sở học thuật}
+% SLIDE 36: CHẤT LƯỢNG, CI/CD DIFF FILTER & TÀI LIỆU THAM KHẢO
+\begin{frame}{Đảm bảo Chất lượng, CI/CD Chọn lọc theo Diff \& Tài liệu Tham khảo}{Tổng kết kỹ thuật \texttt{ifog-vproto \DocVersion} (Đạt chuẩn TRL 7--8 / DO-254) và cơ sở học thuật}
 \begin{columns}[T]
   \begin{column}{0.50\textwidth}
     \begin{eqbox}[1. Kiểm chứng Chất lượng \& CI/CD Thông minh]
-      \begin{itemize}\setlength\itemsep{2.8pt}
+      \begin{itemize}\setlength\itemsep{2.4pt}
         \item \textbf{Độ phủ mã nguồn kép 100.0\%:}
           \begin{itemize}\setlength\itemsep{1pt}
-            \item C++ (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}): \textbf{2,329 / 2,329 dòng} (\textbf{100.0\%}, 211/211 hàm qua \texttt{gcovr}).
-            \item Python (\texttt{tier1}, \texttt{tier3}, \texttt{viz}): \textbf{100.00\%} dòng (\texttt{pytest-cov}, 4,770/4,770 stmts).
+            \item C++ (\texttt{tier2\_sysc\_ams/} + \texttt{fmi\_wrapper/src/}): \textbf{2,733 / 2,733 dòng} (\textbf{100.0\%}, 299/299 hàm qua \texttt{gcovr}).
+            \item Python (\texttt{tier1}, \texttt{tier3}, \texttt{viz}): \textbf{100.00\%} dòng (\texttt{pytest-cov}, 5,632/5,632 stmts).
           \end{itemize}
-        \item \textbf{Truy vết công thức 1-đối-1:} Toàn bộ \textbf{53 / 53 công thức} (\texttt{EQ-01..53}) có bài kiểm thử tự động trong CI.
-        \item \textbf{Khóa toàn vẹn Đặc tả (Rule 7) \& Đồng bộ (Rule 16):} Xác thực SHA-256 cho \texttt{SPEC-004..007} và tài liệu phát hành.
-        \item \textbf{Bộ lọc Diff CI/CD (\texttt{scripts/ci\_diff\_filter.py}):} Tự phân tích \texttt{git diff} tại bước \texttt{detect-changes} — \textbf{chỉ kích hoạt CI/CD khi mã nguồn/cấu hình/đặc tả thay đổi}, tự bỏ qua khi chỉ sửa tài liệu (\texttt{docs/}, slide, \texttt{README.md}).
+        \item \textbf{Truy vết công thức 1-đối-1:} Toàn bộ \textbf{53 / 53 công thức} (\texttt{EQ-01..53}) + \textbf{29/29 kịch bản} tự động hóa trong CI.
+        \item \textbf{Dual FMU \& Đóng gói Release:} 23 gói sản phẩm phát hành gồm cả \texttt{ifog\_core.fmu}, \texttt{ifog\_core\_multi.fmu} và bộ slide này.
+        \item \textbf{Khóa Đặc tả (Rule 7), Đồng bộ (Rule 16) \& Diff Filter:} SHA-256 cho \texttt{SPEC-004..007}; tự bỏ qua CI nặng khi chỉ sửa tài liệu.
       \end{itemize}
     \end{eqbox}
   \end{column}
   \begin{column}{0.48\textwidth}
     \begin{remarkbox}[2. Tài liệu Tham khảo \& Chuẩn mực Khoa học]
       \scriptsize
-      \begin{enumerate}\setlength\itemsep{1.8pt}
+      \begin{enumerate}\setlength\itemsep{1.4pt}
         \item \textbf{IEEE Std 952-2020}, \emph{Specification Format Guide and Test Procedure for Single-Axis Interferometric Fiber Optic Gyros}.
         \item H. C. Lefèvre, \emph{The Fiber-Optic Gyroscope}, 3rd Ed., Artech House, 2022.
-        \item M. Barnasconi \emph{et al.}, \emph{SystemC AMS Extensions User's Guide} (TDF \& LTF \texttt{sca\_ltf\_nd}), Accellera Systems Initiative / \textbf{IEEE Std 1666.1-2016}.
-        \item D. M. Shupe, ``Thermally induced nonreciprocity in the fiber-optic interferometer,'' \emph{Applied Optics}, 19(5):654--655, 1980.
-        \item F. Mohr, ``Thermooptically induced bias drift in fiber optical Sagnac interferometers,'' \emph{J. Lightwave Technol.}, 14(1):27--41, 1996.
+        \item M. Barnasconi \emph{et al.}, \emph{SystemC AMS Extensions User's Guide} (TDF \& LTF \texttt{sca\_ltf\_nd}), Accellera / \textbf{IEEE Std 1666.1-2016}.
+        \item D. M. Shupe, ``Thermally induced nonreciprocity in the fiber-optic interferometer,'' \emph{Applied Optics}, 19(5):654--655, 1980; F. Mohr, \emph{J. Lightwave Technol.}, 1996.
         \item \textbf{Modelica Association}, \emph{Functional Mock-up Interface (FMI) Specification 3.0.2}, 2024.
+        \item \textbf{NASA-STD-7009A} (CAS-4), \textbf{ASME V\&V 20}, \textbf{RTCA DO-254} \& \textbf{MIL-STD-810H / DO-160G} Environmental Qualification Standards.
       \end{enumerate}
     \end{remarkbox}
   \end{column}

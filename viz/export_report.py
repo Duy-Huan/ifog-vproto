@@ -33,6 +33,7 @@ from viz.plot_scenarios import (
     plot_fmi_gate,
     plot_td_scenarios,
 )
+from viz.plot_industrial import plot_all_industrial_figures
 from viz.plot_spec007_calibration import (
     plot_spec007_calibration_validation,
     plot_spec007_physics_winding_mioc,
@@ -189,6 +190,23 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
             }
         )
 
+    ind_titles = {
+        "IND-01": "Physical Lab Hardware Validation (NASA-STD-7009A CAS-4 / ASME V&V 20)",
+        "IND-02": "Bit-True FPGA Fixed-Point DSP & SystemVerilog RTL (2/4/6-State)",
+        "IND-03": "3D Cylindrical FEM (ANSYS/COMSOL) -> shupe_lut.bin v2",
+        "IND-04": "MIL-STD-810H / DO-160G Random Vibration PSD & 2-DOF Resonance",
+        "IND-05": "Multi-Instance Pure-C++17 Source-Code FMI 3.0.2 FMU (3 Axes)",
+        "IND-06": "12-Corner PVT Matrix & 10-Yr Aging / 50 krad(Si) Space TID",
+    }
+    for sc_id, sc in summary.get("ind_scenarios", {}).items():
+        rows.append(
+            {
+                "gate": f"{sc_id} — {ind_titles[sc_id]}",
+                "status": "PASS" if bool(sc.get("pass", False)) else "FAIL",
+                "detail": _summarize_scenario_detail(sc_id, sc),
+            }
+        )
+
     if not rows and summary.get("sim_summary") is not None:
         ss = summary["sim_summary"]
         detail = (
@@ -203,7 +221,7 @@ def _compute_gate_statuses(summary: dict[str, Any]) -> list[dict[str, str]]:
 
 
 def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
-    """Build concise quantitative KPI summary string for TD, ENG, DYN & SPEC-007 rows."""
+    """Build concise quantitative KPI summary string for TD, ENG, DYN, SPEC-007 & IND rows."""
     if sc_id == "TD-01":
         return f"t_s={sc['tia_ts_0p1pct_ns']:.1f} ns, k*_opt={sc['k_start_optimal_0p5pct']}, clean_err={sc['clean_window_max_err_pct']:.3f}%, ARW x{sc['arw_blanking_penalty_factor']:.3f}"
     if sc_id == "TD-02":
@@ -242,6 +260,20 @@ def _summarize_scenario_detail(sc_id: str, sc: dict[str, Any]) -> str:
     if sc_id == "CAL-01":
         eb, ea = sc["error_before_pct"], sc["error_after_pct"]
         return f"AVAR {eb['avar_nrmse_pct']:.1f}%->{ea['avar_nrmse_pct']:.2f}%, DB {eb['deadband_nrmse_pct']:.1f}%->{ea['deadband_nrmse_pct']:.2f}%, Therm {eb['thermal_bias_nrmse_pct']:.1f}%->{ea['thermal_bias_nrmse_pct']:.2f}%, max param err={sc['max_param_recovery_err_pct']:.2f}%"
+    if sc_id == "IND-01":
+        return f"CAS-{sc['nasa_cas_level']}, err {sc['max_error_before_pct']:.1f}%->{sc['max_error_after_pct']:.2f}%, ASME max |E|/u_val={sc['max_ratio_E_over_u_val_after']:.2f}, T2 err={sc['tier2_closed_loop_err_pct']:.4f}%"
+    if sc_id == "IND-02":
+        m2, m4, m6 = sc["modes"]["2state"]["variants"]["q16_32"], sc["modes"]["4state"]["variants"]["q16_32"], sc["modes"]["6state"]["variants"]["q16_32"]
+        return f"0-LSB RTL match (2/4/6-State), Q16.32 err={m2['quant_err_rms_deg_h']:.2f}/{m4['quant_err_rms_deg_h']:.2f}/{m6['quant_err_rms_deg_h']:.2f} deg/h, 0 overflows"
+    if sc_id == "IND-03":
+        return f"3D FEM ({sc['n_fem_nodes']} nodes, dT={sc['max_spatial_dT_K']:.1f} K, sigma={sc['max_stress_MPa']:.2f} MPa), Octupole suppression={sc['octupole_suppression_ratio']:.2f}x"
+    if sc_id == "IND-04":
+        return f"MIL-STD-810H {sc['input_g_rms']:.2f} g_rms -> Hard {sc['coil_hard_mounted_g_rms']:.2f} vs Iso {sc['coil_isolated_g_rms']:.2f} g_rms ({sc['g_rms_attenuation_ratio']:.2f}x), VRE red={sc['vre_reduction_ratio']:.2f}x"
+    if sc_id == "IND-05":
+        ax = sc["concurrent_axes"]
+        return f"0 XSD errs, Source-Code FMU, 3 concurrent axes: 6s={ax['axis_x_6state']['err_pct']:.3f}%, 4s={ax['axis_y_4state']['err_pct']:.3f}%, 2s={ax['axis_z_2state']['err_pct']:.3f}%"
+    if sc_id == "IND-06":
+        return f"{sc['n_pvt_corners']} PVT corners WC ARW={sc['worst_case_pvt_arw_deg_per_rt_h']:.5f} deg/rt-h, EOL 10yr/50krad ARW={sc['eol_50krad_arw_deg_per_rt_h']:.5f} deg/rt-h"
     return f"Gain={sc['sine_tracking_gain']:.4f}, Phase={sc['sine_phase_lag_deg']:.2f} deg, THD={sc['output_thd_dB']:.1f} dB, SFDR={sc['output_sfdr_dB']:.1f} dB, phi_S={sc['peak_phi_sagnac_rad']:.3f} rad, wraps={sc['flyback_count']}, r(PD,phi_err)={sc['pd_demod_to_phi_err_corr']:.4f}"
 
 
@@ -1332,9 +1364,18 @@ def export_run_report(
         ("DYN-03", "dyn03_output_psd.json"),
         ("DYN-04", "dyn04_sine_electro_optic.json"),
     )
+    ind_files = (
+        ("IND-01", "ind01_lab_validation.json"),
+        ("IND-02", "ind02_fixed_point_rtl.json"),
+        ("IND-03", "ind03_fem_3d.json"),
+        ("IND-04", "ind04_random_vib_psd.json"),
+        ("IND-05", "ind05_fmu_multi_instance.json"),
+        ("IND-06", "ind06_pvt_aging_corners.json"),
+    )
     td_loaded = {k: v for k, fname in td_files if (v := _load_optional_json(rdir / fname)) is not None}
     eng_loaded = {k: v for k, fname in eng_files if (v := _load_optional_json(rdir / fname)) is not None}
     dyn_loaded = {k: v for k, fname in dyn_files if (v := _load_optional_json(rdir / fname)) is not None}
+    ind_loaded = {k: v for k, fname in ind_files if (v := _load_optional_json(rdir / fname)) is not None}
     dsp6_loaded = _load_optional_json(rdir / "dsp6_compare.json")
     fmi_loaded = _load_optional_json(rdir / "fmi_gate_summary.json")
     sp7_loaded: dict[str, Any] = {}
@@ -1363,6 +1404,7 @@ def export_run_report(
         "eng_scenarios": eng_loaded,
         "dyn_scenarios": dyn_loaded,
         "spec007_scenarios": sp7_loaded,
+        "ind_scenarios": ind_loaded,
         "generated_artifacts": [],
     }
 
@@ -1434,6 +1476,10 @@ def export_run_report(
             p = plot_spec007_calibration_validation(
                 cal01_dir, fig_dir / "fig_spec007_calibration_validation.png"
             )
+            summary["generated_artifacts"].append(str(p))
+            fig_rel_paths.append(f"figures/{p.name}")
+
+        for p in plot_all_industrial_figures(rdir, fig_dir):
             summary["generated_artifacts"].append(str(p))
             fig_rel_paths.append(f"figures/{p.name}")
 

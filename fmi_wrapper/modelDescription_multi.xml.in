@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiModelDescription
+  fmiVersion="3.0"
+  modelName="ifog_core_multi"
+  instantiationToken="{6e9c4b1a-7f20-4f06-9a5c-000000004100}"
+  description="Closed-Loop IFOG Multi-Instance Pure-C++17 FMI 3.0.2 Co-Simulation &amp; Source-Code FMU (Zero Singleton — Concurrent 3-Axis GNC Ready, v4.1.0 IND-05)"
+  author="ifog-vproto engineering"
+  version="@IFOG_PROJECT_VERSION@"
+  generationTool="ifog-vproto CMake FMI 3.0 Multi-Instance Packager"
+  generationDateAndTime="@IFOG_FMU_BUILD_TIMESTAMP@"
+  variableNamingConvention="flat">
+
+  <CoSimulation
+    modelIdentifier="ifog_core_multi"
+    canHandleVariableCommunicationStepSize="true"
+    canBeInstantiatedOnlyOncePerProcess="false"
+    hasEventMode="false"
+    providesIntermediateUpdate="false"/>
+
+  <UnitDefinitions>
+    <Unit name="s"><BaseUnit s="1"/></Unit>
+    <Unit name="m"><BaseUnit m="1"/></Unit>
+    <Unit name="rad"><BaseUnit rad="1"/></Unit>
+    <Unit name="rad/s"><BaseUnit rad="1" s="-1"/></Unit>
+    <Unit name="1"><BaseUnit/></Unit>
+    <Unit name="A/V"><BaseUnit kg="-1" m="-2" s="3" A="2"/></Unit>
+    <Unit name="S"><BaseUnit kg="-1" m="-2" s="3" A="2"/></Unit>
+    <Unit name="F"><BaseUnit kg="-1" m="-2" s="4" A="2"/></Unit>
+    <Unit name="dB"><BaseUnit/></Unit>
+    <Unit name="ppm/K"><BaseUnit K="-1" factor="1e-6"/></Unit>
+  </UnitDefinitions>
+
+  <LogCategories>
+    <Category name="logEvents" description="Log FMI 3.0 lifecycle events"/>
+    <Category name="logStatusError" description="Log FMI 3.0 errors"/>
+  </LogCategories>
+
+  <DefaultExperiment startTime="0.0" stopTime="1.0" stepSize="1.0e-3"/>
+
+  <ModelVariables>
+    <Float64 name="time" valueReference="0" causality="independent" variability="continuous" unit="s"/>
+    <Float64 name="omega_in" valueReference="1" causality="input" variability="continuous" unit="rad/s" start="0.0"/>
+    <Float64 name="shupe_phase_in" valueReference="2" causality="input" variability="continuous" unit="rad" start="0.0"/>
+    <Float64 name="omega_out" valueReference="3" causality="output" variability="continuous" initial="calculated" unit="rad/s"/>
+    <Float64 name="e_vpi_res" valueReference="4" causality="output" variability="continuous" initial="calculated" unit="rad"/>
+    <UInt32 name="bit_status" valueReference="5" causality="output" variability="discrete" initial="calculated"/>
+    <Float64 name="eps_vpi" valueReference="6" causality="parameter" variability="tunable" unit="1" start="0.02"/>
+    <Float64 name="k_xtalk" valueReference="7" causality="parameter" variability="tunable" unit="A/V" start="1.0e-8"/>
+    <Boolean name="enable_dither" valueReference="8" causality="parameter" variability="tunable" start="true"/>
+    <Int32 name="dsp_mode" valueReference="9" causality="parameter" variability="fixed" start="6"/>
+    <Boolean name="en_white_noise" valueReference="10" causality="parameter" variability="fixed" start="true"/>
+    <Boolean name="en_pink_noise" valueReference="11" causality="parameter" variability="fixed" start="false"/>
+    <Boolean name="en_vpi_loop" valueReference="12" causality="parameter" variability="fixed" start="true"/>
+    <Int32 name="seed" valueReference="13" causality="parameter" variability="fixed" start="42004"/>
+    <Float64 name="omega_out_avg" valueReference="14" causality="output" variability="continuous" initial="calculated" unit="rad/s"/>
+    <Float64 name="C_xtalk_F" valueReference="15" causality="parameter" variability="tunable" unit="F" start="2.0e-12"/>
+    <Float64 name="G_xtalk_S" valueReference="16" causality="parameter" variability="tunable" unit="S" start="1.0e-8"/>
+    <Float64 name="c_pink_coeff" valueReference="17" causality="parameter" variability="tunable" unit="1" start="1.0"/>
+    <Float64 name="R_facet_dB" valueReference="18" causality="parameter" variability="tunable" unit="dB" start="-200.0"/>
+    <Float64 name="alpha_vpi_ppm_K" valueReference="19" causality="parameter" variability="tunable" unit="ppm/K" start="0.0"/>
+    <Float64 name="alpha_bobbin_ppm_K" valueReference="20" causality="parameter" variability="tunable" unit="ppm/K" start="0.0"/>
+    <Float64 name="delta_z_quad_m" valueReference="21" causality="parameter" variability="tunable" unit="m" start="0.002"/>
+  </ModelVariables>
+
+  <ModelStructure>
+    <Output valueReference="3"/>
+    <Output valueReference="4"/>
+    <Output valueReference="5"/>
+    <Output valueReference="14"/>
+    <InitialUnknown valueReference="3"/>
+    <InitialUnknown valueReference="4"/>
+    <InitialUnknown valueReference="5"/>
+    <InitialUnknown valueReference="14"/>
+  </ModelStructure>
+</fmiModelDescription>

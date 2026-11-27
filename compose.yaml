@@ -9,7 +9,7 @@ services:
     build:
       context: .
       dockerfile: Containerfile
-    image: ifog-vproto:4.0.1
+    image: ifog-vproto:4.1.0
     working_dir: /workspace/ifog-vproto
     environment:
       MPLBACKEND: Agg

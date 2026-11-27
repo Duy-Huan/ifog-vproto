@@ -189,6 +189,59 @@ def _full_mock_summary() -> dict:
                 "passed": True,
             },
         },
+        "ind_scenarios": {
+            "IND-01": {
+                "nasa_cas_level": 4,
+                "max_error_before_pct": 101.9,
+                "max_error_after_pct": 4.51,
+                "max_ratio_E_over_u_val_after": 0.723,
+                "tier2_closed_loop_err_pct": 0.0031,
+                "pass": True,
+            },
+            "IND-02": {
+                "rtl_file": "rtl/ifog_dsp_6state.sv",
+                "modes": {
+                    "2state": {"variants": {"q16_32": {"quant_err_rms_deg_h": 0.87}, "q8_24_trunc": {"quant_err_rms_deg_h": 109.4}}},
+                    "4state": {"variants": {"q16_32": {"quant_err_rms_deg_h": 0.46}, "q8_24_trunc": {"quant_err_rms_deg_h": 14.0}}},
+                    "6state": {"variants": {"q16_32": {"quant_err_rms_deg_h": 0.57}, "q8_24_trunc": {"quant_err_rms_deg_h": 213.4}}},
+                },
+                "pass": True,
+            },
+            "IND-03": {
+                "n_fem_nodes": 160,
+                "max_spatial_dT_K": 3.0,
+                "max_stress_MPa": 4.49,
+                "peak_3d_quad_deg_h": 0.1974,
+                "peak_3d_oct_deg_h": 0.0329,
+                "octupole_suppression_ratio": 6.0,
+                "pass": True,
+            },
+            "IND-04": {
+                "input_g_rms": 4.88,
+                "coil_hard_mounted_g_rms": 14.37,
+                "coil_isolated_g_rms": 2.98,
+                "g_rms_attenuation_ratio": 4.82,
+                "vre_bias_hard_deg_h": 8.04,
+                "vre_bias_isolated_deg_h": 2.59,
+                "vre_reduction_ratio": 3.11,
+                "pass": True,
+            },
+            "IND-05": {
+                "fmu_path": "build/ifog_core_multi.fmu",
+                "concurrent_axes": {
+                    "axis_x_6state": {"err_pct": 0.014},
+                    "axis_y_4state": {"err_pct": 0.041},
+                    "axis_z_2state": {"err_pct": 0.149},
+                },
+                "pass": True,
+            },
+            "IND-06": {
+                "n_pvt_corners": 12,
+                "worst_case_pvt_arw_deg_per_rt_h": 0.00049,
+                "eol_50krad_arw_deg_per_rt_h": 0.00052,
+                "pass": True,
+            },
+        },
     }
 
 
@@ -242,7 +295,7 @@ def test_architecture_explorer_rendering_live_banners_and_cli(tmp_path: Path) ->
 
 def test_report_narratives_all_21_figures_and_fallbacks() -> None:
     """Cover every single one of the 23 figure stems, sim_summary fallback, unknown stem, and inline formatter."""
-    assert len(FIGURE_GUIDES) == 23
+    assert len(FIGURE_GUIDES) == 29
     full_sum = _full_mock_summary()
 
     for stem in FIGURE_GUIDES:

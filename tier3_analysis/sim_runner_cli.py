@@ -42,6 +42,17 @@ from tier3_analysis.scenarios_engineering import (
     run_eng_vre_faraday,
 )
 from tier3_analysis.fmi_master_runner import DEFAULT_FMU, run_fmi_gate_suite
+from tier3_analysis.scenarios_industrial import (
+    DEFAULT_LAB_DIR,
+    DEFAULT_MULTI_FMU_PATH,
+    run_all_industrial_scenarios,
+    run_ind01_lab_validation,
+    run_ind02_fixed_point_rtl,
+    run_ind03_fem_3d,
+    run_ind04_random_vib_psd,
+    run_ind05_fmu_multi_instance,
+    run_ind06_pvt_aging_corners,
+)
 from tier3_analysis.scenarios_spec007 import (
     run_all_spec007_scenarios,
     run_spec007_calibration,
@@ -95,6 +106,13 @@ ALL_MODES = (
     "spec007_physics",
     "spec007_calibration",
     "spec007_all",
+    "ind_lab_validation",
+    "ind_fixed_point_rtl",
+    "ind_fem_3d",
+    "ind_random_vib_psd",
+    "ind_fmu_multi_instance",
+    "ind_pvt_aging_corners",
+    "ind_all",
     "all_scenarios",
 )
 
@@ -493,6 +511,8 @@ def run_simulation_workflow(
     dsp_mode: str | None = None,
     workers: int | None = None,
     auto_build: bool = False,
+    lab_dir: Path | str | None = None,
+    multi_fmu_path: Path | str = DEFAULT_MULTI_FMU_PATH,
 ) -> dict[str, Any]:
     """Execute the requested IFOG simulation mode and auto-export .md and .html reports into report/."""
     if mode not in ALL_MODES:
@@ -592,6 +612,22 @@ def run_simulation_workflow(
         run_spec007_calibration(resolved_bin, cfg, run_dir / "cal01_spec007_calibration")
     elif mode == "spec007_all":
         run_all_spec007_scenarios(resolved_bin, cfg, run_dir)
+    elif mode == "ind_lab_validation":
+        run_ind01_lab_validation(resolved_bin, cfg, run_dir, lab_dir=lab_dir)
+    elif mode == "ind_fixed_point_rtl":
+        run_ind02_fixed_point_rtl(resolved_bin, cfg, run_dir)
+    elif mode == "ind_fem_3d":
+        run_ind03_fem_3d(resolved_bin, cfg, run_dir)
+    elif mode == "ind_random_vib_psd":
+        run_ind04_random_vib_psd(resolved_bin, cfg, run_dir)
+    elif mode == "ind_fmu_multi_instance":
+        run_ind05_fmu_multi_instance(run_dir, fmu_path=multi_fmu_path)
+    elif mode == "ind_pvt_aging_corners":
+        run_ind06_pvt_aging_corners(resolved_bin, cfg, run_dir)
+    elif mode == "ind_all":
+        run_all_industrial_scenarios(
+            resolved_bin, cfg, run_dir, lab_dir=lab_dir, multi_fmu_path=multi_fmu_path
+        )
     elif mode == "full":
         run_gate1_stage(resolved_bin, cfg, run_dir)
         run_gate2_stage(resolved_bin, cfg_p, Path(sweep_path), run_dir, workers=workers)
@@ -637,6 +673,9 @@ def run_simulation_workflow(
         run_all_engineering_scenarios(resolved_bin, cfg, run_dir, mc_runs=mc_runs, workers=workers)
         run_all_dynamic_probe_scenarios(resolved_bin, cfg, run_dir, workers=workers)
         run_all_spec007_scenarios(resolved_bin, cfg, run_dir)
+        run_all_industrial_scenarios(
+            resolved_bin, cfg, run_dir, lab_dir=lab_dir, multi_fmu_path=multi_fmu_path
+        )
 
     summary = export_run_report(
         run_dir,
@@ -651,18 +690,20 @@ def run_simulation_workflow(
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for unified IFOG simulation & automatic report generation."""
     parser = argparse.ArgumentParser(
-        description="IFOG-SIM-SPEC-006 Unified Simulation Runner (auto-generates report/<run_id>/{report.md, report.html})"
+        description="IFOG-VPROTO v4.1.0 Unified Simulation Runner (auto-generates report/<run_id>/{report.md, report.html})"
     )
     parser.add_argument(
         "--mode",
         default="single",
         choices=list(ALL_MODES),
-        help="Simulation workflow mode (4-Gate, 6-State DSP, FMI 3.0 FMU Gate 6, TD-01..06, ENG-01..05, DYN-01..04, or all_scenarios)",
+        help="Simulation workflow mode (4-Gate, 2/4/6-State DSP, FMI 3.0 FMU, TD-01..06, ENG-01..05, DYN-01..04, PHY-01/CAL-01, IND-01..06, or all_scenarios)",
     )
     parser.add_argument("--cfg", default=str(DEFAULT_CFG), help="Baseline config JSON")
     parser.add_argument("--sweep", default=str(DEFAULT_SWEEP), help="Sweep JSON or directory (for gate2/sweep/full)")
     parser.add_argument("--bin", default=str(DEFAULT_BIN), help="Path to compiled Tier 2 binary (build/ifog_sim)")
     parser.add_argument("--fmu", default=str(DEFAULT_FMU), help="Path to FMI 3.0 Co-Simulation FMU (build/ifog_core.fmu)")
+    parser.add_argument("--multi-fmu", default=str(DEFAULT_MULTI_FMU_PATH), help="Path to Multi-Instance Source-Code FMU (build/ifog_core_multi.fmu)")
+    parser.add_argument("--lab-dir", default=str(DEFAULT_LAB_DIR), help="Directory of 3 physical lab CSVs for IND-01")
     parser.add_argument("--data-dir", default=str(REPO_ROOT / "data"), help="Root directory for raw simulation data")
     parser.add_argument("--report-dir", default=str(REPO_ROOT / "report"), help="Root directory for auto-generated .md/.html reports")
     parser.add_argument("--run-id", default=None, help="Explicit run identifier (defaults to <mode>_YYYYMMDD_HHMMSS)")
@@ -699,6 +740,8 @@ def main(argv: list[str] | None = None) -> int:
         dsp_mode=args.dsp_mode,
         workers=args.workers,
         auto_build=args.auto_build,
+        lab_dir=args.lab_dir,
+        multi_fmu_path=args.multi_fmu,
     )
     rdir = Path(summary["report_dir"])
     n_figs = sum(1 for a in summary.get("generated_artifacts", []) if str(a).endswith(".png"))

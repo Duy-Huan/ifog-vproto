@@ -1,0 +1,17 @@
+{
+  "scenario": "IND-04_random_vib_psd",
+  "standard": "MIL-STD-810H Cat.24 / DO-160G Curve C (20-2000 Hz)",
+  "input_g_rms": 4.88365297705375,
+  "bobbin_fn_Hz": 480.0,
+  "bobbin_Q": 12.0,
+  "isolator_fn_Hz": 65.0,
+  "isolator_zeta": 0.22,
+  "miles_eq_bobbin_g_rms": 13.871645541621042,
+  "coil_hard_mounted_g_rms": 14.367819797038981,
+  "coil_isolated_g_rms": 2.9826789924461137,
+  "g_rms_attenuation_ratio": 4.81708552392889,
+  "vre_bias_hard_deg_h": 11.113311716280656,
+  "vre_bias_isolated_deg_h": 0.45915600023159137,
+  "vre_reduction_ratio": 24.203781962285735,
+  "pass": true
+}

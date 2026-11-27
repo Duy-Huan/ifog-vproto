@@ -261,8 +261,10 @@ def run_dyn_step_response(
     )
 
     specs = [
+        ("step10_2state", "2state", 0.25, 10.0),
         ("step10_4state", "4state", 0.25, 10.0),
         ("step10_6state", "6state", 0.25, 10.0),
+        ("step100_2state", "2state", 0.25, 100.0),
         ("step100_4state", "4state", 0.25, 100.0),
         ("step100_6state", "6state", 0.25, 100.0),
         ("step10_6state_k015", "6state", 0.15, 10.0),
@@ -286,7 +288,7 @@ def run_dyn_step_response(
 
     result = {
         "scenario_id": "DYN-01",
-        "title": "Closed-Loop Step Response (10 & 100 deg/s, 4-State vs 6-State & K_tot_1 Sweep)",
+        "title": "Closed-Loop Step Response (10 & 100 deg/s, 2/4/6-State DSP & K_tot_1 Sweep)",
         "K_opt_rad_per_rad_s": k_opt,
         "cases": cases,
         "max_steady_state_err_pct": max_ss_err,
@@ -332,12 +334,13 @@ def run_dyn_freq_response(
     freqs_hz = [
         20.0, 50.0, 100.0, 200.0, 400.0, 700.0, 1000.0,
         1500.0, 2000.0, 2500.0, 3200.0, 4200.0, 5500.0, 7500.0, 10000.0,
+        14000.0, 20000.0,
     ]
     amp_deg_s = 2.0
     amp_rad_s = amp_deg_s * DEG_S_TO_RAD_S
 
     jobs: list[tuple[str, float]] = [
-        (mode, f_hz) for mode in ("4state", "6state") for f_hz in freqs_hz
+        (mode, f_hz) for mode in ("2state", "4state", "6state") for f_hz in freqs_hz
     ]
 
     def _run_pt(item: tuple[str, float]) -> dict[str, Any]:
@@ -388,13 +391,14 @@ def run_dyn_freq_response(
 
     f_arr = np.array(freqs_hz, dtype=np.float64)
     modes_out: dict[str, Any] = {}
-    for mode, n_states in (("4state", 4), ("6state", 6)):
+    for mode, n_states in (("2state", 2), ("4state", 4), ("6state", 6)):
         pts = [p for p in raw_pts if p["mode"] == mode]
         mags_db = np.array([p["mag_dB"] for p in pts], dtype=np.float64)
         ph_unwrap_deg = np.degrees(np.unwrap([p["phase_rad_raw"] for p in pts]))
         gd_us = -(np.gradient(ph_unwrap_deg, f_arr) / 360.0) * 1.0e6
 
-        frame_s = n_states * tau_s
+        # 2-State sliding-window demodulation updates every 1*tau; 4-State/6-State update once per N*tau frame
+        frame_s = tau_s if mode == "2state" else n_states * tau_s
         th_mag_db, th_phase_deg, th_gd_us = compute_closed_loop_frf_theory(f_arr, k_tot_1, frame_s)
         bw_theory_hz = compute_theoretical_bw_3db_hz(k_tot_1, frame_s, tau_s=tau_s)
 
@@ -428,24 +432,28 @@ def run_dyn_freq_response(
             "theory_group_delay_us": [float(x) for x in th_gd_us],
         }
 
-    m4, m6 = modes_out["4state"], modes_out["6state"]
+    m2, m4, m6 = modes_out["2state"], modes_out["4state"], modes_out["6state"]
     bw_ratio = m4["bw_3db_measured_Hz"] / max(m6["bw_3db_measured_Hz"], 1.0)
     passed = bool(
-        abs(m4["dc_gain_20Hz_dB"]) < 0.1
+        abs(m2["dc_gain_20Hz_dB"]) < 0.1
+        and abs(m4["dc_gain_20Hz_dB"]) < 0.1
         and abs(m6["dc_gain_20Hz_dB"]) < 0.1
         and m4["bw_mismatch_pct"] < 25.0
         and m6["bw_mismatch_pct"] < 25.0
+        and m2["bw_3db_measured_Hz"] > 2.0 * m4["bw_3db_measured_Hz"]
         and m4["bw_3db_measured_Hz"] > m6["bw_3db_measured_Hz"]
         and m6["phase_deg"][-1] < m6["phase_at_1kHz_deg"] < m6["phase_at_100Hz_deg"] < 0.0
     )
     result = {
         "scenario_id": "DYN-02",
-        "title": "Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay",
+        "title": "Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay (2/4/6-State)",
         "sine_amp_deg_per_s": amp_deg_s,
         "K_tot_1": k_tot_1,
+        "two_state": m2,
         "four_state": m4,
         "six_state": m6,
         "bw_ratio_4state_to_6state": bw_ratio,
+        "bw_ratio_2state_to_6state": m2["bw_3db_measured_Hz"] / max(m6["bw_3db_measured_Hz"], 1.0),
         "pass": passed,
     }
     (out_dir / "dyn02_freq_response.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
@@ -522,6 +530,10 @@ def run_dyn_output_psd(
             },
         },
     )
+    cfg_full_2s = deep_merge(
+        cfg_full_4s,
+        {"dsp": {"mode": "2state", "alpha_rad": math.pi / 4.0, "en_vpi_loop": False}},
+    )
     cfg_full_6s = deep_merge(
         cfg_full_4s,
         {"dsp": {"mode": "6state", "alpha_rad": math.pi / 3.0}},
@@ -529,6 +541,7 @@ def run_dyn_output_psd(
 
     jobs = [
         ("white_linear", cfg_white),
+        ("full_2state", cfg_full_2s),
         ("full_4state", cfg_full_4s),
         ("full_6state", cfg_full_6s),
     ]
@@ -580,7 +593,7 @@ def run_dyn_output_psd(
             "cum_rms_deg_per_h": cum_bin,
         }
 
-    max_w = workers if workers is not None else min(3, max(1, os.cpu_count() or 1))
+    max_w = workers if workers is not None else min(4, max(1, os.cpu_count() or 1))
     with concurrent.futures.ThreadPoolExecutor(max_workers=max_w) as pool:
         regimes = dict(pool.map(_run_psd, jobs))
 
@@ -599,7 +612,7 @@ def run_dyn_output_psd(
 
     result = {
         "scenario_id": "DYN-03",
-        "title": "Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise",
+        "title": "Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise (2/4/6-State)",
         "duration_s": float(duration_s),
         "analytical_white_ref": arw_ref,
         "regimes": regimes,

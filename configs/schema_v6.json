@@ -180,7 +180,11 @@
         "en_vpi_loop": { "type": "boolean" },
         "en_prbs_dither": { "type": "boolean" },
         "prbs_amplitude_rad": { "type": "number", "minimum": 0.0, "maximum": 0.5 },
-        "max_delta_phi_step_rad": { "type": "number", "exclusiveMinimum": 0.0 }
+        "max_delta_phi_step_rad": { "type": "number", "exclusiveMinimum": 0.0 },
+        "en_fixed_point": { "type": "boolean" },
+        "fxp_acc_bits": { "type": "integer", "minimum": 16, "maximum": 62 },
+        "fxp_frac_bits": { "type": "integer", "minimum": 8, "maximum": 54 },
+        "fxp_truncate": { "type": "boolean" }
       }
     },
     "noise": {

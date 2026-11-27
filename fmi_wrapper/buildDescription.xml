@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fmiBuildDescription fmiVersion="3.0">
+  <BuildConfiguration modelIdentifier="ifog_core_multi" description="Portable zero-dependency C++17 source build for Linux, Windows (x86_64-windows), macOS, and aarch64 RT targets">
+    <SourceFileSet language="C++17">
+      <SourceFile name="fmi3_multi_bridge.cpp"/>
+      <IncludeDirectory name="."/>
+    </SourceFileSet>
+  </BuildConfiguration>
+</fmiBuildDescription>
