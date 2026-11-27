@@ -286,6 +286,11 @@ struct IfogConfig {
     bool en_prbs_dither = true;
     double prbs_amplitude_rad = 0.02;
     double max_delta_phi_step_rad = 20.0;
+    // Bit-true FPGA fixed-point accumulator mode (v4.1.0 IND-02, defaults to double64 when false)
+    bool en_fixed_point = false;
+    int fxp_acc_bits = 48;
+    int fxp_frac_bits = 32;
+    bool fxp_truncate = false;
 
     // Noise (EQ-15 & PinkNoise_TDF)
     bool en_white_noise = true;
@@ -362,6 +367,7 @@ struct SimSummary {
     uint64_t flyback_count = 0;
     uint64_t adc_clip_count = 0;
     uint64_t anti_windup_count = 0;
+    uint64_t fxp_overflow_count = 0;
     double final_omega_out_rad_per_s = 0.0;
     double final_delta_phi_step_rad = 0.0;
     double final_g_dac = 1.0;

@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [4.1.0] - 2026-11-27
+
+### Added
+- **Group E Industrial TRL 7–8 / DO-254 Qualification Suite (`IND-01`..`IND-06`, `tier3_analysis/scenarios_industrial.py`, `viz/plot_industrial.py`):**
+  - **`IND-01` Physical Lab Hardware Validation (`tier3_analysis/lab_validation.py`, `configs/lab_datasets/reference_ifog_lab/`):** Standardized 3-rig CSV ingestor (`static_avar_10h.csv`, `rate_table_deadband.csv` `[-2, +2] deg/s`, `thermal_chamber_ramp.csv` `-40..+85 degC`) with NASA-STD-7009A CAS-4 & ASME V&V 20 validation (`101.9% -> 4.51%`, max $|E|/u_{\text{val}} = 0.723 \le 1.0$) and CLI `--lab-dir`.
+  - **`IND-02` Bit-True Fixed-Point FPGA DSP & Synthesizable SystemVerilog RTL (`rtl/ifog_dsp_6state.sv`):** Exact signed `Q(W-F).F` saturating/truncating quantizer (`quantize_fixed_signed` in `ifog_math.hpp`, `DigitalDSP_SC::quantize_reg`, `fxp_overflow_count` in `sim_summary.json`, `schema_v6.json`) verified across **all three DSP modes (2-State, 4-State, 6-State)**: `Q16.32` (48-bit) vs `Q8.24` (32-bit) vs `Float64`, achieving **0-LSB** RTL equivalence and `0` overflows (`31x–376x` precision improvement over 32-bit).
+  - **`IND-03` 3D Cylindrical ANSYS/COMSOL FEM $\to$ `shupe_lut.bin` v2 (`tier1_offline/shupe_thermal.py`):** Added `load_fem_3d_csv`, `generate_asymmetric_3d_fem_csv`, `solve_tier1_shupe_3d_fem` (smooth linear RBF 3D projection of $T(r,\theta,z,t)$ & $\sigma_{\text{eff}}(r,\theta,z,t)$ onto discrete wound fiber turns), and `--fem-3d-csv` CLI option; fixed 3D axial traverse parity in `build_winding_map`, proving **`6.00x`** Octupole vs Quadrupole 3D drift suppression in real Tier 2 C++.
+  - **`IND-04` MIL-STD-810H / DO-160G Broadband Random Vibration PSD & 2-DOF Resonance:** Piecewise log-log PSD (`20–2000 Hz`, `4.88 g_rms`) through 2-DOF elastomer isolator (`65 Hz`) + bobbin (`480 Hz, Q=12`) transmissibility + Miles' Equation check, proving **`4.82x`** coil $g_{\text{rms}}$ attenuation (`14.37 -> 2.98 g_rms`) and **`3.11x`** Tier 2 C++ VRE bias reduction.
+  - **`IND-05` Multi-Instance Pure-C++17 Source-Code FMI 3.0.2 FMU (`build/ifog_core_multi.fmu`):** Created `fmi_wrapper/src/fmi3_multi_bridge.cpp`, `modelDescription_multi.xml.in` (`canBeInstantiatedOnlyOncePerProcess="false"`, 22 SI VRs, 75 C-API exports), `buildDescription.xml`, `package_fmu_multi.cmake`, and `ifog_fmi_multi_tests`; eliminates SystemC singleton lock, bundles portable C++17 `sources/` for Windows/Simulink & RT-Linux, passes FMPy validation with **0 XSD errors**, and executes **3 concurrent axes (6-State / 4-State / 2-State) in ONE OS process** (`< 0.15%` error, 0 cross-talk).
+  - **`IND-06` 12-Corner Worst-Case PVT Matrix & 10-Yr SLD/MIOC Aging + Space 50 krad(Si) TID:** Full `-40/+25/+85 degC` $\times$ $\pm 5\%$ rail $\times$ $\pm 3\sigma$ process sweep + exponential SLD droop & power-law PM fiber RIA(TID) verified via real Tier 1 + Tier 2 C++ mission milestones.
+- **Complete 2-State / 4-State / 6-State DSP Coverage:** Extended `DSP-01` (`dsp6_compare`), `DYN-01` (step), `DYN-02` (Bode FRF extended to `20 kHz`), `DYN-03` (broadband PSD), `IND-02` (FPGA fixed-point/RTL), and `IND-05` (3-axis Multi-FMU) + 300-DPI plotters (`viz/plot_scenarios.py`, `viz/plot_industrial.py`) to compare all 3 DSP architectures side by side.
+- **11th Project Skill (`skills/ifog-industrial-trl7-do254/SKILL.md`):** Documented TRL 7–8 / DO-254 workflows and updated `skills/README.md`.
+
+### Changed
+- Expanded CLI runner to **38 modes** (`ind_lab_validation`..`ind_all` + included in `all_scenarios`), verification suite to **29 / 29 PASS** gates & scenarios, `viz/report_narratives.py` to **29 figure guides**, C++ coverage to **100.0% (`2,733/2,733` lines, `299/299` functions)**, Python coverage to **100.00% (`5,632/5,632` statements)**, and GitHub Release bundle to **23 verified assets** (adding `ifog_core_multi.fmu`).
+- Synchronized `pyproject.toml`, `Containerfile`, `Dockerfile`, `compose.yaml`, `AGENT.md`, `README.md`, `docs/*.{md,tex,pdf}`, `docs/IFOG_VPROTO_PRESENTATION.{tex,pdf}`, `docs/IFOG_ARCHITECTURE_EXPLORER.html`, and `examples/full_all_scenarios/` to `v4.1.0` per Rule 16.
+
 ## [4.0.1] - 2026-11-26
 
 ### Added

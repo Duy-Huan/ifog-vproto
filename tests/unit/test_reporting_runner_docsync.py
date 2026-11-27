@@ -557,13 +557,27 @@ def test_container_files_portable_scripts_and_curated_example() -> None:
         "figures/dyn04_sine_electro_optic.png",
         "figures/fig_spec007_physics_winding_mioc.png",
         "figures/fig_spec007_calibration_validation.png",
+        "ind01_lab_validation.json",
+        "ind02_fixed_point_rtl.json",
+        "ind03_fem_3d.json",
+        "ind04_random_vib_psd.json",
+        "ind05_fmu_multi_instance.json",
+        "ind06_pvt_aging_corners.json",
+        "ind_all_summary.json",
+        "lab_validation_report.json",
+        "figures/fig_ind01_lab_validation.png",
+        "figures/fig_ind02_fixed_point_rtl.png",
+        "figures/fig_ind03_fem_3d.png",
+        "figures/fig_ind04_random_vib_psd.png",
+        "figures/fig_ind05_fmu_multi_instance.png",
+        "figures/fig_ind06_pvt_aging_corners.png",
     ):
         fp = ex_all / fname
         assert fp.exists() and fp.stat().st_size > 100, f"Missing all-scenarios example deliverable: {fname}"
 
     ms_all = json.loads((ex_all / "metrics_summary.json").read_text(encoding="utf-8"))
     assert ms_all["report_meta"]["overall_status"] == "PASS"
-    assert len(ms_all["gate_statuses"]) == 23
+    assert len(ms_all["gate_statuses"]) == 29
     assert all(g["status"] == "PASS" for g in ms_all["gate_statuses"])
     md_all = (ex_all / "report.md").read_text(encoding="utf-8")
     assert "Tổng quan Mô hình Mô phỏng" in md_all

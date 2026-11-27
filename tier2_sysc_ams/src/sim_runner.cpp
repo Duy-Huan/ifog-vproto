@@ -148,6 +148,7 @@ SimSummary run_ifog_simulation(const IfogConfig& cfg, const std::string& out_dir
     summary.flyback_count = dsp.flyback_count();
     summary.adc_clip_count = afe.clip_count();
     summary.anti_windup_count = dsp.anti_windup_count();
+    summary.fxp_overflow_count = dsp.fxp_overflow_count();
     summary.final_omega_out_rad_per_s = dsp.final_omega_out();
     summary.final_delta_phi_step_rad = dsp.final_delta_phi_step();
     summary.final_g_dac = dsp.final_g_dac();

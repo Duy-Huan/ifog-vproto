@@ -47,6 +47,7 @@ public:
     uint64_t total_records_written() const { return records_written_; }
     uint64_t flyback_count() const { return flyback_count_; }
     uint64_t anti_windup_count() const { return anti_windup_count_; }
+    uint64_t fxp_overflow_count() const { return fxp_overflow_count_; }
     double final_omega_out() const { return omega_out_; }
     double step_mean_omega_out() const;
     double final_delta_phi_step() const { return delta_phi_step_; }
@@ -135,6 +136,8 @@ private:
     uint64_t records_written_;
     uint64_t flyback_count_;
     uint64_t anti_windup_count_;
+    uint64_t fxp_overflow_count_;
+    double quantize_reg(double val);
     double second_half_sum_;
     uint64_t second_half_count_;
     double e_asym_sq_sum_;

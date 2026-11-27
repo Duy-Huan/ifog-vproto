@@ -86,6 +86,10 @@ void validate_ifog_config(const IfogConfig& cfg) {
         cfg.spec007.R_facet_dB > 0.0 || cfg.spec007.C_xtalk_F < 0.0 || cfg.spec007.G_xtalk_S < 0.0) {
         throw std::invalid_argument("SPEC-007 physical bounds violated (Rule 11 fail-closed)");
     }
+    if (cfg.fxp_acc_bits < 16 || cfg.fxp_acc_bits > 62 ||
+        cfg.fxp_frac_bits < 8 || cfg.fxp_frac_bits >= cfg.fxp_acc_bits) {
+        throw std::invalid_argument("Invalid FPGA fixed-point format Q(W-F).F (Rule 11 fail-closed)");
+    }
 }
 
 IfogConfig load_ifog_config(
@@ -200,6 +204,10 @@ IfogConfig load_ifog_config(
     cfg.en_prbs_dither = dsp.at("en_prbs_dither").get<bool>();
     cfg.prbs_amplitude_rad = dsp.at("prbs_amplitude_rad").get<double>();
     cfg.max_delta_phi_step_rad = dsp.value("max_delta_phi_step_rad", 20.0);
+    cfg.en_fixed_point = dsp.value("en_fixed_point", false);
+    cfg.fxp_acc_bits = dsp.value("fxp_acc_bits", 48);
+    cfg.fxp_frac_bits = dsp.value("fxp_frac_bits", 32);
+    cfg.fxp_truncate = dsp.value("fxp_truncate", false);
 
     // Noise
     const auto& ns = jcfg.at("noise");
@@ -378,6 +386,7 @@ void write_sim_summary_json(const std::string& out_path, const SimSummary& s) {
         {"flyback_count", s.flyback_count},
         {"adc_clip_count", s.adc_clip_count},
         {"anti_windup_count", s.anti_windup_count},
+        {"fxp_overflow_count", s.fxp_overflow_count},
         {"final_omega_out_rad_per_s", s.final_omega_out_rad_per_s},
         {"final_delta_phi_step_rad", s.final_delta_phi_step_rad},
         {"final_g_dac", s.final_g_dac},

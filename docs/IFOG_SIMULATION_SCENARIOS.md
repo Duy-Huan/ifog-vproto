@@ -5,8 +5,8 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-SCEN-001` |
-| **Current Version** | `v4.0.1` |
-| **Status** | `RELEASED (Production Gate Verified)` |
+| **Current Version** | `v4.1.0` |
+| **Status** | `RELEASED (TRL 7-8 / DO-254 Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md) & [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf) (v7.0); [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) |
@@ -25,28 +25,30 @@
 | `v3.0.1` | `2026-11-26` | Standardized Explanatory Reports (`.md`/`.html`) & Code-Audited HTML Model Explorer | `viz/architecture_explorer.py`, `viz/report_narratives.py`, `viz/export_report.py`, `docs/IFOG_ARCHITECTURE_EXPLORER.html`, `examples/full_4gate_baseline/`, `examples/full_all_scenarios/` | Standardized all auto-generated Markdown (`report.md`) and KaTeX/Plotly HTML5 (`report.html`) outputs to include an interactive code-audited 3-Tier + FMI 3.0 model diagram (`architecture_model.html`) plus 3-part theoretical foundation, plain-language reading guide (for non-specialists), and live measured proof beneath all 21 diagnostic plots; re-ran and synced both curated examples (`examples/full_4gate_baseline/` & `examples/full_all_scenarios/`). |
 | `v4.0.0` | `2026-11-26` | `IFOG-SIM-SPEC-007` Group D — Predictive Physics (`PHY-01`) & Inverse Calibration (`CAL-01`, `23/23` PASS) | `spec/IFOG-SIM-SPEC-007.*`, `configs/schema_v6.json`, `tier1_offline/shupe_thermal.py`, `tier2_sysc_ams/`, `fmi_wrapper/`, `tier3_analysis/inverse_calibration.py`, `tier3_analysis/scenarios_spec007.py`, `viz/plot_spec007_calibration.py`, `viz/export_report.py`, `examples/full_all_scenarios/` | Added **Group D (`PHY-01`, `CAL-01`, `--mode spec007_all`, `EQ-45`–`EQ-53`)**: verified discrete Quadrupole vs Octupole winding (`-47.69%` Shupe reduction), thermo-mechanical stress drift, 6-channel `shupe_lut.bin` v2, MIOC electro-acoustic ringing + capacitive crosstalk spike (`0.583 V`), live FMI 3.0 `VR 15..21` tunability, and 3-stage bounded `InverseCalibrator` cutting uncalibrated `40–103%` error down to **`0.04–0.91%` (`< 5%`)** with all 10 hidden parameters recovered within `<= 2.18%`; expanded suite to **23 gates/scenarios**, **31 CLI modes**, **23 300-DPI PNGs**, and complete tier-by-tier formulas in `report.{md,html}`. |
 | `v4.0.1` | `2026-11-26` | 32-Slide Academic Presentation Deck, Code-Only CI/CD Diff Filter & Release Bundle | `docs/IFOG_VPROTO_PRESENTATION.{tex,pdf}`, `tier3_analysis/ci_diff_filter.py`, `scripts/ci_diff_filter.py`, `.github/workflows/{ci,release}.yml`, `scripts/build_docs.sh` | Added 32-slide academic LaTeX presentation deck (`docs/IFOG_VPROTO_PRESENTATION.{tex,pdf}`) documenting all 3 tiers, inter-tier parameter handoffs & proofs, 2/4/6-State DSP, and 11 enlarged experimental scenario slides (`TD-01`, `DYN-01..04`, Gates 2/4/5/6, `PHY-01`, `CAL-01`), packaged directly into the 22-asset GitHub Release bundle alongside the code-only CI/CD diff filter. |
+| `v4.1.0` | `2026-11-27` | TRL 7–8 / DO-254 Industrial Qualification Suite (`IND-01`..`IND-06`), Full 2/4/6-State FPGA DSP & Multi-Instance FMI 3.0.2 FMU (`29/29` PASS) | `rtl/ifog_dsp_6state.sv`, `fmi_wrapper/{src/fmi3_multi_bridge.cpp,modelDescription_multi.xml.in,buildDescription.xml}`, `tier1_offline/shupe_thermal.py`, `tier2_sysc_ams/`, `tier3_analysis/{lab_validation,scenarios_industrial,scenarios_time_domain,scenarios_dynamic_probe,sim_runner_cli}.py`, `configs/lab_datasets/reference_ifog_lab/`, `viz/{plot_industrial,plot_scenarios,report_narratives,export_report,architecture_explorer}.py`, `docs/`, `examples/full_all_scenarios/` | Closed all 6 Industrial TRL 7–8 / DO-254 gaps via **Group E (`IND-01`..`IND-06`, `--mode ind_all`)**: (1) `IND-01` Physical Lab CSV Ingestion & NASA-STD-7009A CAS-4 / ASME V&V 20 validation (`101.9% -> 4.51%`, max $|E|/u_{\text{val}} = 0.723$); (2) `IND-02` Bit-True FPGA Fixed-Point DSP (`Q16.32` 48-bit / `Q8.24` 32-bit) + synthesizable SV-2012 RTL (`rtl/ifog_dsp_6state.sv`) with 0-LSB match across **2-State, 4-State, and 6-State**; (3) `IND-03` 3D ANSYS/COMSOL FEM cylindrical importer $\to$ `shupe_lut.bin` v2 (`6.00x` Octupole suppression); (4) `IND-04` MIL-STD-810H / DO-160G broadband random vibration PSD (`20–2000 Hz`) through 2-DOF isolator + bobbin resonance (`4.82x` g_rms & `3.11x` VRE attenuation); (5) `IND-05` Multi-Instance pure-C++17 Source-Code + Binary FMI 3.0.2 FMU (`build/ifog_core_multi.fmu`, `canBeInstantiatedOnlyOncePerProcess="false"`, 3 concurrent axes 6s/4s/2s in 1 process, `< 0.15%` error); (6) `IND-06` 12-corner PVT & 10-yr/50 krad EOL qualification. Expanded `DSP-01` and `DYN-01..03` to full **2-State / 4-State / 6-State** coverage; suite expanded to **29 gates/scenarios**, **38 CLI modes**, **29 300-DPI PNGs**, and **23 GitHub Release assets** at **100.0% C++ (`2,733/2,733`) & 100.00% Python (`5,632/5,632`) coverage**. |
 
 ---
 
 ## 1. Official Scenario Taxonomy & Execution Architecture
 
-Under **`IFOG-SIM-SPEC-007` (v7.0)**, `ifog-vproto` organizes its verification suite into a complete **7-Layer Official Simulation Framework (23 Gates & Scenarios)** organized cleanly by engineering domain:
+Under **`IFOG-SIM-SPEC-007` (v7.0) + `v4.1.0` TRL 7–8 Industrial Qualification**, `ifog-vproto` organizes its verification suite into a complete **8-Layer Official Simulation Framework (29 Gates & Scenarios)** organized cleanly by engineering domain:
 
 1. **Core Acceptance Gates (`Gate 1` – `Gate 4`):** Baseline linear accuracy & continuous $2\pi$ flyback (`gate1`), Deadband & Bunny Ears mitigation (`gate2`), $1/f$ Flicker PSD & $100\text{ Hz}$ $\mathbf{K}$-matrix (`gate3`), and 60 s Fast-Scale + 10 h Slow-Scale Dual-Regime Overlapping AVAR (`gate4`), combined under `--mode full`.
-2. **Gate 5 — Official 6-State Symmetric DSP Benchmark (`dsp6_compare`):** Head-to-head quantitative validation of the official 6-state symmetric modulation/demodulation law (`EQ-31`–`EQ-34`, $\alpha^* = \pi/3$) against 4-state Lefèvre modulation under identical RAM, capacitive/resistive crosstalk, and MIOC quadratic nonlinearity.
+2. **Gate 5 — Full 2-State / 4-State / 6-State Symmetric DSP Benchmark (`dsp6_compare`):** Head-to-head quantitative validation of **2-State**, **4-State Lefèvre**, and the official **6-State symmetric modulation/demodulation law** (`EQ-31`–`EQ-34`, $\alpha^* = \pi/3$) under identical RAM, capacitive/resistive crosstalk, and MIOC quadratic nonlinearity.
 3. **Gate 6 — FMI 3.0 Black-Box Co-Simulation FMU Gate (`fmi_gate`, `EQ-42`–`EQ-44`):** Standalone `build/ifog_core.fmu` XSD compliance (`fmpy.validation.validate_fmu`), bit-exact `< 1e-12 rad/s` equivalence vs `build/ifog_sim` on both 4-state & 6-state DSP modes, Slow Rate Ramp deadband sweep (`enable_dither=False` vs `True`, `step_size=1e-3`), and seamless FMU -> Tier 3 Dual-Regime 5-Region IEEE Std 952 Overlapping AVAR synthesis.
 4. **Group A — 6 Time-Domain Verification Scenarios (`TD-01` .. `TD-06`, `--mode td_all`):** Exploits Tier 2's micro-trace (`micro_waveforms.bin`, 64 B) and cycle-accurate DSP register logger (`dsp_trace.bin`, 64 B) to validate sub-$\tau$ switching transients, closed-loop step/Bode bandwidth, Loop-2 thermal $V_\pi$ shock, high-rate serrodyne dynamics + anti-windup, real-time Shupe shock + compensation, and quantization limit cycles + PRBS dither.
 5. **Group B — 5 System Engineering & Production Scenarios (`ENG-01` .. `ENG-05`, `--mode eng_all`):** Leverages the `-O3` compiled C++ SystemC-AMS virtual prototype for production hardware sizing (ENOB, aperture jitter, TIA/SLD Pareto), real concurrent 3-axis SystemC-AMS IMU crosstalk (`--imu3axis`), vibration rectification (VRE) + dynamic Faraday/Mu-metal sizing, 5-mode real-time FPGA BIT/FDIR fault injection, and parallel Monte Carlo production yield ($C_{pk}$) + $-40^\circ\text{C}..+85^\circ\text{C}$ virtual thermal calibration.
-6. **Group C — 4 Dynamic Characterization, Output PSD & Internal Electro-Optic Probe Scenarios (`DYN-01` .. `DYN-04`, `--mode dyn_all`):** Dedicated closed-loop control & electro-optic observability workflows: multi-amplitude/gain-sweep Step Response (`dyn_step_response`), full 15-point Bode Magnitude/Phase/Group Delay Frequency Response comparing 4-state & 6-state against half-frame Z-domain theory (`dyn_freq_response`), broadband Output Rate PSD/ASD & Cumulative RMS Noise vs analytical `EQ-15` ARW (`dyn_output_psd`), and Sinusoidal Angular-Rate Excitation (`50 deg/s @ 250 Hz`) probing Sagnac phase $\Delta\phi_S(t)$, feedback phase $\Delta\phi_{\text{fb}}(t)$, MIOC serrodyne voltage $V_{\text{fb,MIOC}}(t)$ & total $V_{\text{MIOC}}(t)$, Photodiode optical power $P_{\text{PD}}(t)$ / photocurrent $I_{\text{PD}}(t)$, TIA output $V_{\text{TIA}}(t)$, and sub-$\tau$ ADC blanking (`dyn_sine_electro_optic`).
+6. **Group C — 4 Dynamic Characterization, Output PSD & Internal Electro-Optic Probe Scenarios (`DYN-01` .. `DYN-04`, `--mode dyn_all`):** Dedicated closed-loop control & electro-optic observability workflows with full **2-State / 4-State / 6-State** DSP comparison: multi-amplitude/gain-sweep Step Response (`dyn_step_response`), full Bode Magnitude/Phase/Group Delay Frequency Response up to `20 kHz` comparing 2-state, 4-state & 6-state against half-frame Z-domain theory (`dyn_freq_response`), broadband Output Rate PSD/ASD & Cumulative RMS Noise across 2/4/6-state vs analytical `EQ-15` ARW (`dyn_output_psd`), and Sinusoidal Angular-Rate Excitation (`50 deg/s @ 250 Hz`) probing Sagnac phase $\Delta\phi_S(t)$, feedback phase $\Delta\phi_{\text{fb}}(t)$, MIOC serrodyne voltage $V_{\text{fb,MIOC}}(t)$ & total $V_{\text{MIOC}}(t)$, Photodiode optical power $P_{\text{PD}}(t)$ / photocurrent $I_{\text{PD}}(t)$, TIA output $V_{\text{TIA}}(t)$, and sub-$\tau$ ADC blanking (`dyn_sine_electro_optic`).
 7. **Group D — `SPEC-007` High-Fidelity Predictive Physics & Inverse Calibration (`PHY-01`, `CAL-01`, `--mode spec007_all`, `EQ-45`–`EQ-53`):** Validates discrete Quadrupole vs Octupole coil winding, thermo-mechanical elasto-optic stress, 6-channel `shupe_lut.bin` v2, 2nd-order MIOC electro-acoustic ringing + capacitive crosstalk spike (`PHY-01`), and automated 3-stage bounded `InverseCalibrator` recovering 10 hidden parasitic parameters with Gauss–Newton 95% CI to achieve `< 5%` (`0.04–0.91%`) hardware prediction accuracy across Static AVAR, Slow Rate Ramp, and Thermal Chamber datasets (`CAL-01`).
+8. **Group E — TRL 7–8 / DO-254 Industrial Qualification Suite (`IND-01` .. `IND-06`, `--mode ind_all`):** Physical lab CSV ingestion & NASA-STD-7009A CAS-4 / ASME V&V 20 validation (`ind_lab_validation`), bit-true FPGA fixed-point `Q16.32`/`Q8.24` & SV-2012 RTL (`rtl/ifog_dsp_6state.sv`) 2/4/6-state differential verification (`ind_fixed_point_rtl`), 3D ANSYS/COMSOL FEM $\to$ `shupe_lut.bin` v2 thermal-stress mapping (`ind_fem_3d`), MIL-STD-810H / DO-160G broadband random vibration PSD through 2-DOF isolator + bobbin resonance (`ind_random_vib_psd`), Multi-Instance pure-C++17 Source-Code FMI 3.0.2 FMU 3-axis concurrent execution (`ind_fmu_multi_instance`), and 12-corner PVT + 10-year/50 krad(Si) EOL qualification (`ind_pvt_aging`).
 
 ```mermaid
 flowchart TB
-    CLI["Unified CLI Entrypoints (31 Modes / 23 Gates & Scenarios)\n./scripts/run_sim.sh --mode <mode>\n./scripts/run_all_scenarios.sh"]
+    CLI["Unified CLI Entrypoints (38 Modes / 29 Gates & Scenarios)\n./scripts/run_sim.sh --mode <mode>\n./scripts/run_all_scenarios.sh"]
 
-    subgraph CORE["Core Gates + Gate 5 + Gate 6 (FMI 3.0 FMU)"]
+    subgraph CORE["Core Gates + Gate 5 (2/4/6s) + Gate 6 (FMI 3.0 FMU)"]
         G1["gate1..gate4 / full\n(Gates 1–4 + 10 h AVAR)"]
-        DSP6["dsp6_compare\n(Gate 5: 6-State EQ-31..34)"]
+        DSP6["dsp6_compare\n(Gate 5: 2/4/6-State EQ-31..34)"]
         FMI6["fmi_gate\n(Gate 6: FMI 3.0 FMU EQ-42..44)"]
     end
 
@@ -58,7 +60,7 @@ flowchart TB
         E1["eng_hw_sizing .. eng_mc_yield_cal\n(ENG-01 .. ENG-05)"]
     end
 
-    subgraph DYNG["Group C — 4 Dynamic & Probe (dyn_all)"]
+    subgraph DYNG["Group C — 4 Dynamic & Probe (dyn_all, 2/4/6s)"]
         D1["dyn_step_response .. dyn_sine_electro_optic\n(DYN-01 .. DYN-04)"]
     end
 
@@ -67,7 +69,12 @@ flowchart TB
         C1["spec007_calibration (CAL-01)\n3-Stage InverseCalibrator (<5% Error)"]
     end
 
+    subgraph INDG["Group E — TRL 7–8 / DO-254 Industrial (ind_all)"]
+        I1["ind_lab_validation .. ind_pvt_aging\n(IND-01 .. IND-06: Lab CAS-4, FPGA RTL, 3D FEM, PSD, Multi-FMU, PVT)"]
+    end
+
     CLI --> CORE
+    CLI --> INDG
     CLI --> TDG
     CLI --> ENGG
     CLI --> DYNG

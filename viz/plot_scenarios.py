@@ -20,33 +20,51 @@ def _load_json(path: Path) -> dict[str, Any] | None:
 
 
 def plot_dsp6_compare(data: dict[str, Any], out_path: Path | str) -> Path:
-    """Plot 4-State vs Official 6-State Symmetric DSP comparison (EQ-31..EQ-34)."""
+    """Plot 2-State vs 4-State vs Official 6-State Symmetric DSP comparison (EQ-31..EQ-34)."""
     out = Path(out_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.5, 4.2), dpi=300)
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10.8, 4.2), dpi=300)
 
-    labels = ["4-State\n($\\alpha=\\pi/4$)", "6-State\n($\\alpha=\\pi/3$)"]
-    b4 = max(float(data["four_state"]["ram_xtalk_bias_deg_per_h"]), 1.0e-12)
-    b6 = max(float(data["six_state"]["ram_xtalk_bias_deg_per_h"]), 1.0e-12)
-    bars1 = ax1.bar(labels, [b4, b6], color=["#C53030", "#0E6251"], width=0.5)
+    labels: list[str] = []
+    biases: list[float] = []
+    vfracs: list[float] = []
+    cols1: list[str] = []
+    cols2: list[str] = []
+    if "two_state" in data:
+        labels.append("2-State\n($\\alpha=\\pi/4$)")
+        biases.append(max(float(data["two_state"]["ram_xtalk_bias_deg_per_h"]), 1.0e-12))
+        vfracs.append(float(data["two_state"]["peak_bias_vpi_frac"]))
+        cols1.append("#D97706")
+        cols2.append("#4A5568")
+    labels.extend(["4-State\n($\\alpha=\\pi/4$)", "6-State\n($\\alpha=\\pi/3$)"])
+    biases.extend([
+        max(float(data["four_state"]["ram_xtalk_bias_deg_per_h"]), 1.0e-12),
+        max(float(data["six_state"]["ram_xtalk_bias_deg_per_h"]), 1.0e-12),
+    ])
+    vfracs.extend([
+        float(data["four_state"]["peak_bias_vpi_frac"]),
+        float(data["six_state"]["peak_bias_vpi_frac"]),
+    ])
+    cols1.extend(["#C53030", "#0E6251"])
+    cols2.extend(["#1B365D", "#2B6CB0"])
+
+    bars1 = ax1.bar(labels, biases, color=cols1, width=0.5)
     ax1.set_yscale("log")
     ax1.set_ylabel("RAM + Crosstalk Bias Error [deg/h]")
     ax1.set_title(f"RAM & Crosstalk Rejection ({data['ram_xtalk_rejection_dB']:.1f} dB gain)")
     ax1.grid(True, axis="y", alpha=0.3)
-    for bar, val in zip(bars1, (b4, b6)):
+    for bar, val in zip(bars1, biases):
         ax1.text(bar.get_x() + bar.get_width() / 2.0, val * 1.3, f"{val:.2e}", ha="center", fontsize=8.5)
 
-    v4 = float(data["four_state"]["peak_bias_vpi_frac"])
-    v6 = float(data["six_state"]["peak_bias_vpi_frac"])
-    bars2 = ax2.bar(labels, [v4, v6], color=["#1B365D", "#2B6CB0"], width=0.5)
+    bars2 = ax2.bar(labels, vfracs, color=cols2, width=0.5)
     ax2.set_ylim(0, 1.25)
     ax2.set_ylabel("Peak Bias Voltage [$V_\\pi$ fraction]")
-    ax2.set_title(f"MIOC Peak Bias Swing (-{data['peak_voltage_reduction_pct']:.1f}%)")
+    ax2.set_title(f"MIOC Peak Bias Swing (6s vs 4s: -{data['peak_voltage_reduction_pct']:.1f}%)")
     ax2.grid(True, axis="y", alpha=0.3)
-    for bar, val in zip(bars2, (v4, v6)):
+    for bar, val in zip(bars2, vfracs):
         ax2.text(bar.get_x() + bar.get_width() / 2.0, val + 0.04, f"{val:.3f} $V_\\pi$", ha="center", fontsize=9)
 
-    fig.suptitle("IFOG-SIM-SPEC-005 — Official 6-State vs 4-State DSP Benchmark", fontweight="bold")
+    fig.suptitle("IFOG-VPROTO v4.1.0 — Complete 2-State / 4-State / 6-State DSP Benchmark", fontweight="bold")
     fig.tight_layout()
     fig.savefig(out, dpi=300)
     plt.close(fig)
@@ -357,12 +375,15 @@ def plot_dyn_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
         ax1.plot(c100_6["trace"]["t_ms"], np.array(c100_6["trace"]["omega_in_deg_per_s"]) / 100.0, "k--", lw=1.1, label="Command $\\Omega_{\\mathrm{in}}$")
         ax1.plot(c10_4["trace"]["t_ms"], np.array(c10_4["trace"]["omega_out_deg_per_s"]) / 10.0, color="#1B365D", lw=1.5, label=f"10 deg/s 4s ($t_r={c10_4['rise_time_10_90_ms']:.2f}$ ms)")
         ax1.plot(c10_6["trace"]["t_ms"], np.array(c10_6["trace"]["omega_out_deg_per_s"]) / 10.0, color="#0E6251", lw=1.5, label=f"10 deg/s 6s ($t_r={c10_6['rise_time_10_90_ms']:.2f}$ ms)")
+        if "step10_2state" in d1["cases"]:
+            c10_2 = d1["cases"]["step10_2state"]
+            ax1.plot(c10_2["trace"]["t_ms"], np.array(c10_2["trace"]["omega_out_deg_per_s"]) / 10.0, "-", color="#D97706", lw=1.6, label=f"10 deg/s 2s ($t_r={c10_2['rise_time_10_90_ms']:.3f}$ ms)")
         ax1.plot(c100_4["trace"]["t_ms"], np.array(c100_4["trace"]["omega_out_deg_per_s"]) / 100.0, ":", color="#2B6CB0", lw=1.6, label=f"100 deg/s 4s ($t_r={c100_4['rise_time_10_90_ms']:.2f}$ ms)")
         ax1.plot(c100_6["trace"]["t_ms"], np.array(c100_6["trace"]["omega_out_deg_per_s"]) / 100.0, "-.", color="#C53030", lw=1.5, label=f"100 deg/s 6s ($t_r={c100_6['rise_time_10_90_ms']:.2f}$ ms)")
         ax1.set_xlim(-0.2, 1.5)
         ax1.set_xlabel("Time Relative to Step [ms]")
         ax1.set_ylabel("Normalized Rate $\\Omega_{\\mathrm{out}} / \\Omega_{\\mathrm{step}}$")
-        ax1.set_title("DYN-01A: Closed-Loop Step Response (4-State vs 6-State)")
+        ax1.set_title("DYN-01A: Closed-Loop Step Response (2-State / 4-State / 6-State)")
         ax1.grid(True, alpha=0.3)
         ax1.legend(fontsize=7.5, loc="lower right")
 
@@ -418,13 +439,19 @@ def plot_dyn_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
         m4, m6 = d2["four_state"], d2["six_state"]
         f4, f6 = m4["freqs_Hz"], m6["freqs_Hz"]
 
+        if "two_state" in d2:
+            m2 = d2["two_state"]
+            f2 = m2["freqs_Hz"]
+            ax1.semilogx(f2, m2["mag_dB"], "^-", color="#D97706", lw=1.6, ms=4.5, label=f"2-State Meas (BW={m2['bw_3db_measured_Hz']:.0f} Hz)")
+            ax2.semilogx(f2, m2["phase_deg"], "^-", color="#D97706", lw=1.6, ms=4.5, label="2-State Meas Phase")
+            ax3.semilogx(f2, m2["group_delay_us"], "^-", color="#D97706", lw=1.5, ms=4.2, label=f"2-State ($\\tau_{{g,0}}={m2['low_freq_group_delay_us']:.1f}\\;\\mu$s)")
         ax1.semilogx(f4, m4["mag_dB"], "o-", color="#1B365D", lw=1.6, ms=4.5, label=f"4-State Meas (BW={m4['bw_3db_measured_Hz']:.0f} Hz)")
         ax1.semilogx(f4, m4["theory_mag_dB"], "--", color="#1B365D", alpha=0.65, lw=1.2, label="4-State Analytical Z-Domain")
         ax1.semilogx(f6, m6["mag_dB"], "s-", color="#0E6251", lw=1.6, ms=4.5, label=f"6-State Meas (BW={m6['bw_3db_measured_Hz']:.0f} Hz)")
         ax1.semilogx(f6, m6["theory_mag_dB"], "--", color="#0E6251", alpha=0.65, lw=1.2, label="6-State Analytical Z-Domain")
         ax1.axhline(-3.0, color="#C53030", ls=":", lw=1.2, label="-3 dB Bandwidth")
         ax1.set_ylabel("Magnitude $|H(f)|$ [dB]")
-        ax1.set_title(f"DYN-02: Closed-Loop Bode Frequency Response (4-State vs Official 6-State, BW Ratio = {d2['bw_ratio_4state_to_6state']:.2f}x)")
+        ax1.set_title(f"DYN-02: Closed-Loop Bode Frequency Response (2/4/6-State DSP, 4s/6s BW Ratio = {d2['bw_ratio_4state_to_6state']:.2f}x)")
         ax1.grid(True, which="both", alpha=0.3)
         ax1.legend(fontsize=8, ncol=2, loc="lower left")
 
@@ -459,6 +486,10 @@ def plot_dyn_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
         wl, f4, f6 = reg["white_linear"], reg["full_4state"], reg["full_6state"]
         arw_ref = d3["analytical_white_ref"]
 
+        if "full_2state" in reg:
+            f2 = reg["full_2state"]
+            ax1.loglog(f2["freqs_Hz"], f2["psd_deg2_h2_per_Hz"], color="#D97706", lw=1.4, label="Full Impairments (2-State)")
+            ax2.loglog(f2["freqs_Hz"], f2["asd_deg_h_per_rtHz"], color="#D97706", lw=1.3, label="ASD 2-State [deg/h/$\\sqrt{\\mathrm{Hz}}$]")
         ax1.loglog(f4["freqs_Hz"], f4["psd_deg2_h2_per_Hz"], color="#C53030", lw=1.5, label="Full Impairments (4-State)")
         ax1.loglog(f6["freqs_Hz"], f6["psd_deg2_h2_per_Hz"], color="#0E6251", lw=1.5, label=f"Full Impairments (6-State, -{d3['low_freq_6state_suppression_dB']:.1f} dB LF)")
         ax1.loglog(wl["freqs_Hz"], wl["psd_deg2_h2_per_Hz"], color="#1B365D", lw=1.3, alpha=0.85, label="White-Noise Linear Floor")
@@ -471,7 +502,7 @@ def plot_dyn_scenarios(run_dir: Path | str, fig_dir: Path | str) -> list[Path]:
         )
         ax1.set_xlabel("Frequency $f$ [Hz]")
         ax1.set_ylabel("Output Rate PSD $S_\\Omega(f)$ [(deg/h)$^2$/Hz]")
-        ax1.set_title("DYN-03A: Broadband Output Angular-Rate PSD")
+        ax1.set_title("DYN-03A: Broadband Output Angular-Rate PSD (2/4/6-State)")
         ax1.grid(True, which="both", alpha=0.3)
         ax1.legend(fontsize=7.5, loc="lower left")
 

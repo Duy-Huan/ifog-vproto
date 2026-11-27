@@ -3,9 +3,9 @@
 | Field | Value |
 | :--- | :--- |
 | **Specification** | `IFOG-SIM-SPEC-007` (v7.0) |
-| **Software Version** | `v4.0.0` |
+| **Software Version** | `v4.1.0` |
 | **Run Mode** | `all_scenarios` |
-| **Generated (UTC)** | `2026-11-26T10:52:55Z` |
+| **Generated (UTC)** | `2026-11-27T08:24:18Z` |
 | **Overall Status** | **PASS** |
 | **Interactive Model Diagram** | [`architecture_model.html`](architecture_model.html) (Sơ đồ Kiến trúc & Công thức 3 Tầng đối chiếu Source Code) |
 | **Data Directory** | `/home/antigravity/Duy-Huan/ifog-vproto/data/full_all_scenarios` |
@@ -41,12 +41,18 @@ Hệ thống mô phỏng vòng kín con quay sợi quang giao thoa (**IFOG — I
 | ENG-03 — Vibration Rectification Error (VRE) & Magnetic Faraday Sensitivity / Mu-Metal Sizing | **PASS** | VRE=-3.486e-01 deg/h/g^2, Faraday=0.183 deg/h/G, Mu-metal=25.3 dB |
 | ENG-04 — Fault Injection & Real-Time FPGA BIT/FDIR Verification (5 Fault Modes) | **PASS** | 5/5 faults detected, max TTA=30.0 us, SEU FDIR recovered=True |
 | ENG-05 — Monte Carlo Production Yield (C_pk) & -40..+85 C Virtual Thermal Calibration | **PASS** | MC Yield=97.2% (N=500, Cpk=0.60), Cal Poly red=100.0% |
-| DYN-01 — Closed-Loop Step Response (10 & 100 deg/s, 4-State vs 6-State & K_tot_1 Sweep) | **PASS** | 10 deg/s 6s t_r=0.206 ms, 100 deg/s 6s t_r=0.294 ms, OS=0.00%, max SS err=0.0000% |
-| DYN-02 — Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay | **PASS** | 4s BW=2544 Hz (gd=65.2 us), 6s BW=1642 Hz (gd=103.3 us), ratio=1.55x |
-| DYN-03 — Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise | **PASS** | ARW=0.0004 deg/rt-h (ratio=0.97), 6s LF supp=29.2 dB, HF rolloff=-13.5 dB |
+| DYN-01 — Closed-Loop Step Response (10 & 100 deg/s, 2/4/6-State DSP & K_tot_1 Sweep) | **PASS** | 10 deg/s 6s t_r=0.206 ms, 100 deg/s 6s t_r=0.294 ms, OS=0.00%, max SS err=0.0000% |
+| DYN-02 — Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay (2/4/6-State) | **PASS** | 4s BW=2544 Hz (gd=65.2 us), 6s BW=1642 Hz (gd=103.3 us), ratio=1.55x |
+| DYN-03 — Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise (2/4/6-State) | **PASS** | ARW=0.0004 deg/rt-h (ratio=0.97), 6s LF supp=29.2 dB, HF rolloff=-13.5 dB |
 | DYN-04 — Sinusoidal Rate Input & Full Electro-Optic Signal Chain (PD, V_fb MIOC, Sagnac Phase, TIA) | **PASS** | Gain=0.9889, Phase=-9.36 deg, THD=-67.5 dB, SFDR=43.6 dB, phi_S=1.180 rad, wraps=391, r(PD,phi_err)=0.9960 |
 | PHY-01 — SPEC-007 Predictive Physics (Winding, LUT v2, MIOC, Xtalk, Backscatter) | **PASS** | Octupole -47.7%, dK_opt=85.6 ppm, dV_TIA_cap=0.583 V, LUTv2 err=0.0e+00 |
 | CAL-01 — SPEC-007 Inverse Calibration (>40% -> <5% Hardware Prediction) | **PASS** | AVAR 40.2%->0.81%, DB 102.7%->0.91%, Therm 58.8%->0.29%, max param err=2.18% |
+| IND-01 — Physical Lab Hardware Validation (NASA-STD-7009A CAS-4 / ASME V&V 20) | **PASS** | CAS-4, err 101.9%->4.51%, ASME max |E|/u_val=0.72, T2 err=0.0690% |
+| IND-02 — Bit-True FPGA Fixed-Point DSP & SystemVerilog RTL (2/4/6-State) | **PASS** | 0-LSB RTL match (2/4/6-State), Q16.32 err=0.91/0.43/0.54 deg/h, 0 overflows |
+| IND-03 — 3D Cylindrical FEM (ANSYS/COMSOL) -> shupe_lut.bin v2 | **PASS** | 3D FEM (160 nodes, dT=3.0 K, sigma=4.49 MPa), Octupole suppression=5.16x |
+| IND-04 — MIL-STD-810H / DO-160G Random Vibration PSD & 2-DOF Resonance | **PASS** | MIL-STD-810H 4.88 g_rms -> Hard 14.37 vs Iso 2.98 g_rms (4.82x), VRE red=24.20x |
+| IND-05 — Multi-Instance Pure-C++17 Source-Code FMI 3.0.2 FMU (3 Axes) | **PASS** | 0 XSD errs, Source-Code FMU, 3 concurrent axes: 6s=0.014%, 4s=0.041%, 2s=0.149% |
+| IND-06 — 12-Corner PVT Matrix & 10-Yr Aging / 50 krad(Si) Space TID | **PASS** | 12 PVT corners WC ARW=0.00049 deg/rt-h, EOL 10yr/50krad ARW=0.00052 deg/rt-h |
 
 ## 2. Tier 1 Offline Optical & Thermal Parameters
 
@@ -166,17 +172,19 @@ Hệ thống mô phỏng vòng kín con quay sợi quang giao thoa (**IFOG — I
 
 | Scenario ID | Characterization Scope | Key Quantitative Metrics | Status |
 | :--- | :--- | :--- | :---: |
-| `DYN-01` | Closed-Loop Step Response (10 & 100 deg/s, 4-State vs 6-State & K_tot_1 Sweep) | 10 deg/s 6s t_r=0.206 ms, 100 deg/s 6s t_r=0.294 ms, OS=0.00%, max SS err=0.0000% | **PASS** |
-| `DYN-02` | Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay | 4s BW=2544 Hz (gd=65.2 us), 6s BW=1642 Hz (gd=103.3 us), ratio=1.55x | **PASS** |
-| `DYN-03` | Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise | ARW=0.0004 deg/rt-h (ratio=0.97), 6s LF supp=29.2 dB, HF rolloff=-13.5 dB | **PASS** |
+| `DYN-01` | Closed-Loop Step Response (10 & 100 deg/s, 2/4/6-State DSP & K_tot_1 Sweep) | 10 deg/s 6s t_r=0.206 ms, 100 deg/s 6s t_r=0.294 ms, OS=0.00%, max SS err=0.0000% | **PASS** |
+| `DYN-02` | Closed-Loop Frequency Response — Full Bode Magnitude, Phase & Group Delay (2/4/6-State) | 4s BW=2544 Hz (gd=65.2 us), 6s BW=1642 Hz (gd=103.3 us), ratio=1.55x | **PASS** |
+| `DYN-03` | Output Angular-Rate Power Spectral Density (PSD), ASD & Cumulative RMS Noise (2/4/6-State) | ARW=0.0004 deg/rt-h (ratio=0.97), 6s LF supp=29.2 dB, HF rolloff=-13.5 dB | **PASS** |
 | `DYN-04` | Sinusoidal Rate Input & Full Electro-Optic Signal Chain (PD, V_fb MIOC, Sagnac Phase, TIA) | Gain=0.9889, Phase=-9.36 deg, THD=-67.5 dB, SFDR=43.6 dB, phi_S=1.180 rad, wraps=391, r(PD,phi_err)=0.9960 | **PASS** |
 
 ### DYN-01 — Closed-Loop Step Response Comparison Table
 
 | Step Case | DSP Mode | $K_{\text{tot},1}$ | Target [deg/s] | $t_d$ (50%) [ms] | $t_r$ (10–90%) [ms] | $t_s$ (2%) [ms] | Overshoot [%] | Steady-State Err [%] |
 | :--- | :---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `step10_2state` | `2state` | `0.25` | `10` | `0.009` | `0.015` | `0.043` | `4.11` | `0.0000` |
 | `step10_4state` | `4state` | `0.25` | `10` | `0.043` | `0.137` | `0.234` | `0.01` | `0.0000` |
 | `step10_6state` | `6state` | `0.25` | `10` | `0.092` | `0.206` | `0.381` | `0.01` | `0.0000` |
+| `step100_2state` | `2state` | `0.25` | `100` | `0.033` | `0.044` | `0.058` | `1.31` | `0.0000` |
 | `step100_4state` | `4state` | `0.25` | `100` | `0.121` | `0.215` | `0.332` | `0.01` | `0.0000` |
 | `step100_6state` | `6state` | `0.25` | `100` | `0.151` | `0.294` | `0.498` | `0.00` | `0.0000` |
 | `step10_6state_k015` | `6state` | `0.15` | `10` | `0.121` | `0.382` | `0.704` | `0.00` | `0.0000` |
@@ -391,6 +399,54 @@ Mỗi hình dưới đây đi kèm đầy đủ 3 mục chuẩn hóa: **Cơ sở
 > - **Cơ sở lý thuyết:** Giải bài toán tối ưu phi tuyến có ràng buộc biên (`Trust-Region Reflective`, `EQ-53`) tối thiểu hóa tổng bình phương sai dư trọng số trên 3 miền đo thực nghiệm: **Giai đoạn A** (AVAR tĩnh + PSD $\rightarrow$ `c_pink_coeff`, `R_facet_dB`, `eta_pd_scale`), **Giai đoạn B** (Quét tốc độ chậm Deadband & Bunny Ears $\rightarrow$ `C_xtalk_F`, `G_xtalk_S`, `dac_asym_lsb`), và **Giai đoạn C** (Buồng nhiệt Ramp $\rightarrow$ `diffusivity_m2_per_s`, `delta_z_quad_m`, `alpha_vpi_ppm_K`, `alpha_bobbin_ppm_K`), kèm ma trận hiệp phương sai Gauss–Newton & khoảng tin cậy 95%.
 > - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Chấm tròn đen là 'dữ liệu đo từ phần cứng thật'. Đường nét đứt đỏ là mô phỏng chỉ dùng thông số datasheet chưa hiệu chuẩn (lệch > 40%–100%). Sau khi chạy bộ hiệu chuẩn nghịch `InverseCalibrator`, các đường liền nét bám sát khít vào toàn bộ dữ liệu phần cứng thật với sai số dưới 1% trên cả 3 phép đo (AVAR, Vùng chết/Tai thỏ, Trôi nhiệt).
 > - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (CAL-01 — SPEC-007):** Sai số dự báo giảm vượt bậc từ mức chưa hiệu chuẩn (`>40%`) xuống **`< 1%`** trên toàn bộ 3 miền: AVAR **`40.2%` → `0.81%`**, Deadband/Bunny Ears **`102.7%` → `0.91%`**, Trôi nhiệt **`58.8%` → `0.29%`**; khôi phục 10/10 tham số ẩn sai số max = **`2.18%`** (`< 5%`), sai số vòng kín Tầng 2 thực = **`0.0288%`**.
+
+### IND-01 (v4.1.0 TRL 7-8) — Xác thực Dữ liệu Phòng Lab Vật lý (NASA-STD-7009A CAS-4 / ASME V&V 20)
+![IND-01 (v4.1.0 TRL 7-8) — Xác thực Dữ liệu Phòng Lab Vật lý (NASA-STD-7009A CAS-4 / ASME V&V 20)](figures/fig_ind01_lab_validation.png)
+
+> **Mã công thức liên kết:** `EQ-53, ASME V&V 20, NASA-STD-7009A CAS-4`
+> - **Cơ sở lý thuyết:** Nạp trực tiếp 3 bộ CSV chuẩn từ băng thử phần cứng IFOG thật: (a) AVAR tĩnh 10 giờ trên bàn đá cách ly rung, (b) Bàn quay tốc độ chậm $[-2, +2]\;^\circ/\text{s}$ đo Deadband/Bunny Ears, và (c) Buồng nhiệt $-40..+85\;^\circ\text{C}$. Đánh giá sai số đối chiếu $E = S - D$ so với độ bất định xác thực $u_{\text{val}} = \sqrt{u_{\text{num}}^2 + u_D^2}$ theo chuẩn ASME V&V 20.
+> - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Thay vì chỉ thử trên dữ liệu giả lập, bộ nạp chuẩn này đọc thẳng dữ liệu đo từ mẫu IFOG ngoài đời thực. Đường sau hiệu chuẩn nằm gọn trong thanh sai số đo thực nghiệm ($|E|/u_{\text{val}} < 1$), chứng minh độ tin cậy chuẩn CAS-4.
+> - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (IND-01 — CAS-4):** Nạp trực tiếp 3 bộ CSV phần cứng lab; sai số dự báo giảm từ **`101.9%`** xuống **`4.51%`** (`< 5%`), chuẩn ASME V&V 20 đạt max $|E|/u_{\text{val}} = \mathbf{0.723}$ (`<= 2.0`), và vòng kín Tầng 2 thực đạt sai số `0.0690%`.
+
+### IND-02 (DO-254 FPGA) — DSP Dấu phẩy Tĩnh Bit-True (Q16.32 vs Q8.24) & RTL SystemVerilog (2 / 4 / 6 Trạng thái)
+![IND-02 (DO-254 FPGA) — DSP Dấu phẩy Tĩnh Bit-True (Q16.32 vs Q8.24) & RTL SystemVerilog (2 / 4 / 6 Trạng thái)](figures/fig_ind02_fixed_point_rtl.png)
+
+> **Mã công thức liên kết:** `EQ-20, EQ-21, EQ-31..EQ-34, rtl/ifog_dsp_6state.sv`
+> - **Cơ sở lý thuyết:** Lượng tử hóa bão hòa có dấu $Q_{(W-F).F}$ trên các thanh ghi tích phân FPGA (`delta_phi_step`, `phi_ramp`, `g_dac`) được so sánh song song giữa `Float64`, `Q16.32` (48-bit) và `Q8.24` (32-bit cắt cụt) trên cả 3 chế độ **2-State, 4-State, 6-State**, đối chiếu 0-LSB với mô hình RTL tổng hợp được `rtl/ifog_dsp_6state.sv`.
+> - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Khi nạp thuật toán xuống chip FPGA thật, số thực không còn vô hạn chữ số. Biểu đồ chứng minh thanh ghi 48-bit Q16.32 đạt sai số lượng tử nhỏ hơn 32-bit tới 30–375 lần, khớp tuyệt đối 0-LSB với mã Verilog và không bị tràn thanh ghi trên cả 3 chế độ DSP 2, 4 và 6 trạng thái.
+> - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (IND-02 — DO-254 FPGA):** Khớp **0-LSB** với `rtl/ifog_dsp_6state.sv` và **0 tràn thanh ghi** trên cả 3 chế độ DSP: 2-State Q16.32 = `0.910` (vs Q8.24 `6.5` deg/h), 4-State = `0.427` (vs `13.9`), 6-State = `0.542` (vs `211.5` deg/h).
+
+### IND-03 (3D FEM) — Liên kết Lưới Nhiệt–Cơ 3D ANSYS/COMSOL sang shupe_lut.bin v2 (Quadrupole vs Octupole)
+![IND-03 (3D FEM) — Liên kết Lưới Nhiệt–Cơ 3D ANSYS/COMSOL sang shupe_lut.bin v2 (Quadrupole vs Octupole)](figures/fig_ind03_fem_3d.png)
+
+> **Mã công thức liên kết:** `EQ-09, EQ-45..EQ-49, RBF 3D Cylindrical Projection`
+> - **Cơ sở lý thuyết:** Ánh xạ trường nhiệt độ 3D $T(r,\theta,z,t)$ và ứng suất keo potting dị hướng $\sigma_{\text{eff}}(r,\theta,z,t)$ xuất từ ANSYS/COMSOL lên từng vòng sợi rời rạc $(r_i, \theta_j, z_{\text{ax},i})$ bằng nội suy RBF tuyến tính 3D, xuất thẳng chuẩn nhị phân 56-byte `shupe_lut.bin` v2 nạp vào Tầng 2 C++.
+> - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Trong vỏ IMU thật, FPGA và bộ nguồn tỏa nhiệt lệch tâm làm cuộn sợi nóng không đều theo góc phương vị. Liên kết 3D FEM bắt trọn hiệu ứng lệch tâm này và chứng minh cuộn sợi quấn Octupole triệt tiêu trôi nhiệt–cơ 3D gấp ~6 lần so với Quadrupole.
+> - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (IND-03 — 3D FEM):** Lưới trụ 3D (`160` nút, $\Delta T_{\text{3D}} = 3.0\;\text{K}$, $\sigma_{\max} = 4.49\;\text{MPa}$) xuất chuẩn `shupe_lut.bin` v2; Octupole triệt tiêu trôi nhiệt–cơ 3D **`5.16x`** (`0.1583` → `0.0307 deg/h`).
+
+### IND-04 (MIL-STD-810H / DO-160G) — Rung động Ngẫu nhiên Phổ rộng PSD & Cộng hưởng Khung đỡ 2-DOF
+![IND-04 (MIL-STD-810H / DO-160G) — Rung động Ngẫu nhiên Phổ rộng PSD & Cộng hưởng Khung đỡ 2-DOF](figures/fig_ind04_random_vib_psd.png)
+
+> **Mã công thức liên kết:** `MIL-STD-810H Cat.24, DO-160G Curve C, Miles' Eq, EQ-37`
+> - **Cơ sở lý thuyết:** Kích thích phổ mật độ gia tốc rung băng rộng $S_a(f)\;[\text{g}^2/\text{Hz}]$ ($20\text{–}2000\;\text{Hz}$) đi qua hàm truyền cơ học 2 bậc tự do $H_{\text{mech}}(f) = H_{\text{iso}}(f) \cdot H_{\text{bob}}(f)$ (giảm chấn elastomer + cộng hưởng cuộn sợi), đối chiếu công thức Miles và bơm vào lõi VRE Tầng 2 C++.
+> - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Rung động máy bay/tên lửa diễn ra trên toàn dải tần rộng và dễ bị khuếch đại tại tần số cộng hưởng của lõi cuộn sợi (480 Hz). Gắn thêm giảm chấn elastomer (65 Hz) cắt giảm mạnh gia tốc truyền vào cuộn sợi và triệt tiêu sai số chỉnh lưu rung động VRE.
+> - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (IND-04 — MIL-STD-810H):** Phổ rung đầu vào `4.88 g_rms` khuếch đại lên `14.37 g_rms` khi gắn cứng, giảm **`4.82x`** xuống **`2.98 g_rms`** nhờ giảm chấn 65 Hz; thiên lệch VRE Tầng 2 thực giảm **`24.20x`** (`11.11` → `0.46 deg/h`).
+
+### IND-05 (FMI 3.0.2 Multi-Instance) — FMU Thuần C++17 Mã nguồn mở Chạy Đồng thời 3 Trục (6 / 4 / 2 Trạng thái)
+![IND-05 (FMI 3.0.2 Multi-Instance) — FMU Thuần C++17 Mã nguồn mở Chạy Đồng thời 3 Trục (6 / 4 / 2 Trạng thái)](figures/fig_ind05_fmu_multi_instance.png)
+
+> **Mã công thức liên kết:** `FMI 3.0.2 CS, canBeInstantiatedOnlyOncePerProcess=false, buildDescription.xml`
+> - **Cơ sở lý thuyết:** Loại bỏ hoàn toàn giới hạn singleton `sc_simcontext` của Accellera SystemC bằng lõi FMI 3.0.2 thuần C++17 độc lập (`ifog_core_multi.fmu`), đóng gói song song nhị phân Linux và mã nguồn chuẩn `sources/buildDescription.xml` để biên dịch chéo cho Windows/Simulink và RT-Linux.
+> - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Một hệ thống dẫn đường GNC 3 trục cần chạy đồng thời 3 con quay độc lập trong cùng một tiến trình phần mềm. Biểu đồ chứng minh 3 thực thể FMU (Trục X 6-State, Trục Y 4-State, Trục Z 2-State) bám độc lập 3 vận tốc góc khác nhau với 0 nhiễu chéo và 0 lỗi chuẩn FMI.
+> - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (IND-05 — Multi-FMU):** `build/ifog_core_multi.fmu` đạt **0 lỗi XSD**, đóng gói mã nguồn chuẩn `buildDescription.xml` và chạy đồng thời **3 trục trong 1 tiến trình**: Trục X 6-State (`0.014%`), Trục Y 4-State (`0.041%`), Trục Z 2-State (`0.149%`), 0 nhiễu chéo.
+
+### IND-06 (PVT & EOL) — Quét 12 Góc PVT Cực trị & Lão hóa SLD/MIOC 10 Năm + Bức xạ Vũ trụ 50 krad(Si)
+![IND-06 (PVT & EOL) — Quét 12 Góc PVT Cực trị & Lão hóa SLD/MIOC 10 Năm + Bức xạ Vũ trụ 50 krad(Si)](figures/fig_ind06_pvt_aging_corners.png)
+
+> **Mã công thức liên kết:** `12-Corner PVT (-40/+25/+85 degC, +/-5% Rail, +/-3sigma), RIA(TID) = c*D^0.75`
+> - **Cơ sở lý thuyết:** Đánh giá ma trận 12 góc cực trị kết hợp nhiệt độ quân sự ($-40/+25/+85\;^\circ\text{C}$), dao động nguồn $\pm 5\%$ và sai số công nghệ $\pm 3\sigma$, cùng lộ trình suy giảm công suất/bước sóng SLD 10 năm, trôi $V_\pi$ MIOC và suy hao quang do bức xạ ion hóa RIA tới $50\;\text{krad(Si)}$ trên lõi Tầng 1 + Tầng 2 thực.
+> - **Ý nghĩa biểu đồ & cách đọc (dành cho người không chuyên):** Trước khi đưa vào sản xuất hàng loạt hoặc phóng lên vệ tinh, cảm biến phải vượt qua mọi điều kiện khắc nghiệt nhất từ đầu đời (BOL) đến cuối đời 10 năm (EOL). Biểu đồ chứng minh hệ thống vẫn giữ nguyên biên độ dự phòng ARW và vòng kín bám chính xác ở góc xấu nhất.
+> - **Kết quả thực tế & điều được chứng minh:** **ĐẠT (IND-06 — PVT & EOL):** Quét trọn **12 góc PVT** (`-40/+25/+85 degC`, $\pm 5\%$ nguồn, $\pm 3\sigma$) đạt worst-case ARW = **`0.00049 deg/rt-h`**; cuối đời 10 năm / 50 krad(Si) đạt EOL ARW = **`0.00052 deg/rt-h`** với 4/4 mốc Tầng 2 ĐẠT.
 
 ## 12. Hệ thống Công thức Toán học Chi tiết Theo Từng Tầng (`EQ-01` .. `EQ-53`)
 

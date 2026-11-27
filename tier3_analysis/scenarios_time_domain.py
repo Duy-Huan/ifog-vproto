@@ -127,6 +127,12 @@ def run_dsp6_comparison(
             },
         },
     )
+    s2_lin = _run_tier2(
+        bin_path,
+        deep_merge(common_linear, {"dsp": {"mode": "2state", "alpha_rad": math.pi / 4.0, "en_vpi_loop": False}}),
+        phys_ideal_p,
+        work / "lin_2state",
+    )
     s4_lin = _run_tier2(
         bin_path,
         deep_merge(common_linear, {"dsp": {"mode": "4state", "alpha_rad": math.pi / 4.0}}),
@@ -159,6 +165,12 @@ def run_dsp6_comparison(
             },
         },
     )
+    s2_imp = _run_tier2(
+        bin_path,
+        deep_merge(common_imp, {"dsp": {"mode": "2state", "alpha_rad": math.pi / 4.0, "en_vpi_loop": False}}),
+        phys_ideal_p,
+        work / "imp_2state",
+    )
     s4_imp = _run_tier2(
         bin_path,
         deep_merge(common_imp, {"dsp": {"mode": "4state", "alpha_rad": math.pi / 4.0}}),
@@ -172,8 +184,10 @@ def run_dsp6_comparison(
         work / "imp_6state",
     )
 
+    err2_lin = abs(float(s2_lin["final_delta_phi_step_rad"]) - target_dphi)
     err4_lin = abs(float(s4_lin["final_delta_phi_step_rad"]) - target_dphi)
     err6_lin = abs(float(s6_lin["final_delta_phi_step_rad"]) - target_dphi)
+    bias2_deg_h = abs(float(s2_imp["mean_omega_out_second_half_rad_per_s"])) * RAD_S_TO_DEG_H
     bias4_deg_h = abs(float(s4_imp["mean_omega_out_second_half_rad_per_s"])) * RAD_S_TO_DEG_H
     bias6_deg_h = abs(float(s6_imp["mean_omega_out_second_half_rad_per_s"])) * RAD_S_TO_DEG_H
     rejection_ratio = bias4_deg_h / max(bias6_deg_h, 1.0e-12)
@@ -182,9 +196,18 @@ def run_dsp6_comparison(
     result = {
         "spec_id": "IFOG-SIM-SPEC-005",
         "formula_ids": ["EQ-31", "EQ-32", "EQ-33", "EQ-34"],
+        "two_state": {
+            "alpha_rad": math.pi / 4.0,
+            "peak_bias_vpi_frac": 0.5,
+            "has_vpi_loop": False,
+            "static_err_rad": err2_lin,
+            "final_eps_vpi_eff": abs(float(s2_lin["final_eps_vpi_eff"])),
+            "ram_xtalk_bias_deg_per_h": bias2_deg_h,
+        },
         "four_state": {
             "alpha_rad": math.pi / 4.0,
             "peak_bias_vpi_frac": 1.0,
+            "has_vpi_loop": True,
             "static_err_rad": err4_lin,
             "final_eps_vpi_eff": abs(float(s4_lin["final_eps_vpi_eff"])),
             "ram_xtalk_bias_deg_per_h": bias4_deg_h,
@@ -192,6 +215,7 @@ def run_dsp6_comparison(
         "six_state": {
             "alpha_rad": math.pi / 3.0,
             "peak_bias_vpi_frac": 2.0 / 3.0,
+            "has_vpi_loop": True,
             "static_err_rad": err6_lin,
             "final_eps_vpi_eff": abs(float(s6_lin["final_eps_vpi_eff"])),
             "ram_xtalk_bias_deg_per_h": bias6_deg_h,

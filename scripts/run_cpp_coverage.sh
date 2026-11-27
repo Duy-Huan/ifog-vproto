@@ -177,6 +177,18 @@ run_cfg("spec007_full_cov", {
     "simulation": {"duration_s": 0.003, "decimation_tau": 1, "dump_micro_ms": 0.02},
 }, extra_args=["--shupe", str(shupe_v2)])
 
+# (h2) v4.1.0 IND-02: Bit-true FPGA fixed-point DSP (normal Q16.32 + Q8.8 overflow saturation)
+run_cfg("fxp_q16_32_6s", {
+    "dsp": {"mode": "6state", "alpha_rad": 1.0471975511965976, "en_fixed_point": True, "fxp_acc_bits": 48, "fxp_frac_bits": 32, "fxp_truncate": False},
+    "simulation": {"duration_s": 0.002, "decimation_tau": 1, "dump_micro_ms": 0.0,
+                   "stimulus": {"type": "constant", "omega_rad_per_s": 0.1}},
+})
+run_cfg("fxp_q1_15_ovf", {
+    "dsp": {"mode": "6state", "alpha_rad": 1.0471975511965976, "en_fixed_point": True, "fxp_acc_bits": 16, "fxp_frac_bits": 15, "fxp_truncate": True, "max_delta_phi_step_rad": 20.0},
+    "simulation": {"duration_s": 0.002, "decimation_tau": 1, "dump_micro_ms": 0.0,
+                   "stimulus": {"type": "constant", "omega_rad_per_s": 1.2}},
+})
+
 # (i) Negative validation & CLI error branches in ifog_config.cpp / main.cpp / digital_dsp_sc.cpp
 run_cfg("bad_dsp_mode", {"dsp": {"mode": "8state"}}, expect_fail=True)
 run_cfg("bad_sine_target", {"noise": {"sine_inject_target": "bogus"}}, expect_fail=True)
@@ -210,7 +222,9 @@ mkdir -p "${FMU_COV_NOSHUPE}"
 cp "${COV_WORK}/phys_params.json" "${FMU_COV_NOSHUPE}/phys_params.json"
 cp "${REPO_ROOT}/configs/baseline_1km.json" "${FMU_COV_NOSHUPE}/baseline_cfg.json"
 "${BUILD_COV}/ifog_fmi_tests" "${FMU_COV_NOSHUPE}" 4
-# Verify dlopen + sc_main stub on the compiled FMI 3.0 shared library
+# 3c. Exercise every branch of Multi-Instance FMI 3.0 bridge (v4.1.0 IND-05)
+"${BUILD_COV}/ifog_fmi_multi_tests"
+# Verify dlopen + sc_main stub on both compiled FMI 3.0 shared libraries
 python3 - "${BUILD_COV}" <<'PY'
 import ctypes, pathlib, sys
 so_list = list((pathlib.Path(sys.argv[1]) / "binaries").rglob("ifog_core.so"))
@@ -219,14 +233,20 @@ lib = ctypes.CDLL(str(so_list[0]))
 lib.fmi3GetVersion.restype = ctypes.c_char_p
 assert lib.fmi3GetVersion() == b"3.0"
 assert lib.sc_main(0, None) == 0
+multi_list = list((pathlib.Path(sys.argv[1]) / "binaries_multi").rglob("ifog_core_multi.so"))
+assert len(multi_list) == 1, f"Expected 1 ifog_core_multi.so, found {multi_list}"
+mlib = ctypes.CDLL(str(multi_list[0]))
+mlib.fmi3GetVersion.restype = ctypes.c_char_p
+assert mlib.fmi3GetVersion() == b"3.0"
 PY
 
-# 4. Compute and enforce strict 100.0% C++ line coverage with gcovr (Tier 2 + FMI 3.0 wrapper)
+# 4. Compute and enforce strict 100.0% C++ line coverage with gcovr (Tier 2 + FMI 3.0 wrappers)
 gcovr -r "${REPO_ROOT}" "${BUILD_COV}" \
     --filter "${REPO_ROOT}/tier2_sysc_ams/(src|include)/" \
     --filter "${REPO_ROOT}/fmi_wrapper/src/" \
     --exclude "${REPO_ROOT}/tier2_sysc_ams/src/cpp_unit_tests\.cpp" \
     --exclude "${REPO_ROOT}/tier2_sysc_ams/src/fmi_unit_tests\.cpp" \
+    --exclude "${REPO_ROOT}/tier2_sysc_ams/src/fmi_multi_unit_tests\.cpp" \
     --exclude-unreachable-branches \
     --txt-metric line \
     --print-summary \
@@ -234,4 +254,4 @@ gcovr -r "${REPO_ROOT}" "${BUILD_COV}" \
     --json-summary "${COV_WORK}/cpp_coverage_summary.json" \
     --html-details "${COV_WORK}/cpp_coverage.html"
 
-echo "C++ 100.0% line coverage verified (Tier 2 + FMI 3.0 wrapper)!"
+echo "C++ 100.0% line coverage verified (Tier 2 + FMI 3.0 wrappers)!"

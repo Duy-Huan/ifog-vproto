@@ -5,18 +5,18 @@
 # + standalone FMI 3.0 Co-Simulation FMU (build/ifog_core.fmu).
 #
 # Build:
-#   docker build -t ifog-vproto:4.0.1 .
-#   podman build -f Containerfile -t ifog-vproto:4.0.1 .
+#   docker build -t ifog-vproto:4.1.0 .
+#   podman build -f Containerfile -t ifog-vproto:4.1.0 .
 #
 # Run:
-#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:4.0.1 \
+#   docker run --rm -v "$PWD/report:/workspace/ifog-vproto/report" ifog-vproto:4.1.0 \
 #     ./scripts/run_all_scenarios.sh --run-id docker_all_scenarios
 
 FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.title="ifog-vproto" \
-      org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype + Predictive Physics, Inverse Calibration & FMI 3.0 FMU (IFOG-SIM-SPEC-007)" \
-      org.opencontainers.image.version="4.0.1" \
+      org.opencontainers.image.description="Closed-Loop IFOG Multi-Scale Virtual Prototype: Predictive Physics, Inverse Calibration, TRL 7-8 / DO-254 Industrial Suite & Multi-Instance FMI 3.0.2 FMU (v4.1.0)" \
+      org.opencontainers.image.version="4.1.0" \
       org.opencontainers.image.source="https://github.com/Duy-Huan/ifog-vproto"
 
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -50,15 +50,16 @@ RUN bash scripts/setup_env.sh --prefix /opt/ifog-env \
     --skip-systemc --skip-systemc-ams --skip-nlohmann --skip-editable \
     && ln -sf /opt/ifog-env/env.sh /etc/profile.d/ifog-env.sh
 
-# 4. Copy full repository, install editable package, pre-build Tier 2 Release (-O3) core & FMI 3.0 FMU
+# 4. Copy full repository, install editable package, pre-build Tier 2 Release (-O3) core & both FMI 3.0.2 FMUs
 COPY . /workspace/ifog-vproto
 RUN chmod +x scripts/*.sh scripts/*.py examples/*.sh 2>/dev/null || true \
     && python3 -m pip install -e /workspace/ifog-vproto --no-build-isolation --no-deps \
     && cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build -j"$(nproc)" \
-    && cmake --build build --target package_fmu \
+    && cmake --build build --target package_fmu package_fmu_multi \
     && ./build/ifog_cpp_tests \
-    && python3 -c "from fmpy.validation import validate_fmu; probs = validate_fmu('build/ifog_core.fmu'); assert not probs, probs" \
+    && ./build/ifog_fmi_multi_tests \
+    && python3 -c "from fmpy.validation import validate_fmu; assert not validate_fmu('build/ifog_core.fmu'); assert not validate_fmu('build/ifog_core_multi.fmu')" \
     && sha256sum -c spec/IFOG-SIM-SPEC-004.sha256 spec/IFOG-SIM-SPEC-005.sha256 spec/IFOG-SIM-SPEC-006.sha256 spec/IFOG-SIM-SPEC-007.sha256
 
 CMD ["bash"]

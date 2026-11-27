@@ -1,0 +1,48 @@
+{
+  "scenario": "IND-05_fmu_multi_instance",
+  "fmu_path": "build/ifog_core_multi.fmu",
+  "fmi_version": "3.0",
+  "xsd_validation_errors": [],
+  "can_multi_instantiate_in_process": true,
+  "bundles_source_code_fmu": true,
+  "archive_members": [
+    "binaries/",
+    "binaries/x86_64-linux/",
+    "binaries/x86_64-linux/ifog_core_multi.so",
+    "modelDescription.xml",
+    "sources/",
+    "sources/buildDescription.xml",
+    "sources/fmi3/",
+    "sources/fmi3/fmi3FunctionTypes.h",
+    "sources/fmi3/fmi3Functions.h",
+    "sources/fmi3/fmi3PlatformTypes.h",
+    "sources/fmi3_multi_bridge.cpp"
+  ],
+  "concurrent_axes": {
+    "axis_x_6state": {
+      "dsp_mode": 6,
+      "target_deg_s": 5.0,
+      "final_deg_s": 4.9992995957787585,
+      "err_pct": 0.014008084424830258,
+      "bit_status": 0,
+      "pass": true
+    },
+    "axis_y_4state": {
+      "dsp_mode": 4,
+      "target_deg_s": -12.0,
+      "final_deg_s": -11.995078633006306,
+      "err_pct": 0.04101139161411342,
+      "bit_status": 0,
+      "pass": true
+    },
+    "axis_z_2state": {
+      "dsp_mode": 2,
+      "target_deg_s": 25.0,
+      "final_deg_s": 24.962776733496778,
+      "err_pct": 0.14889306601288865,
+      "bit_status": 0,
+      "pass": true
+    }
+  },
+  "pass": true
+}

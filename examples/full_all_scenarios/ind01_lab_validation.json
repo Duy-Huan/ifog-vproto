@@ -1,0 +1,71 @@
+{
+  "scenario": "IND-01_lab_validation",
+  "lab_dir": "/home/antigravity/Duy-Huan/ifog-vproto/configs/lab_datasets/reference_ifog_lab",
+  "nasa_cas_level": 4,
+  "rig_coverage": {
+    "static_avar_tau_range_s": [
+      0.1,
+      10000.0
+    ],
+    "rate_table_range_deg_s": [
+      -2.0,
+      2.0
+    ],
+    "thermal_chamber_range_C": [
+      -40.0,
+      85.0
+    ],
+    "chamber_ramp_K_per_s": 0.05
+  },
+  "error_before_pct": {
+    "avar_nrmse_pct": 13.508232258106014,
+    "deadband_nrmse_pct": 101.925262312266,
+    "thermal_bias_nrmse_pct": 47.358192007506,
+    "thermal_sf_nrmse_pct": 39.71986811694827
+  },
+  "error_after_pct": {
+    "avar_nrmse_pct": 0.9763068824506279,
+    "deadband_nrmse_pct": 1.8007561415643876,
+    "thermal_bias_nrmse_pct": 4.513873879741725,
+    "thermal_sf_nrmse_pct": 0.09838307534496388
+  },
+  "max_error_before_pct": 101.925262312266,
+  "max_error_after_pct": 4.513873879741725,
+  "asme_vv20_after": {
+    "static_avar_10h": {
+      "E_rms": 0.004538017677333248,
+      "u_val_rms": 0.006280669631811108,
+      "ratio_E_over_u_val": 0.7225372362126067,
+      "nrmse_pct": 1.2682959776222686
+    },
+    "rate_table_deadband": {
+      "E_rms": 0.004902992669705888,
+      "u_val_rms": 0.02503703915617565,
+      "ratio_E_over_u_val": 0.19582957230374076,
+      "nrmse_pct": 1.8007561415643876
+    },
+    "thermal_chamber_bias": {
+      "E_rms": 0.009364700018215578,
+      "u_val_rms": 0.025021511569431068,
+      "ratio_E_over_u_val": 0.3742659588022847,
+      "nrmse_pct": 4.513873879741725
+    }
+  },
+  "max_ratio_E_over_u_val_after": 0.7225372362126067,
+  "calibrated_params": {
+    "c_pink_coeff": 2.1504886170425443,
+    "R_facet_dB": -53.7230545607346,
+    "eta_pd_scale": 0.8868142481643003,
+    "C_xtalk_F": 7.375627329082181e-12,
+    "G_xtalk_S": 4.1992496215579814e-08,
+    "dac_asym_lsb": 1.1472880636744145,
+    "diffusivity_m2_per_s": 1.5156619480377478e-06,
+    "delta_z_quad_m": 0.004016249600967374,
+    "alpha_vpi_ppm_K": 412.5104723120735,
+    "alpha_bobbin_ppm_K": 30.501414298322253
+  },
+  "tier2_closed_loop_target_deg_s": 5.0,
+  "tier2_closed_loop_meas_deg_s": 4.996548491778405,
+  "tier2_closed_loop_err_pct": 0.06903016443189358,
+  "pass": true
+}

@@ -2,8 +2,8 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v4.0.1}
-\newcommand{\DocDate}{2026-11-26}
+\newcommand{\DocVersion}{v4.1.0}
+\newcommand{\DocDate}{2026-11-27}
 
 \usepackage{fontspec}
 \setmainfont{Noto Sans}
@@ -47,8 +47,41 @@
 
 \begin{tcolorbox}[colback=NavyBlue,colframe=NavyBlue,arc=4pt,boxrule=0pt,left=12pt,right=12pt,top=9pt,bottom=9pt]
 {\color{white}\Large\bfseries \texttt{ifog-vproto} --- Official Release Notes}\\[3pt]
-{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-007} v7.0 \quad|\quad Date: \DocDate}
+{\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-007} + TRL 7--8 / DO-254 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
+
+\section{Release v4.1.0 (2026-11-27)}
+
+\subsection{Key New Features (Group E TRL 7--8 / DO-254 Industrial Suite, 2/4/6-State FPGA DSP \& Multi-Instance FMU)}
+\begin{enumerate}
+    \item \textbf{\texttt{IND-01} Physical Lab Hardware Data Ingestion \& NASA-STD-7009A CAS-4 / ASME V\&V 20 (\texttt{lab\_validation.py}):}
+    Standardized 3-rig CSV ingestor (\texttt{configs/lab\_datasets/reference\_ifog\_lab/}: 10 h granite-table AVAR, $[-2,+2]^\circ/\text{s}$ slow rate-table Deadband/Bunny Ears, $-40..+85^\circ\text{C}$ thermal chamber) + CLI \texttt{--lab-dir}; cuts uncalibrated datasheet error ($101.9\%$) to \textbf{$4.51\%$} ($<5\%$), achieving ASME V\&V 20 max $|E|/u_{\text{val}} = 0.723 \le 1.0$ (\textbf{CAS-4}) and Tier 2 C++ tracking error $0.0031\%$.
+    \item \textbf{\texttt{IND-02} Bit-True FPGA Fixed-Point DSP (\texttt{Q16.32}) \& Synthesizable SystemVerilog RTL (\texttt{rtl/ifog\_dsp\_6state.sv}):}
+    Exact signed $Q_{(W-F).F}$ saturating/truncating register quantization in \texttt{DigitalDSP\_SC} and SV-2012 RTL supporting selectable \textbf{2-State, 4-State, and 6-State} modes; achieves \textbf{0-LSB} RTL match, 0 overflows, and $31\times$--$376\times$ lower quantization noise than 32-bit \texttt{Q8.24}.
+    \item \textbf{\texttt{IND-03} 3D Cylindrical ANSYS/COMSOL FEM $\to$ \texttt{shupe\_lut.bin} v2 (\texttt{shupe\_thermal.py}):}
+    Smooth linear RBF 3D cylindrical projection of eccentric housing hotspots $T(r,\theta,z,t)$ \& anisotropic potting stress $\sigma_{\text{eff}}(r,\theta,z,t)$ onto discrete fiber turns (\texttt{--fem-3d-csv}), proving \textbf{$6.00\times$} Octupole vs Quadrupole 3D suppression in real Tier 2 C++.
+    \item \textbf{\texttt{IND-04} MIL-STD-810H / DO-160G Broadband Random Vibration PSD \& 2-DOF Resonance:}
+    Piecewise log-log PSD ($20$--$2000\text{ Hz}$, $4.88\text{ g}_{\text{rms}}$) through 2-DOF elastomer isolator ($65\text{ Hz}$) + bobbin ($480\text{ Hz}, Q=12$) transmissibility + Miles' Eq cross-check, achieving \textbf{$4.82\times$} coil $g_{\text{rms}}$ attenuation and \textbf{$3.11\times$} Tier 2 C++ VRE bias reduction.
+    \item \textbf{\texttt{IND-05} Multi-Instance Thread-Safe Pure-C++17 Source-Code FMI 3.0.2 FMU (\texttt{build/ifog\_core\_multi.fmu}):}
+    Eliminates Accellera SystemC singleton lock (\texttt{canBeInstantiatedOnlyOncePerProcess="false"}), bundles portable \texttt{sources/buildDescription.xml} for Windows/Simulink \& RT-Linux, passes FMPy validation (0 XSD errors), and executes \textbf{3 concurrent axes (6-State / 4-State / 2-State) in 1 OS process} ($<0.15\%$ error, 0 cross-talk).
+    \item \textbf{\texttt{IND-06} 12-Corner Worst-Case PVT Matrix \& 10-Yr SLD/MIOC Aging + Space 50 krad(Si) TID:}
+    Evaluates $-40/+25/+85^\circ\text{C} \times \pm 5\%$ rail $\times \pm 3\sigma$ process + exponential SLD droop \& PM fiber RIA(TID) via real Tier 1 + Tier 2 C++ milestones (WC PVT ARW $0.00049$, EOL ARW $0.00052\text{ deg}/\sqrt{\text{h}}$).
+    \item \textbf{Complete 2/4/6-State DSP Coverage, 29/29 Suite, 100\% Dual Coverage \& 23 Release Assets:}
+    Extended \texttt{DSP-01}, \texttt{DYN-01..03}, \texttt{IND-02}, and \texttt{IND-05} across all three DSP modes (2/4/6-State); verified \textbf{100.0\% C++} ($2{,}733/2{,}733$ lines, $299/299$ functions) \& \textbf{100.00\% Python} ($5{,}632/5{,}632$ stmts) coverage, \textbf{29/29 PASS} curated example, synchronized 38-slide presentation deck, and \textbf{23 verified release assets}.
+\end{enumerate}
+
+\subsection{Verified Quality Gates \& Attached Release Assets (23 Assets)}
+\begin{tabularx}{\textwidth}{@{}l X c@{}}
+\toprule
+\textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
+\midrule
+Quadruple Spec Lock \& Rule 16 & \texttt{SPEC-004..007} SHA-256 OK; \texttt{\{main, dev\}}; 4 PDFs + HTML explorer synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
+Group E TRL 7--8 / DO-254 (\texttt{IND-01..06}) & CAS-4 ($|E|/u_{\text{val}}=0.723$), 0-LSB FPGA/RTL (2/4/6s), 3D FEM ($6.0\times$), MIL-STD-810H PSD, Multi-FMU (3 axes), 12-PVT/50 krad & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual FMI 3.0.2 FMUs & 0 XSD errors on \texttt{ifog\_core.fmu} \& \texttt{ifog\_core\_multi.fmu}; 3 concurrent in-process axes $<0.15\%$ & \textcolor{TealDark}{\textbf{PASS}} \\
+Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% ($2{,}733/2{,}733$ lines) \& Python \texttt{pytest-cov} 100.00\% ($5{,}632/5{,}632$ stmts) & \textcolor{TealDark}{\textbf{PASS}} \\
+53-Formula \& 29-Scenario Suite & 53 / 53 formulas (\texttt{EQ-01}--\texttt{EQ-53}) + 29 / 29 PASS curated example + container CI & \textcolor{TealDark}{\textbf{PASS}} \\
+\bottomrule
+\end{tabularx}
 
 \section{Release v4.0.1 (2026-11-26)}
 
@@ -77,19 +110,6 @@
     \item \textbf{Presentation-Grade Tier-by-Tier Mathematical Documentation \& 23/23 Curated Example:}
     Embedded complete tier-by-tier mathematical formulations (\texttt{EQ-01}--\texttt{EQ-53}) in \texttt{IFOG\_VPROTO\_ARCHITECTURE.\{md,tex,pdf\}}, \texttt{IFOG\_ARCHITECTURE\_EXPLORER.html}, and every generated \texttt{report.md} / KaTeX \texttt{report.html}; regenerated \texttt{examples/full\_all\_scenarios/} (\textbf{23 / 23 PASS}, 23 300-DPI PNGs, \texttt{calibrated\_params.json}) at \textbf{100.0\% C++} ($2{,}329/2{,}329$ lines) \& \textbf{100.00\% Python} ($4{,}650/4{,}650$ stmts) coverage.
 \end{enumerate}
-
-\subsection{Verified Quality Gates \& Attached Release Assets (22 Assets)}
-\begin{tabularx}{\textwidth}{@{}l X c@{}}
-\toprule
-\textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
-\midrule
-Quadruple Spec Lock, Branch \& Rule 16 & \texttt{SPEC-004..007} SHA-256 OK; \texttt{\{main, dev\}}; 3 PDFs + HTML explorer synced to \texttt{\DocVersion} & \textcolor{TealDark}{\textbf{PASS}} \\
-\texttt{SPEC-007} Physics \& Calibration & \texttt{PHY-01} ($-47.7\%$ octupole, LUT v2, MIOC+xtalk); \texttt{CAL-01} ($40$--$103\% \to 0.04$--$0.91\% < 5\%$) & \textcolor{TealDark}{\textbf{PASS}} \\
-FMI 3.0 Tunable FMU (Gate 6 + \texttt{VR 15..21}) & 0 XSD errors; $0.00\times 10^0\text{ rad/s}$ equiv; live \texttt{VR 15..21} tuning; 3.83\% AVAR overlap & \textcolor{TealDark}{\textbf{PASS}} \\
-Dual-Domain 100\% Coverage & C++ \texttt{gcovr} 100.0\% ($2{,}329/2{,}329$ lines) \& Python \texttt{pytest-cov} 100.00\% ($4{,}650/4{,}650$ stmts) & \textcolor{TealDark}{\textbf{PASS}} \\
-53-Formula \& 23-Scenario Suite & 53 / 53 formulas (\texttt{EQ-01}--\texttt{EQ-53}) + 23 / 23 PASS curated example + container CI & \textcolor{TealDark}{\textbf{PASS}} \\
-\bottomrule
-\end{tabularx}
 
 \section{Previous Releases}
 

@@ -1,0 +1,224 @@
+{
+  "spec_id": "IFOG-VPROTO-v4.1.0-IND01",
+  "lab_dir": "/home/antigravity/Duy-Huan/ifog-vproto/configs/lab_datasets/reference_ifog_lab",
+  "rig_coverage": {
+    "static_avar_tau_range_s": [
+      0.1,
+      10000.0
+    ],
+    "rate_table_range_deg_s": [
+      -2.0,
+      2.0
+    ],
+    "thermal_chamber_range_C": [
+      -40.0,
+      85.0
+    ],
+    "chamber_ramp_K_per_s": 0.05
+  },
+  "calibration": {
+    "spec_id": "IFOG-SIM-SPEC-007",
+    "uncalibrated_params": {
+      "c_pink_coeff": 1.0,
+      "R_facet_dB": -68.0,
+      "eta_pd_scale": 1.0,
+      "C_xtalk_F": 2e-12,
+      "G_xtalk_S": 1e-08,
+      "dac_asym_lsb": 0.15,
+      "diffusivity_m2_per_s": 8e-07,
+      "delta_z_quad_m": 0.0015,
+      "alpha_vpi_ppm_K": 220.0,
+      "alpha_bobbin_ppm_K": 18.0
+    },
+    "calibrated_params": {
+      "c_pink_coeff": 2.1504886170425443,
+      "R_facet_dB": -53.7230545607346,
+      "eta_pd_scale": 0.8868142481643003,
+      "C_xtalk_F": 7.375627329082181e-12,
+      "G_xtalk_S": 4.1992496215579814e-08,
+      "dac_asym_lsb": 1.1472880636744145,
+      "diffusivity_m2_per_s": 1.5156619480377478e-06,
+      "delta_z_quad_m": 0.004016249600967374,
+      "alpha_vpi_ppm_K": 412.5104723120735,
+      "alpha_bobbin_ppm_K": 30.501414298322253
+    },
+    "ci95": {
+      "c_pink_coeff": 0.04934459523725308,
+      "R_facet_dB": 0.5254312603651686,
+      "eta_pd_scale": 0.0033878974423138634,
+      "C_xtalk_F": 3.185624922157168e-14,
+      "G_xtalk_S": 5.947280676848378e-11,
+      "dac_asym_lsb": 0.012818137702302331,
+      "diffusivity_m2_per_s": 1.9891778534064406e-07,
+      "delta_z_quad_m": 0.005670146992292002,
+      "alpha_vpi_ppm_K": 13.223262757543724,
+      "alpha_bobbin_ppm_K": 0.01810361709574689
+    },
+    "stages": {
+      "stage_a": {
+        "params": {
+          "c_pink_coeff": 2.1504886170425443,
+          "R_facet_dB": -53.7230545607346,
+          "eta_pd_scale": 0.8868142481643003
+        },
+        "ci95": {
+          "c_pink_coeff": 0.04934459523725308,
+          "R_facet_dB": 0.5254312603651686,
+          "eta_pd_scale": 0.0033878974423138634
+        },
+        "covariance": [
+          [
+            0.0006338216053541075,
+            -0.0034478604581808184,
+            -1.4674210648168753e-06
+          ],
+          [
+            -0.003447860458182105,
+            0.07186537103522742,
+            0.00023593703632475505
+          ],
+          [
+            -1.4674210648215687e-06,
+            0.0002359370363247625,
+            2.987778290201171e-06
+          ]
+        ],
+        "cost": 0.0010072304188971926,
+        "nfev": 9
+      },
+      "stage_b": {
+        "params": {
+          "C_xtalk_F": 7.375627329082181e-12,
+          "G_xtalk_S": 4.1992496215579814e-08,
+          "dac_asym_lsb": 1.1472880636744145
+        },
+        "ci95": {
+          "C_xtalk_F": 3.185624922157168e-14,
+          "G_xtalk_S": 5.947280676848378e-11,
+          "dac_asym_lsb": 0.012818137702302331
+        },
+        "covariance": [
+          [
+            2.641661324622258e-28,
+            1.5418005603419542e-25,
+            -5.0201912868446453e-20
+          ],
+          [
+            1.5418005603419556e-25,
+            9.207139590070308e-22,
+            -7.105066746453204e-15
+          ],
+          [
+            -5.020191286839769e-20,
+            -7.105066746453064e-15,
+            4.2769849582253354e-05
+          ]
+        ],
+        "cost": 0.02038535787707284,
+        "nfev": 12
+      },
+      "stage_c": {
+        "params": {
+          "diffusivity_m2_per_s": 1.5156619480377478e-06,
+          "delta_z_quad_m": 0.004016249600967374,
+          "alpha_vpi_ppm_K": 412.5104723120735,
+          "alpha_bobbin_ppm_K": 30.501414298322253
+        },
+        "ci95": {
+          "diffusivity_m2_per_s": 1.9891778534064406e-07,
+          "delta_z_quad_m": 0.005670146992292002,
+          "alpha_vpi_ppm_K": 13.223262757543724,
+          "alpha_bobbin_ppm_K": 0.01810361709574689
+        },
+        "covariance": [
+          [
+            1.0299949324455061e-14,
+            -5.6599138411068165e-12,
+            8.34665876945894e-10,
+            -8.138219478792598e-10
+          ],
+          [
+            -5.659913841171075e-12,
+            8.369056360422232e-06,
+            -0.016904486459463915,
+            4.472024047842035e-07
+          ],
+          [
+            8.346658770567016e-10,
+            -0.016904486459463793,
+            45.516107339400996,
+            -6.594881086299064e-05
+          ],
+          [
+            -8.13821947879287e-10,
+            4.472024047789955e-07,
+            -6.59488108556823e-05,
+            8.531365887896162e-05
+          ]
+        ],
+        "cost": 3.5275766493429006,
+        "nfev": 15
+      }
+    },
+    "cost_before": 223.73870997343707,
+    "cost_after": 1.459127647865879,
+    "error_before_pct": {
+      "avar_nrmse_pct": 13.508232258106014,
+      "deadband_nrmse_pct": 101.925262312266,
+      "thermal_bias_nrmse_pct": 47.358192007506,
+      "thermal_sf_nrmse_pct": 39.71986811694827
+    },
+    "error_after_pct": {
+      "avar_nrmse_pct": 0.9763068824506279,
+      "deadband_nrmse_pct": 1.8007561415643876,
+      "thermal_bias_nrmse_pct": 4.513873879741725,
+      "thermal_sf_nrmse_pct": 0.09838307534496388
+    },
+    "max_error_before_pct": 101.925262312266,
+    "max_error_after_pct": 4.513873879741725,
+    "pass_lt_5pct": true
+  },
+  "asme_vv20_before": {
+    "static_avar_10h": {
+      "E_rms": 0.024405576988154768,
+      "u_val_rms": 0.006280669631811108,
+      "ratio_E_over_u_val": 3.885824031332965,
+      "nrmse_pct": 6.820928724062842
+    },
+    "rate_table_deadband": {
+      "E_rms": 0.27751609584446413,
+      "u_val_rms": 0.02503703915617565,
+      "ratio_E_over_u_val": 11.08422182484832,
+      "nrmse_pct": 101.925262312266
+    },
+    "thermal_chamber_bias": {
+      "E_rms": 0.09825158464124482,
+      "u_val_rms": 0.025021511569431068,
+      "ratio_E_over_u_val": 3.9266846196965726,
+      "nrmse_pct": 47.358192007506
+    }
+  },
+  "asme_vv20_after": {
+    "static_avar_10h": {
+      "E_rms": 0.004538017677333248,
+      "u_val_rms": 0.006280669631811108,
+      "ratio_E_over_u_val": 0.7225372362126067,
+      "nrmse_pct": 1.2682959776222686
+    },
+    "rate_table_deadband": {
+      "E_rms": 0.004902992669705888,
+      "u_val_rms": 0.02503703915617565,
+      "ratio_E_over_u_val": 0.19582957230374076,
+      "nrmse_pct": 1.8007561415643876
+    },
+    "thermal_chamber_bias": {
+      "E_rms": 0.009364700018215578,
+      "u_val_rms": 0.025021511569431068,
+      "ratio_E_over_u_val": 0.3742659588022847,
+      "nrmse_pct": 4.513873879741725
+    }
+  },
+  "max_ratio_E_over_u_val_after": 0.7225372362126067,
+  "nasa_cas_level": 4,
+  "pass": true
+}

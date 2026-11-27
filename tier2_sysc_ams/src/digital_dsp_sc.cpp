@@ -63,6 +63,7 @@ DigitalDSP_SC::DigitalDSP_SC(
       records_written_(0),
       flyback_count_(0),
       anti_windup_count_(0),
+      fxp_overflow_count_(0),
       second_half_sum_(0.0),
       second_half_count_(0),
       e_asym_sq_sum_(0.0),
@@ -151,18 +152,34 @@ double DigitalDSP_SC::encode_dac_phase(double phi_total) const {
     return static_cast<double>(q_dac.to_int());
 }
 
+double DigitalDSP_SC::quantize_reg(double val) {
+    if (!cfg_.en_fixed_point) {
+        return val;
+    }
+    bool ovf = false;
+    const double q = quantize_fixed_signed(
+        val, cfg_.fxp_acc_bits, cfg_.fxp_frac_bits, cfg_.fxp_truncate, &ovf
+    );
+    if (ovf) {
+        ++fxp_overflow_count_;
+    }
+    return q;
+}
+
 bool DigitalDSP_SC::apply_loop1_update(double e_omega) {
-    // EQ-20 & EQ-34: Loop-1 PI integrator with anti-windup clamping
-    const double raw_dphi = delta_phi_step_ + k_i1_ * e_omega + k_p1_ * (e_omega - prev_e_omega_);
+    // EQ-20 & EQ-34: Loop-1 PI integrator with anti-windup clamping (+ optional Q(W-F).F FPGA fixed-point)
+    const double raw_dphi = quantize_reg(
+        delta_phi_step_ + quantize_reg(k_i1_) * e_omega + k_p1_ * (e_omega - prev_e_omega_)
+    );
     prev_e_omega_ = e_omega;
     last_e_omega_ = e_omega;
     if (raw_dphi > cfg_.max_delta_phi_step_rad) {
-        delta_phi_step_ = cfg_.max_delta_phi_step_rad;
+        delta_phi_step_ = quantize_reg(cfg_.max_delta_phi_step_rad);
         ++anti_windup_count_;
         return true;
     }
     if (raw_dphi < -cfg_.max_delta_phi_step_rad) {
-        delta_phi_step_ = -cfg_.max_delta_phi_step_rad;
+        delta_phi_step_ = quantize_reg(-cfg_.max_delta_phi_step_rad);
         ++anti_windup_count_;
         return true;
     }
@@ -250,7 +267,7 @@ void DigitalDSP_SC::on_adc_sample() {
                     - (y_frame_[0] + y_frame_[2] + y_frame_[3] + y_frame_[5]);
                 last_e_vpi_raw_ = static_cast<int32_t>(std::llround(e_vpi));
                 if (cfg_.en_vpi_loop) {
-                    g_dac_ -= k_i2_ * e_vpi;
+                    g_dac_ = quantize_reg(g_dac_ - quantize_reg(k_i2_) * e_vpi);
                     g_dac_ = std::clamp(g_dac_, 0.5 * g_dac_nom_, 2.0 * g_dac_nom_);
                 }
 
@@ -277,7 +294,7 @@ void DigitalDSP_SC::on_adc_sample() {
                     (y_frame_[2] + y_frame_[3]) - (y_frame_[0] + y_frame_[1]);
                 last_e_vpi_raw_ = static_cast<int32_t>(std::llround(e_vpi));
                 if (cfg_.en_vpi_loop) {
-                    g_dac_ -= k_i2_ * e_vpi;
+                    g_dac_ = quantize_reg(g_dac_ - quantize_reg(k_i2_) * e_vpi);
                     g_dac_ = std::clamp(g_dac_, 0.5 * g_dac_nom_, 2.0 * g_dac_nom_);
                 }
 
@@ -335,7 +352,7 @@ void DigitalDSP_SC::on_adc_sample() {
 
     // EQ-21: Digital phase ramp with modulo-2pi flyback reset
     const double raw_ramp = phi_ramp_ + delta_phi_step_;
-    phi_ramp_ = wrap_2pi(raw_ramp);
+    phi_ramp_ = quantize_reg(wrap_2pi(raw_ramp));
     const bool flyback = (std::fabs(phi_ramp_ - raw_ramp) > 1.0);
     if (flyback) {
         ++flyback_count_;

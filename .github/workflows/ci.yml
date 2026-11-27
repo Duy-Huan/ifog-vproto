@@ -104,13 +104,14 @@ jobs:
             ifog-6state-and-scenarios \
             ifog-fmi3-cosim-fmu \
             ifog-spec007-physics-calibration \
+            ifog-industrial-trl7-do254 \
             ifog-tier3-dual-regime-avar \
             ifog-reporting-and-doc-sync \
             ifog-portable-container-env \
             ifog-cicd-release-workflow; do
             test -s "skills/${skill}/SKILL.md"
           done
-          echo "AGENT.md and all 10 project skills verified."
+          echo "AGENT.md and all 11 project skills verified."
 
       - name: Enforce Rule 16 — Mandatory Version-Document Synchronization
         run: |
@@ -118,7 +119,7 @@ jobs:
           python3 scripts/verify_doc_sync.py
 
   build-and-verify:
-    name: Build SystemC-AMS & FMI 3.0 FMU, 53 Formulas, 100% C++/Py Coverage & Full Real Scenarios
+    name: Build SystemC-AMS & FMI 3.0.2 FMUs, 53 Formulas, 100% C++/Py Coverage & Full 29 Scenarios
     needs: governance-and-spec-lock
     runs-on: ubuntu-24.04
     timeout-minutes: 35
@@ -157,13 +158,14 @@ jobs:
           python3 -m pip install numpy scipy matplotlib plotly jsonschema fmpy pytest pytest-cov pytest-xdist
           python3 -m pip install -e . --no-build-isolation --no-deps
 
-      - name: Build Tier 2 SystemC-AMS Core (-O3, -fPIC), Package FMI 3.0 FMU & Run C++ Unit Tests
+      - name: Build Tier 2 SystemC-AMS Core (-O3, -fPIC), Package Both FMI 3.0.2 FMUs & Run C++ Unit Tests
         run: |
           cmake -S tier2_sysc_ams -B build -DCMAKE_BUILD_TYPE=Release
           cmake --build build -j"$(nproc)"
-          cmake --build build --target package_fmu
+          cmake --build build --target package_fmu package_fmu_multi
           ./build/ifog_cpp_tests
-          python3 -c "from fmpy.validation import validate_fmu; probs = validate_fmu('build/ifog_core.fmu'); assert not probs, probs; print('FMI 3.0 FMU validation OK!')"
+          ./build/ifog_fmi_multi_tests
+          python3 -c "from fmpy.validation import validate_fmu; assert not validate_fmu('build/ifog_core.fmu'); assert not validate_fmu('build/ifog_core_multi.fmu'); print('Both FMI 3.0.2 FMUs validated cleanly!')"
 
       - name: Gate A — C++ 100.0% Line Coverage Verification (Tier 2 + fmi_wrapper, gcovr)
         run: bash scripts/run_cpp_coverage.sh
@@ -178,7 +180,7 @@ jobs:
           pytest tests/unit tests/formula_verification \
             --cov --cov-report=term-missing --cov-report=xml:data/python_coverage.xml
 
-      - name: Gate D — Full Real 6-Gate (incl. FMI 3.0 FMU) + 17-Scenario (incl. SPEC-007 PHY-01/CAL-01) Simulations (Rule 5)
+      - name: Gate D — Full Real 29-Item Suite (Gates 1-6 + Groups A-E incl. TRL 7-8 / DO-254)
         run: pytest tests/system -v -s
 
       - name: Upload CI Verification Artifacts
@@ -188,6 +190,7 @@ jobs:
           name: ifog-ci-verification-artifacts
           path: |
             build/ifog_core.fmu
+            build/ifog_core_multi.fmu
             data/ci_formula_report/formula_verification_matrix.md
             data/ci_formula_report/formula_verification_matrix.json
             data/cov_cpp_work/cpp_coverage_summary.json

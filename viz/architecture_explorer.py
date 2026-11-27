@@ -288,15 +288,16 @@ ARCHITECTURE_NODES: dict[str, dict[str, Any]] = {
         ],
     },
     "25": {
-        "badge": "Biên Công nghiệp • FMI 3.0 FMU (SPEC-006)",
+        "badge": "Biên Công nghiệp • FMI 3.0.2 FMU (SPEC-006 + v4.1.0)",
         "badge_class": "badge-indigo",
-        "title": "IfogTopModule & fmi_wrapper/ — Hộp đen Chuẩn FMI 3.0 (ifog_core.fmu)",
-        "source_ref": "tier2_sysc_ams/src/ifog_top_module.cpp & fmi_wrapper/src/fmi3_bridge.cpp | EQ-42..EQ-44",
+        "title": "IfogTopModule & fmi_wrapper/ — Hộp đen FMI 3.0.2 (ifog_core.fmu & ifog_core_multi.fmu)",
+        "source_ref": "tier2_sysc_ams/src/ifog_top_module.cpp & fmi_wrapper/src/{fmi3_bridge,fmi3_multi_bridge}.cpp | EQ-42..EQ-44",
         "intuition": (
-            "Đóng gói toàn bộ lõi vật lý Tầng 2 (biên dịch -fPIC thành thư viện chia sẻ ifog_core.so) cùng bảng tham số vào một tệp ZIP chuẩn quốc tế FMI 3.0 (.fmu). "
-            "Nhờ đó, kỹ sư dẫn đường INS/GNSS có thể kéo thả trực tiếp cảm biến IFOG vào MATLAB/Simulink, Python FMPy, Ansys, hoặc ROS mà không cần cài SystemC hay sửa bất kỳ dòng code vật lý nào."
+            "Cung cấp đồng thời 2 gói FMU chuẩn FMI 3.0.2: (1) ifog_core.fmu bọc lõi SystemC-AMS chính xác chu kỳ, và "
+            "(2) ifog_core_multi.fmu lõi thuần C++17 đa thực thể (canBeInstantiatedOnlyOncePerProcess='false') kèm mã nguồn mở "
+            "sources/buildDescription.xml giúp chạy đồng thời 3 trục IMU (6-State / 4-State / 2-State) trong 1 tiến trình hoặc biên dịch chéo sang Windows/Simulink."
         ),
-        "math_title": "Giao diện 15 Biến SI & Quy tắc Chống gập phổ (EQ-42..EQ-44)",
+        "math_title": "Giao diện 22 Biến SI (VR 0..21) & Quy tắc Chống gập phổ (EQ-42..EQ-44)",
         "math_blocks": [
             (
                 "Ánh xạ bước đồng mô phỏng fmi3DoStep(H) → sc_start(H, SC_SEC) và trung bình hộp chống aliasing:",
@@ -308,19 +309,19 @@ ARCHITECTURE_NODES: dict[str, dict[str, Any]] = {
             ),
         ],
         "checks": [
-            "0 lỗi XSD/ZIP từ fmpy.validation.validate_fmu; xuất đủ 75 ký hiệu C-API FMI 3.0; cờ canBeInstantiatedOnlyOncePerProcess='true'.",
-            "Tương đương chính xác bit 0.00e+00 rad/s (< 1e-12) so với nhị phân độc lập ifog_sim trên cả 4-state và 6-state.",
+            "0 lỗi XSD/ZIP trên cả 2 FMU (ifog_core.fmu & ifog_core_multi.fmu); xuất đủ 75 ký hiệu C-API FMI 3.0.",
+            "Chạy song song 3 trục 6-State / 4-State / 2-State trong 1 tiến trình Python với sai số < 0.15% và 0 nhiễu chéo (IND-05).",
         ],
     },
     "3": {
         "badge": "Tầng 3 • Phân tích & Nghiệm thu (Python)",
         "badge_class": "badge-purple",
-        "title": "Hậu xử lý IEEE Std 952, Dual-Regime AVAR, 15 Kịch bản & Báo cáo Chuẩn hóa",
-        "source_ref": "tier3_analysis/{dual_regime_avar,fmi_master_runner,scenarios_*}.py & viz/",
+        "title": "Hậu xử lý IEEE Std 952, Dual-Regime AVAR, 29 Hạng mục Nghiệm thu (Gates 1–6 + Groups A–E)",
+        "source_ref": "tier3_analysis/{dual_regime_avar,fmi_master_runner,lab_validation,scenarios_*}.py & viz/",
         "intuition": (
-            "Tiếp nhận chuỗi dữ liệu tốc độ góc từ Tầng 2 (nhị phân 32-byte sim_out.bin hoặc trực tiếp từ FMU) để thực hiện phân tích dài hạn 10 giờ, "
-            "kiểm thử toàn bộ 6 Cổng nghiệm thu (Gate 1–6) + 15 kịch bản kỹ thuật (TD-01..06, ENG-01..05, DYN-01..04), và tự động xuất bộ báo cáo "
-            "Markdown (.md) + HTML5 tương tác (.html) kèm giải thích lý thuyết và ý nghĩa từng hình vẽ."
+            "Tiếp nhận chuỗi dữ liệu tốc độ góc từ Tầng 2 (nhị phân 32-byte sim_out.bin, FMU hoặc CSV phòng lab vật lý) để phân tích dài hạn 10 giờ, "
+            "kiểm thử toàn bộ 29 hạng mục (6 Cổng nghiệm thu + TD-01..06 + ENG-01..05 + DYN-01..04 + PHY-01/CAL-01 + IND-01..06 TRL 7–8 / DO-254), "
+            "và tự động xuất bộ báo cáo Markdown (.md) + HTML5 tương tác (.html) kèm 29 hình 300-DPI."
         ),
         "math_title": "Overlapping AVAR & Mô hình 5 Vùng IEEE Std 952-2020 (EQ-24..EQ-30)",
         "math_blocks": [
@@ -440,7 +441,7 @@ def _format_live_banner(summary: dict[str, Any] | None) -> str:
 
 
 def render_architecture_explorer_html(
-    version: str = "4.0.0",
+    version: str = "4.1.0",
     summary: dict[str, Any] | None = None,
     back_report_href: str | None = None,
 ) -> str:
@@ -704,12 +705,11 @@ def render_architecture_explorer_html(
           </div>
 
           <div id="node-24" data-node="24" onclick="selectNode('24')" class="diagram-card" style="left:138px; top:502px; width:428px; height:132px; border-color:#ea580c; background:#fff7ed;">
-            <div class="card-title" style="color:#7c2d12;">2.4. DigitalDSP_SC (2 / 4 / Official 6-State FPGA)</div>
+            <div class="card-title" style="color:#7c2d12;">2.4. DigitalDSP_SC (2 / 4 / 6-State Bit-True FPGA &amp; SV RTL)</div>
             <ul class="card-list">
-              <li><strong>Official 6-State ($\alpha^*=\pi/3$):</strong> $-33.3\%$ $V_{{\text{{peak}}}}$, $+136.9\text{{ dB}}$ kháng RAM/xtalk</li>
-              <li><strong>Vòng 1:</strong> Khóa pha Sagnac + Anti-windup $\Rightarrow \Omega_{{\text{{out}}}}[n]$</li>
-              <li><strong>Vòng 2:</strong> Khóa độ lợi $V_\pi$ ($G_{{\text{{DAC}}}} \to 1/(1+\epsilon_{{V_\pi}})$) &amp; Reset $2\pi$</li>
-              <li><strong>PRBS LFSR 32-bit</strong> phá Deadband + <strong>BIT/FDIR</strong> 5 lỗi thời gian thực</li>
+              <li><strong>Đủ 3 chế độ 2 / 4 / 6-State:</strong> 6-State ($\alpha^*=\pi/3$) $-33.3\%$ $V_{{\text{{peak}}}}$, $+136.9\text{{ dB}}$ kháng RAM/xtalk</li>
+              <li><strong>Dấu phẩy tĩnh Q16.32 (48-bit):</strong> Khớp 0-LSB <code>rtl/ifog_dsp_6state.sv</code>, 0 tràn thanh ghi</li>
+              <li><strong>Vòng 1 + Vòng 2:</strong> Khóa pha Sagnac + Khóa $V_\pi$ + Reset $2\pi$ + PRBS + BIT/FDIR 5 lỗi</li>
             </ul>
           </div>
 
@@ -723,27 +723,27 @@ def render_architecture_explorer_html(
           </div>
 
           <div id="node-25" data-node="25" onclick="selectNode('25')" class="diagram-card" style="left:280px; top:718px; width:750px; height:102px; border-color:#4f46e5; background:#eef2ff;">
-            <div class="card-title" style="color:#312e81;">2.5. Lớp vỏ Đóng gói FMI 3.0 Co-Simulation FMU (<code>IfogTopModule</code> + <code>fmi_wrapper/</code>)</div>
+            <div class="card-title" style="color:#312e81;">2.5. FMI 3.0.2 Co-Simulation FMU (<code>ifog_core.fmu</code> &amp; Multi-Instance Source-Code <code>ifog_core_multi.fmu</code>)</div>
             <div class="card-sub" style="color:#3730a3;">
-              <code>build/ifog_core.fmu</code> (<code>fmiVersion="3.0"</code>, 75 ký hiệu C-API, 15 biến SI, <code>canBeInstantiatedOnlyOncePerProcess="true"</code>)<br/>
-              Xuất đồng thời: <code>omega_out</code> ($vr=3$, sai số $0.00\text{{ rad/s}}$ vs <code>ifog_sim</code>), <code>omega_out_avg</code> ($vr=14$, chống aliasing), <code>e_vpi_res</code> ($vr=4$), <code>bit_status</code> ($vr=5$)
+              75 ký hiệu C-API, 22 biến SI (VR 0..21), 0 lỗi XSD • <code>ifog_core_multi.fmu</code>: lõi thuần C++17 (<code>canBeInstantiatedOnlyOncePerProcess="false"</code>)<br/>
+              Đóng gói kèm <code>sources/buildDescription.xml</code> cho Windows/RT-Linux • Chạy song song 3 trục 6-State / 4-State / 2-State trong 1 tiến trình
             </div>
           </div>
 
           <!-- TIER 3 CONTAINER -->
           <div class="tier-box" style="left:12px; top:862px; width:1036px; height:176px; border-color:#e9d5ff; background:rgba(250,245,255,.65);">
             <div class="tier-title" style="color:#581c87;">
-              <span>TẦNG 3: HẬU XỬ LÝ VĨ MÔ, FMPY MASTER &amp; NGHIỆM THU IEEE STD 952 (PYTHON)</span>
-              <span class="tier-pill" style="background:#f3e8ff; color:#6b21a8;">6 Gates + 15 Scenarios + Auto Report</span>
+              <span>TẦNG 3: HẬU XỬ LÝ VĨ MÔ, LAB CAS-4, FMPY MASTER &amp; NGHIỆM THU TRL 7–8 / DO-254 (PYTHON)</span>
+              <span class="tier-pill" style="background:#f3e8ff; color:#6b21a8;">29 Gates &amp; Scenarios (Groups A–E)</span>
             </div>
           </div>
 
           <div id="node-3" data-node="3" onclick="selectNode('3')" class="diagram-card" style="left:138px; top:896px; width:892px; height:128px; border-color:#9333ea;">
-            <div class="card-title" style="color:#581c87;">3. Dual-Regime Overlapping AVAR, FMPy Master &amp; Bộ xuất Báo cáo Chuẩn hóa (<code>tier3_analysis/</code> + <code>viz/</code>)</div>
+            <div class="card-title" style="color:#581c87;">3. Dual-Regime AVAR, Lab CAS-4, 3D FEM, MIL-STD-810H PSD &amp; Báo cáo Tự động (<code>tier3_analysis/</code> + <code>viz/</code>)</div>
             <ol class="card-list" style="padding-left:20px;">
-              <li><strong>Khâu nối 2 miền IEEE Std 952:</strong> 4×60 s Thực (Tầng 2 / FMU) + 12×10 h @ 100 Hz (neo theo $N_{{\text{{fast}}}}$ từ Tầng 2) $\Rightarrow$ chồng lấp $&lt; 5\%$, hồi quy WLS 5 vùng $(Q,N,B,K,R) \le 10\%$.</li>
-              <li><strong>Nghiệm thu 21 hạng mục:</strong> Gates 1–4 + Gate 5 (6-State) + Gate 6 (FMI 3.0 FMU) + Group A (<code>TD-01..06</code>) + Group B (<code>ENG-01..05</code>, IMU 3 trục, MC Yield) + Group C (<code>DYN-01..04</code>).</li>
-              <li><strong>Báo cáo Chuẩn hóa v{html.escape(version)}:</strong> Xuất tự động <code>report.md</code> + <code>report.html</code> (20 đồ thị Plotly + 21 hình 300-DPI) kèm giải thích lý thuyết &amp; ý nghĩa từng biểu đồ.</li>
+              <li><strong>Khâu nối 2 miền IEEE Std 952 + CAS-4:</strong> 4×60 s Thực + 12×10 h @ 100 Hz (chồng lấp $&lt; 5\%$) + Nạp CSV Phòng Lab (ASME V&amp;V 20 $|E|/u_{{\text{{val}}}} &lt; 1$).</li>
+              <li><strong>Nghiệm thu 29 hạng mục:</strong> Gates 1–6 + <code>TD-01..06</code> + <code>ENG-01..05</code> + <code>DYN-01..04</code> + <code>PHY-01/CAL-01</code> + <strong>Group E <code>IND-01..06</code></strong> (Lab CAS-4, FPGA Q16.32/RTL, 3D FEM, MIL-STD-810H PSD, Multi-FMU, 12-PVT/50 krad).</li>
+              <li><strong>Báo cáo Chuẩn hóa v{html.escape(version)}:</strong> Xuất tự động <code>report.md</code> + <code>report.html</code> (29 hình 300-DPI + đồ thị Plotly) kèm giải thích lý thuyết &amp; ý nghĩa từng biểu đồ.</li>
             </ol>
           </div>
 

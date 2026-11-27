@@ -1,0 +1,14 @@
+{
+  "scenario": "IND-03_fem_3d",
+  "n_fem_nodes": 160,
+  "n_fiber_segments": 2048,
+  "max_spatial_dT_K": 2.9973269999999843,
+  "max_stress_MPa": 4.4933352499999994,
+  "peak_1d_quad_deg_h": 1.347288207613266,
+  "peak_3d_quad_deg_h": 0.1583189024083502,
+  "peak_3d_oct_deg_h": 0.030691004326976898,
+  "octupole_suppression_ratio": 5.158479035799765,
+  "tier2_quad_mean_deg_h": -0.8841247198697687,
+  "tier2_oct_mean_deg_h": -1.0562343338332987,
+  "pass": true
+}

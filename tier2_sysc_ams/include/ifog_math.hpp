@@ -456,6 +456,36 @@ inline double step_mioc_dynamics(MiocDynamicsFilter& filt, double v_in) {
     return filt.step(v_in);
 }
 
+// v4.1.0 (IND-02): Bit-true signed Q(total_bits - frac_bits).frac_bits FPGA accumulator quantizer
+inline double quantize_fixed_signed(
+    double val,
+    int total_bits,
+    int frac_bits,
+    bool truncate,
+    bool* overflowed = nullptr
+) {
+    const double scale = std::ldexp(1.0, frac_bits);
+    const double scaled = val * scale;
+    const double q_raw = truncate ? std::floor(scaled) : std::round(scaled);
+    const int64_t max_int = (static_cast<int64_t>(1) << (total_bits - 1)) - 1;
+    const int64_t min_int = -(static_cast<int64_t>(1) << (total_bits - 1));
+    const double max_d = static_cast<double>(max_int);
+    const double min_d = static_cast<double>(min_int);
+    bool ovf = false;
+    double clamped = q_raw;
+    if (q_raw > max_d) {
+        clamped = max_d;
+        ovf = true;
+    } else if (q_raw < min_d) {
+        clamped = min_d;
+        ovf = true;
+    }
+    if (overflowed != nullptr) {
+        *overflowed = ovf;
+    }
+    return clamped / scale;
+}
+
 }  // namespace ifog
 
 #endif  // IFOG_MATH_HPP

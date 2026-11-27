@@ -452,9 +452,46 @@ static void test_gate1_closed_loop_systemc_ams() {
     std::filesystem::remove_all(out_dir);
 }
 
+void test_fixed_point_quantizer_and_validation() {
+    bool ovf = false;
+    // Normal rounding and truncation
+    expect_near(quantize_fixed_signed(1.5, 48, 32, false, &ovf), 1.5, 1e-12, "fxp_round_exact");
+    CHECK(!ovf);
+    expect_near(quantize_fixed_signed(1.0 + 0.75 * std::ldexp(1.0, -8), 16, 8, true, &ovf),
+                1.0, 1e-12, "fxp_trunc");
+    CHECK(!ovf);
+    // Positive & negative overflow saturation (Q8.8 range: [-128, +127.99609375])
+    const double pos_sat = quantize_fixed_signed(500.0, 16, 8, false, &ovf);
+    CHECK(ovf);
+    expect_near(pos_sat, 127.99609375, 1e-9, "fxp_pos_sat");
+    const double neg_sat = quantize_fixed_signed(-500.0, 16, 8, false, &ovf);
+    CHECK(ovf);
+    expect_near(neg_sat, -128.0, 1e-9, "fxp_neg_sat");
+    // Null overflow pointer call
+    expect_near(quantize_fixed_signed(0.25, 24, 16, false, nullptr), 0.25, 1e-12, "fxp_null_ovf");
+
+    // Rule 11 fail-closed fixed-point format validation
+    auto expect_throws = [](auto&& fn) {
+        bool threw = false;
+        try {
+            fn();
+        } catch (const std::exception&) {
+            threw = true;
+        }
+        CHECK(threw);
+    };
+    IfogConfig bad{};
+    bad.fxp_acc_bits = 12;
+    expect_throws([&]() { validate_ifog_config(bad); });
+    bad.fxp_acc_bits = 48;
+    bad.fxp_frac_bits = 48;
+    expect_throws([&]() { validate_ifog_config(bad); });
+}
+
 int sc_main(int, char*[]) {
     test_math_formulas();
     test_config_and_cli_validation();
+    test_fixed_point_quantizer_and_validation();
     test_gate1_closed_loop_systemc_ams();
     std::cout << "[cpp_unit_tests] ALL PASSED\n";
     return 0;

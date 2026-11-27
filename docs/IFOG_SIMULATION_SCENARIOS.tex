@@ -2,8 +2,8 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-SCEN-001}
-\newcommand{\DocVersion}{v4.0.1}
-\newcommand{\DocDate}{2026-11-26}
+\newcommand{\DocVersion}{v4.1.0}
+\newcommand{\DocDate}{2026-11-27}
 
 \usepackage{fontspec}
 \setmainfont{Noto Sans}
@@ -65,7 +65,7 @@
 \midrule
 Document Identifier & \texttt{\DocID} \\
 Current Version & \texttt{\DocVersion} (Synchronized with \texttt{pyproject.toml} per \texttt{AGENT.md} Rule 16) \\
-Release Status & \textcolor{TealDark}{\textbf{RELEASED --- Production CI/CD, 53-Formula, FMI 3.0 FMU \& 23-Scenario Verified}} \\
+Release Status & \textcolor{TealDark}{\textbf{RELEASED --- TRL 7--8 / DO-254, 53-Formula, Dual FMI 3.0.2 FMU \& 29-Scenario Verified}} \\
 Normative Authority & \texttt{spec/IFOG-SIM-SPEC-007.\{md,tex\}} (v7.0), \texttt{SPEC-006} (v6.0), \texttt{SPEC-005} (v5.0) \& \texttt{SPEC-004} (v4.0) (quadruple SHA-256 locked) \\
 Architecture Companion & \texttt{docs/IFOG\_VPROTO\_ARCHITECTURE.\{md,tex,pdf\}} (\DocVersion) \\
 Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
@@ -84,6 +84,7 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 \texttt{v3.0.1} & 2026-11-26 & Standardized Explanatory Reports \& HTML Explorer & Standardized auto-generated \texttt{report.md} and KaTeX/Plotly \texttt{report.html} with embedded code-audited interactive model diagram (\texttt{architecture\_model.html} / \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html}) plus 3-part theoretical foundation, plain-language reading guide (for non-specialists), and live measured proof beneath all 21 figures; regenerated both curated examples. \\
 \texttt{v4.0.0} & 2026-11-26 & \texttt{SPEC-007} Group D Physics \& Calibration (\texttt{23/23}) & Added \textbf{Group D} (\texttt{PHY-01} \& \texttt{CAL-01}, \texttt{--mode spec007\_all}, \texttt{EQ-45}--\texttt{EQ-53}): discrete Quadrupole vs Octupole winding ($-47.69\%$ Shupe reduction), thermo-mechanical stress, 6-channel \texttt{shupe\_lut.bin} v2, MIOC electro-acoustic ringing + capacitive crosstalk spike, live FMI 3.0 \texttt{VR 15..21} tunability, and 3-stage bounded \texttt{InverseCalibrator} cutting uncalibrated $40$--$103\%$ error to $0.04$--$0.91\%$ ($<5\%$) with 10-param recovery $\le 2.18\%$; expanded suite to 23 gates/scenarios, 31 CLI modes, and 23 300-DPI PNGs. \\
 \texttt{v4.0.1} & 2026-11-26 & 32-Slide Academic Deck \& Code-Only CI Diff Filter & Added 32-slide academic LaTeX Beamer deck (\texttt{docs/IFOG\_VPROTO\_PRESENTATION.\{tex,pdf\}}) covering all 3 tiers, inter-tier parameter handoffs \& proofs, 2/4/6-State DSP, and 11 enlarged experimental scenario slides (\texttt{TD-01}, \texttt{DYN-01..04}, Gates 2/4/5/6, \texttt{PHY-01}, \texttt{CAL-01}); added code-only CI/CD diff filter (\texttt{scripts/ci\_diff\_filter.py}) and bundled presentation deck into GitHub Releases (22 assets). \\
+\texttt{v4.1.0} & 2026-11-27 & TRL 7--8 / DO-254 Group E (\texttt{IND-01}--\texttt{IND-06}) \& Full 2/4/6s DSP (\texttt{29/29}) & Added \textbf{Group E} (\texttt{IND-01}--\texttt{IND-06}, \texttt{--mode ind\_all}): physical lab CSV ingestion \& NASA-STD-7009A CAS-4 / ASME V\&V 20 validation ($101.9\% \to 4.51\%$, max $|E|/u_{\text{val}} = 0.723$); bit-true FPGA fixed-point (\texttt{Q16.32}/\texttt{Q8.24}) + SV-2012 RTL (\texttt{rtl/ifog\_dsp\_6state.sv}) across \textbf{2/4/6-State} (0-LSB match); 3D ANSYS/COMSOL FEM $\to$ \texttt{shupe\_lut.bin} v2 ($6.00\times$ Octupole suppression); MIL-STD-810H / DO-160G random vibration PSD via 2-DOF resonance ($4.82\times$ $g_{\text{rms}}$ / $3.11\times$ VRE); multi-instance pure-C++17 Source-Code FMI 3.0.2 FMU (\texttt{build/ifog\_core\_multi.fmu}, 3 concurrent axes 6s/4s/2s); and 12-corner PVT + 10-yr/50~krad EOL. Extended \texttt{DSP-01} \& \texttt{DYN-01..03} to full 2/4/6-State coverage; expanded suite to 29 gates/scenarios, 38 CLI modes, 29 300-DPI PNGs, and 23 release assets. \\
 \bottomrule
 \end{tabularx}
 \normalsize
@@ -94,16 +95,17 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 
 \section{Official Scenario Taxonomy \& Execution Architecture}
 
-Under \textbf{\texttt{IFOG-SIM-SPEC-007} (v7.0)}, the \texttt{ifog-vproto} verification platform organizes its official simulation flow into seven orthogonal layers (\textbf{23 gates \& scenarios}), runnable individually by CLI mode, by functional group, or end-to-end via \texttt{./scripts/run\_all\_scenarios.sh}:
+Under \textbf{\texttt{IFOG-SIM-SPEC-007} (v7.0) + \texttt{v4.1.0} TRL 7--8 Industrial Qualification}, the \texttt{ifog-vproto} verification platform organizes its official simulation flow into eight orthogonal layers (\textbf{29 gates \& scenarios}), runnable individually by CLI mode, by functional group, or end-to-end via \texttt{./scripts/run\_all\_scenarios.sh}:
 
 \begin{enumerate}
     \item \textbf{Core Acceptance Gates (Gates 1--4, \texttt{--mode full}):} Golden linear baseline \& $2\pi$ flyback (\texttt{gate1}), Deadband \& Bunny Ears mitigation (\texttt{gate2}), $1/f$ Flicker PSD \& $100\text{ Hz}$ $\mathbf{K}$-matrix (\texttt{gate3}), and 60 s Fast-Scale + 10 h Slow-Scale Dual-Regime Overlapping AVAR (\texttt{gate4}).
-    \item \textbf{Gate 5 --- Official 6-State Symmetric DSP (\texttt{--mode dsp6\_compare}):} Direct quantitative validation of the anti-periodic 6-state symmetric modulation/demodulation law (\texttt{EQ-31}--\texttt{EQ-34}, $\alpha^* = \pi/3$) against 4-state Lef\`evre modulation under identical RAM, crosstalk, and MIOC $\gamma_{\text{nl}}$ distortion.
+    \item \textbf{Gate 5 --- Full 2/4/6-State Symmetric DSP (\texttt{--mode dsp6\_compare}):} Direct quantitative validation of \textbf{2-state}, \textbf{4-state Lef\`evre}, and the official anti-periodic \textbf{6-state symmetric} modulation/demodulation law (\texttt{EQ-31}--\texttt{EQ-34}, $\alpha^* = \pi/3$) under identical RAM, crosstalk, and MIOC $\gamma_{\text{nl}}$ distortion.
     \item \textbf{Gate 6 --- FMI 3.0 Black-Box Co-Simulation FMU (\texttt{--mode fmi\_gate}):} End-to-end FMPy verification of standalone \texttt{build/ifog\_core.fmu} (\texttt{EQ-42}--\texttt{EQ-44}): XSD/ZIP compliance, bit-exact ($<10^{-12}\text{ rad/s}$) equivalence with \texttt{ifog\_sim}, Slow Rate Ramp deadband reduction ($\ge 90\%$), and Dual-Regime 5-Region AVAR continuity ($<5\%$).
     \item \textbf{Group A --- 6 Time-Domain Scenarios (\texttt{TD-01}..\texttt{TD-06}, \texttt{--mode td\_all}):} Exercises unmodified Tier 2 physics with sub-$\tau$ waveform logging (\texttt{micro\_waveforms.bin}) and DSP register logging (\texttt{dsp\_trace.bin}).
     \item \textbf{Group B --- 5 System Engineering \& Production Scenarios (\texttt{ENG-01}..\texttt{ENG-05}, \texttt{--mode eng\_all}):} Leverages the compiled C++17 \texttt{-O3} SystemC-AMS engine for BOM sizing, concurrent 3-axis IMU crosstalk (\texttt{--imu3axis}), VRE \& dynamic Faraday/Mu-metal sizing, 5-mode real-time FPGA BIT/FDIR fault injection, and parallel Monte Carlo production yield ($C_{pk}$) + $-40..+85^\circ\text{C}$ virtual thermal calibration.
-    \item \textbf{Group C --- 4 Dynamic Response, Output PSD \& Internal Electro-Optic Probe Scenarios (\texttt{DYN-01}..\texttt{DYN-04}, \texttt{--mode dyn\_all}):} Dedicated closed-loop step characterization, full 15-point Bode Magnitude/Phase/Group Delay, broadband output angular-rate PSD/ASD/cumulative RMS noise, and sinusoidal rate excitation exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $V_{\text{MIOC}}$, Photodiode $P_{\text{PD}}/I_{\text{PD}}$, and $V_{\text{TIA}}$.
+    \item \textbf{Group C --- 4 Dynamic Response, Output PSD \& Internal Electro-Optic Probe Scenarios (\texttt{DYN-01}..\texttt{DYN-04}, \texttt{--mode dyn\_all}):} Dedicated closed-loop step characterization, full Bode Magnitude/Phase/Group Delay up to 20~kHz, broadband output angular-rate PSD/ASD/cumulative RMS noise across \textbf{2-state, 4-state \& 6-state DSP}, and sinusoidal rate excitation exposing Sagnac phase, $V_{\text{fb,MIOC}}$, $V_{\text{MIOC}}$, Photodiode $P_{\text{PD}}/I_{\text{PD}}$, and $V_{\text{TIA}}$.
     \item \textbf{Group D --- \texttt{SPEC-007} Predictive Physics \& Inverse Calibration (\texttt{PHY-01}, \texttt{CAL-01}, \texttt{--mode spec007\_all}):} Validates discrete Quadrupole/Octupole coil winding, elasto-optic stress, 6-channel \texttt{shupe\_lut.bin} v2, MIOC electro-acoustic ringing + capacitive crosstalk spike (\texttt{PHY-01}), and automated 3-stage bounded \texttt{InverseCalibrator} reducing uncalibrated $40$--$103\%$ error to $< 1\%$ across Static AVAR, Deadband, and Thermal Chamber validation datasets (\texttt{CAL-01}).
+    \item \textbf{Group E --- TRL 7--8 / DO-254 Industrial Qualification Suite (\texttt{IND-01}--\texttt{IND-06}, \texttt{--mode ind\_all}):} Physical lab CSV ingestion \& NASA-STD-7009A CAS-4 / ASME V\&V 20 validation (\texttt{IND-01}), bit-true FPGA fixed-point \texttt{Q16.32}/\texttt{Q8.24} + SV-2012 RTL 2/4/6-state differential verification (\texttt{IND-02}), 3D ANSYS/COMSOL FEM $\to$ \texttt{shupe\_lut.bin} v2 (\texttt{IND-03}), MIL-STD-810H / DO-160G random vibration PSD + 2-DOF resonance (\texttt{IND-04}), multi-instance pure-C++17 Source-Code FMI 3.0.2 FMU 3-axis concurrent execution (\texttt{IND-05}), and 12-corner PVT + 10-yr/50~krad(Si) EOL (\texttt{IND-06}).
 \end{enumerate}
 
 \begin{figure}[h!]
@@ -111,28 +113,32 @@ Under \textbf{\texttt{IFOG-SIM-SPEC-007} (v7.0)}, the \texttt{ifog-vproto} verif
 \resizebox{\textwidth}{!}{%
 \begin{tikzpicture}[
     node distance=0.85cm and 0.45cm,
-    cli/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=NavyBlue!12,thick,align=center,font=\footnotesize,minimum width=14.6cm,minimum height=0.95cm,inner sep=5pt},
-    grp/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=SlateBg,thick,align=center,font=\scriptsize,minimum width=2.7cm,minimum height=2.25cm,inner sep=4pt},
-    rep/.style={rectangle,rounded corners=3pt,draw=TealDark,fill=TealDark!12,thick,align=center,font=\footnotesize,minimum width=14.6cm,minimum height=0.95cm,inner sep=5pt},
+    cli/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=NavyBlue!12,thick,align=center,font=\footnotesize,minimum width=16.6cm,minimum height=0.95cm,inner sep=5pt},
+    grp/.style={rectangle,rounded corners=3pt,draw=NavyBlue,fill=SlateBg,thick,align=center,font=\scriptsize,minimum width=2.5cm,minimum height=2.25cm,inner sep=4pt},
+    rep/.style={rectangle,rounded corners=3pt,draw=TealDark,fill=TealDark!12,thick,align=center,font=\footnotesize,minimum width=16.6cm,minimum height=0.95cm,inner sep=5pt},
     arr/.style={-{Stealth[length=2.2mm]},thick,NavyBlue},
     tarr/.style={-{Stealth[length=2.2mm]},thick,TealDark}
 ]
-\node[cli] (top) {\textbf{Official Unified CLI \& Batch Orchestrator (31 Modes / 23 Official Gates \& Scenarios)}\\\texttt{./scripts/run\_sim.sh --mode <mode>} \quad|\quad \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}};
+\node[cli] (top) {\textbf{Official Unified CLI \& Batch Orchestrator (38 Modes / 29 Official Gates \& Scenarios)}\\\texttt{./scripts/run\_sim.sh --mode <mode>} \quad|\quad \texttt{./scripts/run\_all\_scenarios.sh --mc-runs 500}};
 
-\node[grp,below=1.0cm of top.south,xshift=-5.8cm] (core) {\textbf{Gates 1--6}\\{\scriptsize\texttt{full}, \texttt{dsp6\_compare}}\\{\scriptsize\texttt{fmi\_gate}}\\[2pt]10 h AVAR, 6-State\\\& FMI 3.0 FMU};
+\node[grp,below=1.0cm of top.south,xshift=-7.0cm] (core) {\textbf{Gates 1--6}\\{\scriptsize\texttt{full}, \texttt{dsp6\_compare}}\\{\scriptsize\texttt{fmi\_gate}}\\[2pt]10 h AVAR, 2/4/6s\\\& FMI 3.0 FMU};
 
-\node[grp,below=1.0cm of top.south,xshift=-2.9cm] (td) {\textbf{Group A: TD}\\{\scriptsize\texttt{td\_all} (\texttt{TD-01..06})}\\Blanking, Bode, $V_\pi$\\700 deg/s, Shupe\\PRBS Limit Cycles};
+\node[grp,below=1.0cm of top.south,xshift=-4.2cm] (td) {\textbf{Group A: TD}\\{\scriptsize\texttt{td\_all} (\texttt{TD-01..06})}\\Blanking, Bode, $V_\pi$\\700 deg/s, Shupe\\PRBS Limit Cycles};
 
-\node[grp,below=1.0cm of top.south,xshift=0.0cm] (eng) {\textbf{Group B: ENG}\\{\scriptsize\texttt{eng\_all} (\texttt{ENG-01..05})}\\ENOB/Jitter, 3-Axis\\VRE/Faraday, BIT\\MC Yield $C_{pk}$ + Cal};
+\node[grp,below=1.0cm of top.south,xshift=-1.4cm] (eng) {\textbf{Group B: ENG}\\{\scriptsize\texttt{eng\_all} (\texttt{ENG-01..05})}\\ENOB/Jitter, 3-Axis\\VRE/Faraday, BIT\\MC Yield $C_{pk}$ + Cal};
 
-\node[grp,below=1.0cm of top.south,xshift=2.9cm] (dyn) {\textbf{Group C: DYN}\\{\scriptsize\texttt{dyn\_all} (\texttt{DYN-01..04})}\\Step, Bode M/P/GD\\Output PSD \& ASD\\Sine $\to$ PD, $V_{\text{fb}}$};
+\node[grp,below=1.0cm of top.south,xshift=1.4cm] (dyn) {\textbf{Group C: DYN}\\{\scriptsize\texttt{dyn\_all} (\texttt{DYN-01..04})}\\Step, Bode (2/4/6s)\\Output PSD \& ASD\\Sine $\to$ PD, $V_{\text{fb}}$};
 
-\node[grp,below=1.0cm of top.south,xshift=5.8cm,draw=TealDark,fill=TealDark!8] (s07) {\textbf{Group D: SPEC-007}\\{\scriptsize\texttt{spec007\_all}}\\{\scriptsize(\texttt{PHY-01}, \texttt{CAL-01})}\\Octupole, LUT v2\\MIOC + Inv. Calib};
+\node[grp,below=1.0cm of top.south,xshift=4.2cm,draw=TealDark,fill=TealDark!8] (s07) {\textbf{Group D: SPEC-007}\\{\scriptsize\texttt{spec007\_all}}\\{\scriptsize(\texttt{PHY-01}, \texttt{CAL-01})}\\Octupole, LUT v2\\MIOC + Inv. Calib};
 
-\node[rep,below=1.0cm of eng.south] (out) {\textbf{Automated Reporting Engine (\texttt{viz/export\_report.py} + \texttt{viz/plot\_spec007\_calibration.py})}\\\texttt{report/<run\_id>/\{report.md, report.html (KaTeX + Plotly + EQ-01..53), figures/*.png (23 plots), calibrated\_params.json\}}};
+\node[grp,below=1.0cm of top.south,xshift=7.0cm,draw=TealDark,fill=TealDark!14] (ind) {\textbf{Group E: TRL 7--8}\\{\scriptsize\texttt{ind\_all} (\texttt{IND-01..06})}\\Lab CAS-4, FPGA RTL\\3D FEM, 810H PSD\\Multi-FMU, PVT/EOL};
+
+\node[rep,below=1.0cm of eng.south,xshift=1.4cm] (out) {\textbf{Automated Reporting Engine (\texttt{viz/export\_report.py} + \texttt{viz/plot\_spec007\_calibration.py} + \texttt{viz/plot\_industrial.py})}\\\texttt{report/<run\_id>/\{report.md, report.html (KaTeX + Plotly + EQ-01..53), figures/*.png (29 plots), calibrated\_params.json, lab\_validation\_report.json\}}};
 
 \draw[arr] (top.south) -| (core.north);
 \draw[arr] (top.south) -| (td.north);
+\draw[arr] (top.south) -| (ind.north);
+\draw[tarr] (ind.south) -- (ind.south |- out.north);
 \draw[arr] (top.south) -- (eng.north);
 \draw[arr] (top.south) -| (dyn.north);
 \draw[arr] (top.south) -| (s07.north);

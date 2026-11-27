@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+from scipy.interpolate import RBFInterpolator
 from scipy.linalg import solve_banded
 
 from tier1_offline.config_loader import (
@@ -103,7 +104,7 @@ def build_winding_map(
             flange_err[i] = 0.25 * flange_offset_m * oct_sign * (0.5 if side == 1 else -0.5)
 
         layer_idx[i] = lay
-        z_ax[i] = coil_height * (frac_ax if (lay % 2 == 0) else (1.0 - frac_ax))
+        z_ax[i] = coil_height * (frac_ax if (layer_pair % 2 == 0) else (1.0 - frac_ax))
 
     r_m = r_inner + layer_idx.astype(np.float64) * dr_layer
     # Spatial asymmetry residual combining winding symmetry & configured delta_z_quad_m
@@ -559,6 +560,289 @@ def solve_tier1_shupe_v2(
     return channels, summary
 
 
+FEM_3D_REQUIRED_COLUMNS = ("t_s", "r_m", "theta_rad", "z_ax_m", "T_K", "sigma_eff_Pa")
+
+
+def load_fem_3d_csv(csv_path: Path | str) -> dict[str, Any]:
+    """Import 3D ANSYS/COMSOL cylindrical thermo-mechanical FEM export CSV (v4.1.0 IND-03).
+
+    Expected header: ``t_s,r_m,theta_rad,z_ax_m,T_K,sigma_eff_Pa``
+    Supports unstructured cylindrical nodal grids across arbitrary timestamps.
+    """
+    path = Path(csv_path)
+    with path.open("r", encoding="utf-8", newline="") as fh:
+        reader = csv.DictReader(fh)
+        if reader.fieldnames is None or any(c not in reader.fieldnames for c in FEM_3D_REQUIRED_COLUMNS):
+            raise ValueError(
+                f"3D FEM CSV {path} missing required columns {FEM_3D_REQUIRED_COLUMNS}"
+            )
+        rows = [
+            (
+                float(r["t_s"]),
+                float(r["r_m"]),
+                float(r["theta_rad"]),
+                float(r["z_ax_m"]),
+                float(r["T_K"]),
+                float(r["sigma_eff_Pa"]),
+            )
+            for r in reader
+        ]
+
+    t_vals = sorted({r[0] for r in rows})
+    if len(t_vals) < 2:
+        raise ValueError(f"3D FEM CSV {path} requires at least 2 timestamps, got {len(t_vals)}")
+    node_keys = sorted({(r[1], r[2], r[3]) for r in rows})
+    t_idx = {t: i for i, t in enumerate(t_vals)}
+    n_idx = {k: j for j, k in enumerate(node_keys)}
+
+    T_K = np.zeros((len(t_vals), len(node_keys)), dtype=np.float64)
+    sigma_Pa = np.zeros((len(t_vals), len(node_keys)), dtype=np.float64)
+    for t_v, r_v, th_v, z_v, temp_v, sig_v in rows:
+        ti = t_idx[t_v]
+        ni = n_idx[(r_v, th_v, z_v)]
+        T_K[ti, ni] = temp_v
+        sigma_Pa[ti, ni] = sig_v
+
+    t_arr = np.array(t_vals, dtype=np.float64)
+    r_arr = np.array([k[0] for k in node_keys], dtype=np.float64)
+    th_arr = np.array([k[1] for k in node_keys], dtype=np.float64)
+    z_arr = np.array([k[2] for k in node_keys], dtype=np.float64)
+    dT_dt = np.gradient(T_K, t_arr, axis=0)
+    dsigma_dt = np.gradient(sigma_Pa, t_arr, axis=0)
+    return {
+        "t_s": t_arr,
+        "r_m": r_arr,
+        "theta_rad": th_arr,
+        "z_ax_m": z_arr,
+        "T_K": T_K,
+        "sigma_eff_Pa": sigma_Pa,
+        "dT_dt_K_per_s": dT_dt,
+        "dsigma_dt_Pa_per_s": dsigma_dt,
+    }
+
+
+def generate_asymmetric_3d_fem_csv(
+    out_csv: Path | str,
+    D_m: float = 0.10,
+    coil_thickness_m: float = 0.015,
+    coil_height_m: float = 0.020,
+    duration_s: float = 600.0,
+    n_times: int = 25,
+    n_r: int = 5,
+    n_theta: int = 8,
+    n_z_ax: int = 4,
+    ambient_ramp_K_per_s: float = 5.0e-3,
+    hotspot_delta_K_per_s: float = 3.5e-3,
+    anisotropic_potting_Pa_per_K: float = 4.5e5,
+) -> Path:
+    """Generate an ANSYS/COMSOL-format 3D cylindrical nodal CSV with eccentric IMU housing hotspots.
+
+    Models an off-center FPGA/PSU heat source at (r_outer, theta=0, z_ax=0), an opposing
+    SLD TEC sink at (r_inner, theta=pi, z_ax=H), and anisotropic potting stress sigma_eff(r,theta,z,t).
+    """
+    out_path = Path(out_csv)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    r_inner = 0.5 * D_m - 0.5 * coil_thickness_m
+    r_outer = 0.5 * D_m + 0.5 * coil_thickness_m
+    t_grid = np.linspace(0.0, duration_s, n_times)
+    r_grid = np.linspace(r_inner, r_outer, n_r)
+    th_grid = np.linspace(0.0, 2.0 * math.pi, n_theta, endpoint=False)
+    z_grid = np.linspace(0.0, coil_height_m, n_z_ax)
+    tau_diff = 90.0
+
+    with out_path.open("w", encoding="utf-8", newline="") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(FEM_3D_REQUIRED_COLUMNS)
+        for t_val in t_grid:
+            trans = 1.0 - math.exp(-t_val / tau_diff)
+            for r_val in r_grid:
+                r_norm = (r_val - r_inner) / max(r_outer - r_inner, 1.0e-12)
+                for th_val in th_grid:
+                    azim = math.cos(th_val)  # +1 at eccentric FPGA/PSU, -1 at opposing SLD TEC
+                    for z_val in z_grid:
+                        z_norm = z_val / max(coil_height_m, 1.0e-12)
+                        # Radial + azimuthal + axial asymmetric thermal field
+                        dT_base = ambient_ramp_K_per_s * t_val * (0.85 + 0.30 * r_norm * r_norm)
+                        dT_ecc = (
+                            hotspot_delta_K_per_s
+                            * t_val
+                            * trans
+                            * (0.65 * r_norm + 0.35 * (1.0 - z_norm))
+                            * (0.5 + 0.5 * azim)
+                        )
+                        T_K = 298.15 + dT_base + dT_ecc
+                        # Anisotropic potting CTE mismatch stress (stronger at flanges & eccentric mount)
+                        aniso_factor = 1.0 + 0.45 * abs(azim) + 0.35 * abs(2.0 * z_norm - 1.0)
+                        sigma_Pa = anisotropic_potting_Pa_per_K * (dT_base + dT_ecc) * aniso_factor
+                        writer.writerow(
+                            [
+                                f"{t_val:.6f}",
+                                f"{r_val:.6f}",
+                                f"{th_val:.6f}",
+                                f"{z_val:.6f}",
+                                f"{T_K:.6f}",
+                                f"{sigma_Pa:.3f}",
+                            ]
+                        )
+    return out_path
+
+
+def solve_tier1_shupe_3d_fem(
+    cfg: dict[str, Any],
+    fem_3d_csv: Path | str,
+    phys_params: dict[str, Any] | None = None,
+    n_theta_per_turn: int = 8,
+) -> tuple[dict[str, np.ndarray], dict[str, Any]]:
+    """Map 3D ANSYS/COMSOL cylindrical FEM fields T(r,theta,z,t) & sigma(r,theta,z,t) to LUT v2.
+
+    Projects every discrete fiber turn (r_i, theta_j, z_ax_i) onto the 3D FEM mesh via
+    Cartesian k-NN inverse-distance interpolation, then integrates exact 3D Shupe + elasto-optic
+    stress phase drift into the native 56-byte shupe_lut.bin v2 contract.
+    """
+    opt = cfg["optics"]
+    th = cfg["thermal"]
+    mioc = cfg["mioc"]
+    sp7 = get_spec007_physics(cfg)
+
+    L_m = float(opt["L_m"])
+    D_m = float(opt["D_m"])
+    lambda_bar_m = float(opt["lambda_bar_m"])
+    n_eff = float(opt["n_eff"])
+    k_opt = compute_k_opt(L_m, D_m, lambda_bar_m)
+
+    v_eff_0 = float(phys_params["visibility_V"]) if phys_params else 0.999
+    phi_pol_0 = float(phys_params["phi_pol_rad"]) if phys_params else 0.0
+    v_pi_0 = float(mioc["V_pi_0_V"])
+
+    fem = load_fem_3d_csv(fem_3d_csv)
+    t_grid = fem["t_s"]
+    winding = build_winding_map(
+        L_m=L_m,
+        D_m=D_m,
+        coil_thickness_m=float(th["coil_thickness_m"]),
+        n_turns=int(sp7["n_turns"]),
+        n_layers=int(sp7["n_layers"]),
+        winding_pattern=str(sp7["winding_pattern"]),
+        flange_offset_m=float(sp7["flange_offset_m"]),
+        delta_z_quad_m=float(th["delta_z_quad_m"]),
+    )
+
+    # Normalize cylindrical FEM coordinates so radial, azimuthal, and axial axes have balanced metric scale
+    r_min = float(np.min(fem["r_m"]))
+    r_span = max(float(np.max(fem["r_m"]) - r_min), 1.0e-9)
+    z_min = float(np.min(fem["z_ax_m"]))
+    z_span = max(float(np.max(fem["z_ax_m"]) - z_min), 1.0e-9)
+
+    def _cyl_to_metric(r_v: np.ndarray, th_v: np.ndarray, z_v: np.ndarray) -> np.ndarray:
+        r_n = (r_v - r_min) / r_span
+        z_n = (z_v - z_min) / z_span
+        return np.column_stack([r_n, 0.5 * np.cos(th_v), 0.5 * np.sin(th_v), z_n])
+
+    fem_pts = _cyl_to_metric(fem["r_m"], fem["theta_rad"], fem["z_ax_m"])
+
+    # Build 3D fiber path samples (n_turns * n_theta_per_turn) along the wound helix
+    n_turns = len(winding["z_m"])
+    theta_turn = np.linspace(0.0, 2.0 * math.pi, n_theta_per_turn, endpoint=False)
+    r_rep = np.repeat(winding["r_m"], n_theta_per_turn)
+    z_ax_rep = np.repeat(winding["z_ax_m"], n_theta_per_turn)
+    th_rep = np.tile(theta_turn, n_turns)
+    z_fiber = (np.arange(n_turns * n_theta_per_turn, dtype=np.float64) + 0.5) * (
+        L_m / float(n_turns * n_theta_per_turn)
+    )
+    dz_quad_rep = np.repeat(winding["delta_z_quad_m"], n_theta_per_turn)
+
+    query_pts = _cyl_to_metric(r_rep, th_rep, z_ax_rep)
+    # Smooth linear RBF interpolation works on arbitrary unstructured ANSYS/COMSOL 3D meshes
+    dT_dt_seg = RBFInterpolator(fem_pts, fem["dT_dt_K_per_s"].T, kernel="linear")(query_pts).T
+    dsigma_dt_seg = RBFInterpolator(fem_pts, fem["dsigma_dt_Pa_per_s"].T, kernel="linear")(query_pts).T
+    T_seg = RBFInterpolator(fem_pts, fem["T_K"].T, kernel="linear")(query_pts).T
+
+    c_eo = float(sp7["C_eo_per_Pa"])
+    delta_phi_shupe = np.empty(len(t_grid), dtype=np.float64)
+    delta_phi_stress = np.empty(len(t_grid), dtype=np.float64)
+    for i in range(len(t_grid)):
+        delta_phi_shupe[i] = shupe_integral(
+            z_m=z_fiber,
+            dT_dt_K_per_s=dT_dt_seg[i, :],
+            L_m=L_m,
+            lambda_bar_m=lambda_bar_m,
+            n_eff=n_eff,
+            dn_dT_per_K=float(th["dn_dT_per_K"]),
+            alpha_T_per_K=float(th["alpha_T_per_K"]),
+            delta_z_quad_m=dz_quad_rep,
+        )
+        delta_phi_stress[i] = elasto_optic_stress_integral(
+            z_m=z_fiber,
+            dsigma_dt_Pa_per_s=dsigma_dt_seg[i, :],
+            L_m=L_m,
+            lambda_bar_m=lambda_bar_m,
+            C_eo_per_Pa=c_eo,
+            delta_z_quad_m=dz_quad_rep,
+        )
+
+    dT_coil = np.mean(T_seg - T_seg[0:1, :], axis=1)
+    dT_sld = float(sp7["delta_T_sld_ratio"]) * dT_coil
+    dT_mioc = float(sp7["delta_T_mioc_ratio"]) * dT_coil
+
+    k_opt_rel = np.asarray(
+        compute_dynamic_k_opt_rel(
+            dT_coil_K=dT_coil,
+            dT_sld_K=dT_sld,
+            alpha_bobbin_ppm_K=float(sp7["alpha_bobbin_ppm_K"]),
+            alpha_lambda_pm_K=float(sp7["alpha_lambda_pm_K"]),
+            lambda_bar_m=lambda_bar_m,
+            kappa_back_m_per_W=float(sp7["kappa_back_m_per_W"]),
+            P_back_W=float(sp7["P_back_W"]),
+            n_eff=n_eff,
+            dn_dT_per_K=float(th["dn_dT_per_K"]),
+        ),
+        dtype=np.float64,
+    )
+    v_eff_t, phi_pol_t, v_pi_t = compute_dynamic_optical_params(
+        V_eff_0=v_eff_0,
+        phi_pol_0=phi_pol_0,
+        V_pi_0=v_pi_0,
+        dT_coil_K=dT_coil,
+        dT_mioc_K=dT_mioc,
+        beta_V_per_K=float(sp7["beta_V_per_K"]),
+        gamma_pol_rad_per_K=float(sp7["gamma_pol_rad_per_K"]),
+        alpha_vpi_ppm_K=float(sp7["alpha_vpi_ppm_K"]),
+    )
+
+    delta_phi_tot = delta_phi_shupe + delta_phi_stress
+    omega_therm_deg_h = (delta_phi_tot / k_opt) * RAD_S_TO_DEG_H
+    channels = {
+        "t_s": t_grid,
+        "delta_phi_shupe_rad": delta_phi_shupe,
+        "delta_phi_stress_rad": delta_phi_stress,
+        "visibility_V_t": np.asarray(v_eff_t, dtype=np.float64),
+        "phi_pol_rad_t": np.asarray(phi_pol_t, dtype=np.float64),
+        "v_pi_V_t": np.asarray(v_pi_t, dtype=np.float64),
+        "k_opt_scale_rel_t": k_opt_rel,
+        "dT_coil_K": dT_coil,
+    }
+    summary = {
+        "spec_id": "IFOG-SIM-SPEC-007-FEM3D",
+        "lut_version": 2,
+        "source_mode": "fem_3d_csv",
+        "winding_pattern": str(sp7["winding_pattern"]),
+        "n_fem_nodes": int(len(fem_pts)),
+        "n_fiber_segments": int(len(z_fiber)),
+        "n_samples": int(len(t_grid)),
+        "duration_s": float(t_grid[-1] - t_grid[0]),
+        "max_spatial_dT_K": float(np.max(np.ptp(fem["T_K"], axis=1))),
+        "max_stress_MPa": float(np.max(np.abs(fem["sigma_eff_Pa"])) * 1.0e-6),
+        "max_abs_delta_phi_shupe_rad": float(np.max(np.abs(delta_phi_shupe))),
+        "max_abs_delta_phi_stress_rad": float(np.max(np.abs(delta_phi_stress))),
+        "max_abs_delta_phi_rad": float(np.max(np.abs(delta_phi_tot))),
+        "max_abs_omega_shupe_deg_per_h": float(np.max(np.abs(omega_therm_deg_h))),
+        "final_delta_phi_rad": float(delta_phi_tot[-1]),
+        "k_opt_rel_drift_ppm": float((k_opt_rel[-1] - 1.0) * 1.0e6),
+        "v_pi_final_V": float(np.asarray(v_pi_t)[-1]),
+    }
+    return channels, summary
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point for Tier 1 thermal Shupe / SPEC-007 thermo-mechanical solver."""
     parser = argparse.ArgumentParser(
@@ -573,6 +857,11 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Override binary LUT version (defaults to spec007_physics.lut_version or 1)",
     )
+    parser.add_argument(
+        "--fem-3d-csv",
+        default=None,
+        help="Optional 3D ANSYS/COMSOL cylindrical FEM CSV (t_s,r_m,theta_rad,z_ax_m,T_K,sigma_eff_Pa)",
+    )
     args = parser.parse_args(argv)
 
     cfg = load_config(args.cfg)
@@ -581,7 +870,21 @@ def main(argv: list[str] | None = None) -> int:
     sp7 = get_spec007_physics(cfg)
     lut_ver = args.lut_version if args.lut_version is not None else int(sp7["lut_version"])
 
-    if lut_ver == 2 or sp7["en_spec007_physics"]:
+    if args.fem_3d_csv:
+        phys_path = out_dir / "phys_params.json"
+        phys = json.loads(phys_path.read_text(encoding="utf-8")) if phys_path.exists() else None
+        ch, summary = solve_tier1_shupe_3d_fem(cfg, args.fem_3d_csv, phys_params=phys)
+        write_shupe_lut_v2(
+            out_dir / "shupe_lut.bin",
+            ch["t_s"],
+            ch["delta_phi_shupe_rad"],
+            ch["delta_phi_stress_rad"],
+            ch["visibility_V_t"],
+            ch["phi_pol_rad_t"],
+            ch["v_pi_V_t"],
+            ch["k_opt_scale_rel_t"],
+        )
+    elif lut_ver == 2 or sp7["en_spec007_physics"]:
         phys_path = out_dir / "phys_params.json"
         phys = json.loads(phys_path.read_text(encoding="utf-8")) if phys_path.exists() else None
         ch, summary = solve_tier1_shupe_v2(cfg, phys_params=phys)
