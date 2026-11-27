@@ -8,14 +8,14 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOCS_DIR="${REPO_ROOT}/docs"
 
-for doc in IFOG_VPROTO_ARCHITECTURE RELEASE_NOTES IFOG_SIMULATION_SCENARIOS; do
+for doc in IFOG_VPROTO_ARCHITECTURE RELEASE_NOTES IFOG_SIMULATION_SCENARIOS IFOG_VPROTO_PRESENTATION; do
     echo "[build_docs] Compiling docs/${doc}.tex -> docs/${doc}.pdf (3-pass lualatex)..."
     (
         cd "${DOCS_DIR}"
         lualatex -interaction=nonstopmode -halt-on-error "${doc}.tex" >/dev/null
         lualatex -interaction=nonstopmode -halt-on-error "${doc}.tex" >/dev/null
         lualatex -interaction=nonstopmode -halt-on-error "${doc}.tex" >/dev/null
-        rm -f "${doc}.aux" "${doc}.log" "${doc}.out" "${doc}.toc"
+        rm -f "${doc}.aux" "${doc}.log" "${doc}.nav" "${doc}.out" "${doc}.snm" "${doc}.toc" "${doc}.vrb"
     )
     ls -lh "${DOCS_DIR}/${doc}.pdf"
 done
