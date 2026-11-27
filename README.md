@@ -1,6 +1,6 @@
 # `ifog-vproto` — Closed-Loop IFOG Multi-Scale Virtual Prototype, Predictive Physics & Inverse Calibration (`IFOG-SIM-SPEC-007`)
 
-[![Version](https://img.shields.io/badge/Release-v4.0.0-0E6251)](docs/RELEASE_NOTES.md)
+[![Version](https://img.shields.io/badge/Release-v4.0.1-0E6251)](docs/RELEASE_NOTES.md)
 [![Spec](https://img.shields.io/badge/Spec-IFOG--SIM--SPEC--007%20v7.0-1B365D)](spec/IFOG-SIM-SPEC-007.pdf)
 [![FMI](https://img.shields.io/badge/FMI-3.0%20Tunable%20FMU%20(VR%200..21)-0E6251)](spec/IFOG-SIM-SPEC-006.md)
 [![Formulas](https://img.shields.io/badge/Formulas-53%2F53%20Verified-0E6251)](AGENT.md)
@@ -63,11 +63,12 @@ Full methodology, equations, and verified real-simulation benchmarks are documen
 
 ---
 
-## Architecture & Synchronized Documentation (`v4.0.0`, Rule 16)
+## Architecture & Synchronized Documentation (`v4.0.1`, Rule 16)
 
-All architecture, scenario, and release documents (Markdown, LaTeX, compiled PDFs, and interactive HTML explorer) are strictly synchronized with `pyproject.toml` (`v4.0.0`) under [`docs/`](docs/):
+All architecture, scenario, presentation, and release documents (Markdown, LaTeX, compiled PDFs, and interactive HTML explorer) are strictly synchronized with `pyproject.toml` (`v4.0.1`) under [`docs/`](docs/):
 - [`docs/IFOG_VPROTO_ARCHITECTURE.md`](docs/IFOG_VPROTO_ARCHITECTURE.md) | [`.tex`](docs/IFOG_VPROTO_ARCHITECTURE.tex) | [`.pdf`](docs/IFOG_VPROTO_ARCHITECTURE.pdf) | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](docs/IFOG_ARCHITECTURE_EXPLORER.html)
 - [`docs/IFOG_SIMULATION_SCENARIOS.md`](docs/IFOG_SIMULATION_SCENARIOS.md) | [`.tex`](docs/IFOG_SIMULATION_SCENARIOS.tex) | [`.pdf`](docs/IFOG_SIMULATION_SCENARIOS.pdf)
+- [`docs/IFOG_VPROTO_PRESENTATION.pdf`](docs/IFOG_VPROTO_PRESENTATION.pdf) | [`.tex`](docs/IFOG_VPROTO_PRESENTATION.tex) *(32-Slide Academic LaTeX Beamer Deck — bundled in every GitHub Release)*
 - [`docs/RELEASE_NOTES.md`](docs/RELEASE_NOTES.md) | [`.tex`](docs/RELEASE_NOTES.tex) | [`.pdf`](docs/RELEASE_NOTES.pdf) | [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 
 | Subsystem | Directory | Responsibility |

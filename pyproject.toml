@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ifog-vproto"
-version = "4.0.0"
+version = "4.0.1"
 description = "Closed-Loop IFOG Multi-Scale Virtual Prototype with High-Fidelity Predictive Physics, Inverse Calibration & FMI 3.0 FMU (IFOG-SIM-SPEC-007 / 006 / 005 / 004)"
 readme = "README.md"
 requires-python = ">=3.10"

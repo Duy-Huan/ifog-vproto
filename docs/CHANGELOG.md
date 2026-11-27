@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html), and are strictly synchronized with `pyproject.toml`, `docs/`, and Git release tags per [`AGENT.md`](../AGENT.md) **Rule 16**.
 
+## [4.0.1] - 2026-11-26
+
+### Added
+- **32-Slide Academic LaTeX Beamer Presentation Deck (`docs/IFOG_VPROTO_PRESENTATION.{tex,pdf}`):**
+  - Authored a 32-slide (`16:9`, `8pt`) academic presentation deck featuring 10 native TikZ/`pgfplots`/`circuitikz` diagrams, explicit IEEE 1666.1 SystemC-AMS LTF (`sca_ltf_nd`) + Hybrid Exact ZOH LTF & Lefèvre/IEEE 952 references, SI input parameter tables (`schema_v6.json`), explicit Tier 1 (`phys_params.json`, `shupe_lut.bin` v2) $\to$ Tier 2 $\to$ Tier 3 parameter handoff slides with mathematical separation/orthogonality proofs, 2-State / 4-State / 6-State DSP comparisons, and 11 enlarged single-figure experimental slides (`TD-01`, `DYN-01..04`, Gates 2/4/5/6, `PHY-01`, `CAL-01`).
+- **Code-Only CI/CD Diff Filter (`tier3_analysis/ci_diff_filter.py`, `scripts/ci_diff_filter.py`, `tests/unit/test_ci_diff_filter.py`):**
+  - Added stdlib-only fail-safe git diff filter (`detect-changes` job in `.github/workflows/ci.yml`) that runs CI/CD if and only if code/config/test/script/workflow/locked-`spec/` files change, skipping docs-only edits cleanly at **100.00% Python coverage (`4,770/4,770` stmts)**.
+
+### Changed
+- Updated `scripts/build_docs.sh` and `.github/workflows/release.yml` to compile, validate, and attach `IFOG_VPROTO_PRESENTATION.pdf` and `IFOG_VPROTO_PRESENTATION.tex` directly inside the GitHub Release bundle (**22 verified assets**).
+- Synchronized `pyproject.toml`, `Containerfile`, `Dockerfile`, `compose.yaml`, `AGENT.md`, `README.md`, and all `docs/*.{md,tex,pdf}` to `v4.0.1` per Rule 16.
+
 ## [4.0.0] - 2026-11-26
 
 ### Added

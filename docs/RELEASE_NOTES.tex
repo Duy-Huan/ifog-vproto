@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-REL-001}
-\newcommand{\DocVersion}{v4.0.0}
+\newcommand{\DocVersion}{v4.0.1}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -50,6 +50,18 @@
 {\color{white}\small Document ID: \texttt{\DocID} \quad|\quad Current Version: \texttt{\DocVersion} \quad|\quad Spec: \texttt{IFOG-SIM-SPEC-007} v7.0 \quad|\quad Date: \DocDate}
 \end{tcolorbox}
 
+\section{Release v4.0.1 (2026-11-26)}
+
+\subsection{Key New Features (32-Slide Academic Presentation Deck, CI/CD Diff Filter \& 22-Asset Release Bundle)}
+\begin{enumerate}
+    \item \textbf{32-Slide Academic LaTeX Beamer Presentation (\texttt{docs/IFOG\_VPROTO\_PRESENTATION.\{pdf,tex\}}):}
+    Authored a publication-grade 32-slide (\texttt{16:9}, \texttt{8pt}) presentation deck with 10 native TikZ/\texttt{pgfplots}/\texttt{circuitikz} diagrams, explicit IEEE 1666.1 SystemC-AMS LTF (\texttt{sca\_ltf\_nd}) + Hybrid ZOH LTF \& Lefèvre/IEEE 952 references, SI input tables (\texttt{schema\_v6.json}), Tier 1$\to$2$\to$3 parameter handoff (\texttt{phys\_params.json}, \texttt{shupe\_lut.bin} v2, \texttt{sim\_out.bin}, \texttt{k\_matrix.json}) with mathematical separation \& variance-orthogonality proofs, 2/4/6-State DSP comparisons, and 11 enlarged experimental slides (\texttt{TD-01}, \texttt{DYN-01..04}, Gates 2/4/5/6, \texttt{PHY-01}, \texttt{CAL-01}).
+    \item \textbf{Code-Only CI/CD Diff Filter (\texttt{tier3\_analysis/ci\_diff\_filter.py}, \texttt{scripts/ci\_diff\_filter.py}):}
+    Integrated fail-safe pre-flight \texttt{detect-changes} job in \texttt{.github/workflows/ci.yml} so CI/CD runs if and only if code/config/test/script/workflow/locked-\texttt{spec/} files change (skipping docs-only edits) at \textbf{100.00\% Python coverage} ($4{,}770/4{,}770$ stmts).
+    \item \textbf{Automated Release Packaging (22 Verified Assets):}
+    Updated \texttt{scripts/build\_docs.sh} and \texttt{.github/workflows/release.yml} to validate and bundle \texttt{IFOG\_VPROTO\_PRESENTATION.\{pdf,tex\}} directly inside every GitHub Release.
+\end{enumerate}
+
 \section{Release v4.0.0 (2026-11-26)}
 
 \subsection{Key New Features (\texttt{IFOG-SIM-SPEC-007} --- High-Fidelity Predictive Physics \& Inverse Calibration)}
@@ -66,7 +78,7 @@
     Embedded complete tier-by-tier mathematical formulations (\texttt{EQ-01}--\texttt{EQ-53}) in \texttt{IFOG\_VPROTO\_ARCHITECTURE.\{md,tex,pdf\}}, \texttt{IFOG\_ARCHITECTURE\_EXPLORER.html}, and every generated \texttt{report.md} / KaTeX \texttt{report.html}; regenerated \texttt{examples/full\_all\_scenarios/} (\textbf{23 / 23 PASS}, 23 300-DPI PNGs, \texttt{calibrated\_params.json}) at \textbf{100.0\% C++} ($2{,}329/2{,}329$ lines) \& \textbf{100.00\% Python} ($4{,}650/4{,}650$ stmts) coverage.
 \end{enumerate}
 
-\subsection{Verified Quality Gates \& Attached Release Assets (20 Assets)}
+\subsection{Verified Quality Gates \& Attached Release Assets (22 Assets)}
 \begin{tabularx}{\textwidth}{@{}l X c@{}}
 \toprule
 \textbf{Verification Gate} & \textbf{Criterion} & \textbf{Status} \\
