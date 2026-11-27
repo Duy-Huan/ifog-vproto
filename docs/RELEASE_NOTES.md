@@ -5,13 +5,26 @@
 | Field | Value |
 | :--- | :--- |
 | **Document ID** | `IFOG-VPROTO-REL-001` |
-| **Current Version** | `v4.0.0` |
+| **Current Version** | `v4.0.1` |
 | **Status** | `RELEASED (Production Gate Verified)` |
 | **Normative Specification** | [`spec/IFOG-SIM-SPEC-007.md`](../spec/IFOG-SIM-SPEC-007.md) & [`spec/IFOG-SIM-SPEC-007.pdf`](../spec/IFOG-SIM-SPEC-007.pdf) (v7.0); [`spec/IFOG-SIM-SPEC-006.md`](../spec/IFOG-SIM-SPEC-006.md) (v6.0); [`spec/IFOG-SIM-SPEC-005.tex`](../spec/IFOG-SIM-SPEC-005.tex) (v5.0); [`spec/IFOG-SIM-SPEC-004.tex`](../spec/IFOG-SIM-SPEC-004.tex) (v4.0) |
 | **Architecture Reference** | [`docs/IFOG_VPROTO_ARCHITECTURE.md`](IFOG_VPROTO_ARCHITECTURE.md) / [`docs/IFOG_VPROTO_ARCHITECTURE.pdf`](IFOG_VPROTO_ARCHITECTURE.pdf) |
 | **Interactive Model Explorer** | [`docs/IFOG_ARCHITECTURE_EXPLORER.html`](IFOG_ARCHITECTURE_EXPLORER.html) |
+| **Academic Presentation Deck** | [`docs/IFOG_VPROTO_PRESENTATION.pdf`](IFOG_VPROTO_PRESENTATION.pdf) / [`docs/IFOG_VPROTO_PRESENTATION.tex`](IFOG_VPROTO_PRESENTATION.tex) |
 | **Scenarios Reference** | [`docs/IFOG_SIMULATION_SCENARIOS.md`](IFOG_SIMULATION_SCENARIOS.md) / [`docs/IFOG_SIMULATION_SCENARIOS.pdf`](IFOG_SIMULATION_SCENARIOS.pdf) |
 | **LaTeX / PDF Companion** | [`docs/RELEASE_NOTES.tex`](RELEASE_NOTES.tex) / [`docs/RELEASE_NOTES.pdf`](RELEASE_NOTES.pdf) |
+
+---
+
+## Release `v4.0.1` (2026-11-26)
+
+### Highlights & New Capabilities
+1. **32-Slide Academic LaTeX Beamer Presentation Deck (`docs/IFOG_VPROTO_PRESENTATION.{pdf,tex}` — Attached to Release Bundle):**
+   - Authored a publication-grade 32-slide (`16:9`, `8pt`) Vietnamese academic presentation deck with **10 native TikZ / `pgfplots` / `circuitikz` vector diagrams**, explicitly referencing **Accellera SystemC-AMS LTF (`sca_ltf_nd`, IEEE Std 1666.1-2016 — M. Barnasconi *et al.*)** + Hybrid Exact ZOH LTF and **Lefèvre (3rd Ed.) / IEEE Std 952-2020**.
+   - Includes a dedicated **SI Simulation Input Parameters** slide (`configs/baseline_1km_spec007.json`, `schema_v6.json`), explicit **Tier 1 (`phys_params.json`, `shupe_lut.bin` v2) $\to$ Tier 2** and **Tier 1 & 2 $\to$ Tier 3** parameter handoff slides with formal mathematical separation, spectral-preservation, variance-orthogonality, and passband-linearization proofs, complete **2-State / 4-State / 6-State DSP** models & 3-curve waveform comparison, and **11 enlarged single-figure experimental result slides** (`TD-01`, `DYN-01..04`, Gates 2/4/5/6, `PHY-01`, `CAL-01`).
+   - Updated [`scripts/build_docs.sh`](../scripts/build_docs.sh) and [`.github/workflows/release.yml`](../.github/workflows/release.yml) so `IFOG_VPROTO_PRESENTATION.pdf` and `IFOG_VPROTO_PRESENTATION.tex` are automatically validated and shipped inside every GitHub Release bundle (**22 verified release assets**).
+2. **Code-Only CI/CD Diff Filter (`tier3_analysis/ci_diff_filter.py`, `scripts/ci_diff_filter.py`):**
+   - Added stdlib-only fail-safe git diff analyzer integrated as the `detect-changes` pre-flight job in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml): triggers heavy CI/CD builds **if and only if** code/config/test/script/workflow/locked-`spec/` files change, skipping docs-only edits cleanly while preserving **100.00% Python line coverage** (`4,770 / 4,770` statements).
 
 ---
 

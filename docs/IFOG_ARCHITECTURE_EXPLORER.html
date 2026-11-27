@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Kiến trúc &amp; Dòng chảy Toán học Mô phỏng Vòng kín IFOG (SPEC-007 v4.0.0)</title>
+  <title>Kiến trúc &amp; Dòng chảy Toán học Mô phỏng Vòng kín IFOG (SPEC-007 v4.0.1)</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
@@ -146,7 +146,7 @@
       <div class="brand">
         <div class="brand-logo">IFOG</div>
         <div>
-          <h1>KIẾN TRÚC &amp; DÒNG CHẢY TOÁN HỌC MÔ PHỎNG VÒNG KÍN IFOG (SPEC-006 v4.0.0)</h1>
+          <h1>KIẾN TRÚC &amp; DÒNG CHẢY TOÁN HỌC MÔ PHỎNG VÒNG KÍN IFOG (SPEC-006 v4.0.1)</h1>
           <p>Đối chiếu 1-1 với Source Code thực tế • Bấm vào từng khối để xem giải thích trực quan, phương trình C++/Python &amp; tiêu chí V&amp;V</p>
         </div>
       </div>
@@ -173,7 +173,7 @@
           <span><span class="legend-dot" style="background:#4f46e5;"></span>FMI 3.0 FMU Wrapper</span>
           <span><span class="legend-dot" style="background:#9333ea;"></span>Tầng 3: IEEE Std 952</span>
         </div>
-        <code>IFOG-SIM-SPEC-006 • v4.0.0 • EQ-01..44</code>
+        <code>IFOG-SIM-SPEC-006 • v4.0.1 • EQ-01..44</code>
       </div>
 
       <div class="canvas-scroll">
@@ -279,7 +279,7 @@
             <ol class="card-list" style="padding-left:20px;">
               <li><strong>Khâu nối 2 miền IEEE Std 952:</strong> 4×60 s Thực (Tầng 2 / FMU) + 12×10 h @ 100 Hz (neo theo $N_{\text{fast}}$ từ Tầng 2) $\Rightarrow$ chồng lấp $&lt; 5\%$, hồi quy WLS 5 vùng $(Q,N,B,K,R) \le 10\%$.</li>
               <li><strong>Nghiệm thu 21 hạng mục:</strong> Gates 1–4 + Gate 5 (6-State) + Gate 6 (FMI 3.0 FMU) + Group A (<code>TD-01..06</code>) + Group B (<code>ENG-01..05</code>, IMU 3 trục, MC Yield) + Group C (<code>DYN-01..04</code>).</li>
-              <li><strong>Báo cáo Chuẩn hóa v4.0.0:</strong> Xuất tự động <code>report.md</code> + <code>report.html</code> (20 đồ thị Plotly + 21 hình 300-DPI) kèm giải thích lý thuyết &amp; ý nghĩa từng biểu đồ.</li>
+              <li><strong>Báo cáo Chuẩn hóa v4.0.1:</strong> Xuất tự động <code>report.md</code> + <code>report.html</code> (20 đồ thị Plotly + 21 hình 300-DPI) kèm giải thích lý thuyết &amp; ý nghĩa từng biểu đồ.</li>
             </ol>
           </div>
 
@@ -342,7 +342,7 @@
   <section class="audit-section">
     <div class="panel">
       <div class="panel-bar">
-        <strong>Bảng Đối chiếu Công thức Lý thuyết ↔ Source Code Thực tế (<code>IFOG-SIM-SPEC-006</code> v4.0.0)</strong>
+        <strong>Bảng Đối chiếu Công thức Lý thuyết ↔ Source Code Thực tế (<code>IFOG-SIM-SPEC-006</code> v4.0.1)</strong>
         <span>44 / 44 Phương trình Verified (<code>EQ-01</code>..<code>EQ-44</code>)</span>
       </div>
       <div style="overflow-x:auto;">

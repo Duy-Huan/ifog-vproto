@@ -2,7 +2,7 @@
 \documentclass[11pt,a4paper]{article}
 
 \newcommand{\DocID}{IFOG-VPROTO-SCEN-001}
-\newcommand{\DocVersion}{v4.0.0}
+\newcommand{\DocVersion}{v4.0.1}
 \newcommand{\DocDate}{2026-11-26}
 
 \usepackage{fontspec}
@@ -83,6 +83,7 @@ Markdown Companion & \texttt{docs/IFOG\_SIMULATION\_SCENARIOS.md} \\
 \texttt{v3.0.0} & 2026-11-26 & \texttt{SPEC-006} Gate 6 FMI 3.0 FMU (\texttt{21/21}) & Added standalone FMI 3.0 Co-Simulation FMU (\texttt{build/ifog\_core.fmu}, \texttt{fmi\_wrapper/}) and \textbf{Gate 6} (\texttt{--mode fmi\_gate}, \texttt{tier3\_analysis/fmi\_master\_runner.py}, \texttt{EQ-42}--\texttt{EQ-44}): 0 XSD validation errors, $0.00\times 10^{0}\text{ rad/s}$ bit-exact equivalence vs \texttt{ifog\_sim} (4s \& 6s), 97.42\% deadband reduction, and 3.83\% ($<5\%$) 5-region AVAR overlap; expanded suite to 21 gates/scenarios, 28 CLI modes, 21 PNGs, and 20 interactive Plotly HTML5 charts. \\
 \texttt{v3.0.1} & 2026-11-26 & Standardized Explanatory Reports \& HTML Explorer & Standardized auto-generated \texttt{report.md} and KaTeX/Plotly \texttt{report.html} with embedded code-audited interactive model diagram (\texttt{architecture\_model.html} / \texttt{docs/IFOG\_ARCHITECTURE\_EXPLORER.html}) plus 3-part theoretical foundation, plain-language reading guide (for non-specialists), and live measured proof beneath all 21 figures; regenerated both curated examples. \\
 \texttt{v4.0.0} & 2026-11-26 & \texttt{SPEC-007} Group D Physics \& Calibration (\texttt{23/23}) & Added \textbf{Group D} (\texttt{PHY-01} \& \texttt{CAL-01}, \texttt{--mode spec007\_all}, \texttt{EQ-45}--\texttt{EQ-53}): discrete Quadrupole vs Octupole winding ($-47.69\%$ Shupe reduction), thermo-mechanical stress, 6-channel \texttt{shupe\_lut.bin} v2, MIOC electro-acoustic ringing + capacitive crosstalk spike, live FMI 3.0 \texttt{VR 15..21} tunability, and 3-stage bounded \texttt{InverseCalibrator} cutting uncalibrated $40$--$103\%$ error to $0.04$--$0.91\%$ ($<5\%$) with 10-param recovery $\le 2.18\%$; expanded suite to 23 gates/scenarios, 31 CLI modes, and 23 300-DPI PNGs. \\
+\texttt{v4.0.1} & 2026-11-26 & 32-Slide Academic Deck \& Code-Only CI Diff Filter & Added 32-slide academic LaTeX Beamer deck (\texttt{docs/IFOG\_VPROTO\_PRESENTATION.\{tex,pdf\}}) covering all 3 tiers, inter-tier parameter handoffs \& proofs, 2/4/6-State DSP, and 11 enlarged experimental scenario slides (\texttt{TD-01}, \texttt{DYN-01..04}, Gates 2/4/5/6, \texttt{PHY-01}, \texttt{CAL-01}); added code-only CI/CD diff filter (\texttt{scripts/ci\_diff\_filter.py}) and bundled presentation deck into GitHub Releases (22 assets). \\
 \bottomrule
 \end{tabularx}
 \normalsize
